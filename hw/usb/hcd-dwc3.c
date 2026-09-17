@@ -1527,6 +1527,12 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                     break;
                 case DEPCMD_SETSTALL:
                     ep->stalled = true;
+                    if (epid == 0 || epid == 1) {
+                        DWC3Endpoint* pair = &s->eps[epid ^ 1];
+
+                        pair->stalled = true;
+                        dwc3_ep_run_schedule_update(s, pair);
+                    }
                     dwc3_ep_run_schedule_update(s, ep);
                     break;
                 case DEPCMD_CLEARSTALL:
