@@ -1456,12 +1456,18 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                                   " par2: 0x%x par1: 0x%x par0: 0x%x\n",
                                   dwc3_depcmd_name(DEPCMD_CMD_GET(val)), epid, par2, par1, par0);
 #endif
-                    /* Special no response update? */
-                    DPRINTF("%s: Special no response update?: tdaddr: 0x%" HWADDR_PRIx "\n", __func__,
-                            ep->xfer->tdaddr);
-                    dwc3_td_fetch(s, ep->xfer, ep->xfer->tdaddr);
-                    ep->not_ready = false;
-                    dwc3_ep_run_schedule_update(s, ep);
+                    if (ep->xfer == NULL) {
+                        qemu_log_mask(LOG_GUEST_ERROR,
+                                      "%s: no-response UPDATEXFER on ep %d without an active transfer\n", __func__,
+                                      epid);
+                    }
+                    else {
+                        DPRINTF("%s: Special no response update?: tdaddr: 0x%" HWADDR_PRIx "\n", __func__,
+                                ep->xfer->tdaddr);
+                        dwc3_td_fetch(s, ep->xfer, ep->xfer->tdaddr);
+                        ep->not_ready = false;
+                        dwc3_ep_run_schedule_update(s, ep);
+                    }
                 }
                 break;
             }
