@@ -182,8 +182,8 @@
 #define GSTS_DEVICE_IP        BIT(6)
 #define GSTS_CSR_TIMEOUT      BIT(5)
 #define GSTS_BUS_ERR_ADDR_VLD BIT(4)
-#define GSTS_CURMOD_MASK(n)   (0x3)
-#define GSTS_CURMOD(n)        ((n) & GSTS_CURMOD_MASK)
+#define GSTS_CURMOD_MASK      (0x3)
+#define GSTS_CURMOD(_v)       ((_v) & GSTS_CURMOD_MASK)
 #define GSTS_CURMOD_DEVICE    0
 #define GSTS_CURMOD_HOST      1
 #define GSTS_CURMOD_DRD       2
