@@ -457,8 +457,9 @@ static bool dwc3_bd_writeback(DWC3State* s, DWC3BufferDesc* desc, USBPacket* p, 
                     bool ioc = trb->ctrl & TRB_CTRL_IOC;
                     bool isp = trb->ctrl & TRB_CTRL_ISP_IMI;
                     switch (trb->ctrl & (TRB_CTRL_CHN | TRB_CTRL_LST)) {
-                        case TRB_CTRL_LST: goto short_complete;
-                        case TRB_CTRL_CHN: {
+                        case TRB_CTRL_CHN | TRB_CTRL_LST:
+                        case TRB_CTRL_LST               : goto short_complete;
+                        case TRB_CTRL_CHN               : {
                             for (j = 0; j < desc->count; j++) {
                                 ioc |= (desc->trbs[j].ctrl & TRB_CTRL_IOC) != 0;
                                 isp |= (desc->trbs[j].ctrl & TRB_CTRL_ISP_IMI) != 0;
