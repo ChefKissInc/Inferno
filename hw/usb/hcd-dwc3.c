@@ -884,6 +884,7 @@ static void dwc3_write_event(DWC3State* s, union dwc3_event event, uint32_t v)
 static void dwc3_event(DWC3State* s, union dwc3_event event, uint32_t v)
 {
     DWC3EventRing* intr;
+    uint32_t       count;
 
     if (v >= s->numintrs) {
         qemu_log_mask(LOG_GUEST_ERROR, "%s: ring nr out of range (%u >= %u)\n", __func__, v, s->numintrs);
@@ -891,25 +892,25 @@ static void dwc3_event(DWC3State* s, union dwc3_event event, uint32_t v)
     }
     intr = &s->intrs[v];
 
-    if (intr->count + 1 >= intr->size) {
-        qemu_log_mask(LOG_GUEST_ERROR,
-                      "%s: ring nr %u is full. "
-                      "Dropping event.\n",
-                      __func__, v);
+    if (intr->size < 2 * EVENT_SIZE) {
+        qemu_log_mask(LOG_GUEST_ERROR, "%s: ring nr %u is not configured (size 0x%x). Dropping event.\n", __func__, v,
+                      intr->size);
         return;
     }
-    else if (intr->count + 2 == intr->size) {
-        union dwc3_event overflow = {.devt = {1, 0, DEVICE_EVENT_OVERFLOW}};
-        if (event.raw != overflow.raw) {
-            dwc3_device_event(s, overflow.devt);
-            qemu_log_mask(LOG_GUEST_ERROR,
-                          "%s: ring nr %u is full."
-                          "Sending event overflow.\n",
-                          __func__, v);
-        }
-    }
+
+    count = qatomic_read(&intr->count);
+
+    if (count + EVENT_SIZE <= intr->size - EVENT_SIZE) { dwc3_write_event(s, event, v); }
     else {
-        dwc3_write_event(s, event, v);
+        union dwc3_event overflow = {.devt = {1, 0, DEVICE_EVENT_OVERFLOW}};
+
+        if (count + EVENT_SIZE <= intr->size && event.raw != overflow.raw) {
+            dwc3_write_event(s, overflow, v);
+            qemu_log_mask(LOG_GUEST_ERROR, "%s: ring nr %u is full. Sending event overflow.\n", __func__, v);
+        }
+        else {
+            qemu_log_mask(LOG_GUEST_ERROR, "%s: ring nr %u is full. Dropping event.\n", __func__, v);
+        }
     }
     dwc3_update_irq(s);
 }
