@@ -1519,7 +1519,9 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                 case DEPCMD_GETSEQNUMBER:
                     // case DEPCMD_GETEPSTATE:
                     DPRINTF("%s: DEPCMD_GETSEQNUMBER/DEPCMD_GETEPSTATE: ep->epid: %d\n", __func__, ep->epid);
-                    ioc.parameters = ep->dseqnum & 0xf;
+                    ioc.parameters |= ep->dseqnum & 0xf;
+                    val            &= ~DEPCMD_PARAM_MASK;
+                    val            |= DEPCMD_PARAM(ep->dseqnum & 0xf);
                     break;
                 case DEPCMD_SETSTALL:
                     ep->stalled = true;
@@ -1557,7 +1559,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                     }
                     val            &= ~DEPCMD_PARAM_MASK;
                     val            |= DEPCFG_RSC_IDX(ep->xfer->rsc_idx);
-                    ioc.parameters  = ep->xfer->rsc_idx & 0x7f;
+                    ioc.parameters |= ep->xfer->rsc_idx & 0x7f;
                     ep->not_ready   = false;
                     dwc3_ep_run_schedule_update(s, ep);
                     break;
