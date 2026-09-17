@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://chromium.googlesource.com/libyuv/libyuv
+revision = main
+depth = 1
+method = cmake
+
+[provide]
+libyuv = yuv_dep

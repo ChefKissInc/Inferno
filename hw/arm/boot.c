@@ -126,7 +126,7 @@ static const char* KEEP_COMP[] = {
     "sart,coastguard\0$",
     "sart,t8030\0$",
     "sacm,1\0$",
-    // "scaler,t8030\0scaler,s5l8960x\0$",
+    "scaler,t8030\0scaler,s5l8960x\0$",
     "sio-dma-controller\0$",
     "smc-pmu\0$",
     "smc-tempsensor\0$",
