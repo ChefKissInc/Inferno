@@ -1404,18 +1404,25 @@ static uint64_t usb_dwc3_depcmdreg_read(void* opaque, hwaddr addr, int index)
     return val;
 }
 
+#ifdef DEBUG_DWC3
 static const char* DEPCMD_names[] = {
-    [DEPCMD_CFG]          = "DEPCFG",
-    [DEPCMD_XFERCFG]      = "DEPXFERCFG",
-    [DEPCMD_GETSEQNUMBER] = "DEPGETDSEQ",
-    [DEPCMD_GETEPSTATE]   = "DEPGETEPSTATE",
-    [DEPCMD_SETSTALL]     = "DEPSETSTALL",
-    [DEPCMD_CLEARSTALL]   = "DEPCSTALL",
-    [DEPCMD_STARTXFER]    = "DEPSTRTXFER",
-    [DEPCMD_UPDATEXFER]   = "DEPUPDXFER",
-    [DEPCMD_ENDXFER]      = "DEPENDXFER",
-    [DEPCMD_STARTCFG]     = "DEPSTARTCFG",
+    [DEPCMD_CFG]        = "DEPCFG",
+    [DEPCMD_XFERCFG]    = "DEPXFERCFG",
+    [DEPCMD_GETEPSTATE] = "DEPGETEPSTATE",
+    [DEPCMD_SETSTALL]   = "DEPSETSTALL",
+    [DEPCMD_CLEARSTALL] = "DEPCSTALL",
+    [DEPCMD_STARTXFER]  = "DEPSTRTXFER",
+    [DEPCMD_UPDATEXFER] = "DEPUPDXFER",
+    [DEPCMD_ENDXFER]    = "DEPENDXFER",
+    [DEPCMD_STARTCFG]   = "DEPSTARTCFG",
 };
+
+static const char* dwc3_depcmd_name(uint32_t cmd)
+{
+    if (cmd < ARRAY_SIZE(DEPCMD_names) && DEPCMD_names[cmd] != NULL) { return DEPCMD_names[cmd]; }
+    return "<reserved>";
+}
+#endif
 
 static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint64_t val)
 {
@@ -1447,7 +1454,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                     qemu_log_mask(LOG_UNIMP,
                                   "Special no response update?: DEPCMD: %s epid: %d"
                                   " par2: 0x%x par1: 0x%x par0: 0x%x\n",
-                                  DEPCMD_names[DEPCMD_CMD_GET(val)], epid, par2, par1, par0);
+                                  dwc3_depcmd_name(DEPCMD_CMD_GET(val)), epid, par2, par1, par0);
 #endif
                     /* Special no response update? */
                     DPRINTF("%s: Special no response update?: tdaddr: 0x%" HWADDR_PRIx "\n", __func__,
@@ -1458,12 +1465,11 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                 }
                 break;
             }
-            (void)DEPCMD_names;
 #ifdef DEBUG_DWC3
             qemu_log_mask(LOG_UNIMP,
                           "DEPCMD: %s epid: %d "
                           "par2: 0x%x par1: 0x%x par0: 0x%x\n",
-                          DEPCMD_names[DEPCMD_CMD_GET(val)], epid, par2, par1, par0);
+                          dwc3_depcmd_name(DEPCMD_CMD_GET(val)), epid, par2, par1, par0);
 #endif
             switch (DEPCMD_CMD_GET(val)) {
                 case DEPCMD_CFG: {
