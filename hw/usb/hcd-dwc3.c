@@ -867,11 +867,14 @@ static void dwc3_write_event(DWC3State* s, union dwc3_event event, uint32_t v)
     DWC3EventRing* intr = &s->intrs[v];
     dma_addr_t     ring_base;
     dma_addr_t     ev_addr;
+    uint32_t       head;
 
     ring_base = dwc3_addr64(s->gevntadr_lo(v), s->gevntadr_hi(v));
-    intr      = &s->intrs[v];
 
-    ev_addr = ring_base + qatomic_fetch_add(&intr->head, EVENT_SIZE) % intr->size;
+    head    = qatomic_read(&intr->head);
+    ev_addr = ring_base + head;
+    qatomic_set(&intr->head, (head + EVENT_SIZE) % intr->size);
+
     dma_memory_write(&s->dma_as, ev_addr, &event.raw, EVENT_SIZE, MEMTXATTRS_UNSPECIFIED);
     smp_wmb();
     qatomic_add(&intr->count, EVENT_SIZE);
