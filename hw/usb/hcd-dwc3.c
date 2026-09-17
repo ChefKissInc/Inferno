@@ -961,7 +961,7 @@ static void dwc3_ep_trb_event(DWC3State* s, int epid, DWC3TRB* trb, struct dwc3_
     dwc3_ep_event(s, epid, depevt);
 }
 
-static void dwc3_dcore_reset(DWC3State* s)
+static void dwc3_dcore_reset(DWC3State* s, bool soft)
 {
     USBDevice* udev = &s->device.parent_obj;
 
@@ -977,30 +977,32 @@ static void dwc3_dcore_reset(DWC3State* s)
     s->gsbuscfg1 = (0xf << 8);
     s->gtxthrcfg = 0;
     s->grxthrcfg = 0;
-    s->gctl      = GCTL_PWRDNSCALE(0x4b0) | GCTL_PRTCAPDIR(GCTL_PRTCAP_DEVICE) | GCTL_U2RSTECN | GCTL_U2EXIT_LFPS;
-    s->guctl     = (1 << 15) | (0x10 << 0);
+    if (!soft) {
+        s->gctl   = GCTL_PWRDNSCALE(0x4b0) | GCTL_PRTCAPDIR(GCTL_PRTCAP_DEVICE) | GCTL_U2RSTECN | GCTL_U2EXIT_LFPS;
+        s->guctl  = (1 << 15) | (0x10 << 0);
+        s->gsts  &= ~GSTS_BUS_ERR_ADDR_VLD;
+    }
     // usb_dwc3_glbreg_write: default: addr: 0xc11c val: 0x80400000
-    s->guctl1           = 0;
-    s->gevten           = 0;
-    s->gbuserraddrlo    = 0;
-    s->gbuserraddrhi    = 0;
-    s->gsts            &= ~GSTS_BUS_ERR_ADDR_VLD;
-    s->gprtbimaplo      = 0;
-    s->gprtbimaphi      = 0;
-    s->gprtbimap_hs_lo  = 0;
-    s->gprtbimap_hs_hi  = 0;
-    s->gprtbimap_fs_lo  = 0;
-    s->gprtbimap_fs_hi  = 0;
-    s->ghwparams0       = 0x40204048 | (GHWPARAMS0_MODE_DRD);
-    s->ghwparams1       = 0x222493b;
-    s->ghwparams2       = 0x12345678;
-    s->ghwparams3       = (0x20 << 23) | GHWPARAMS3_NUM_IN_EPS(DWC3_NUM_EPS >> 1) | GHWPARAMS3_NUM_EPS(DWC3_NUM_EPS)
-                          | (0x2 << 6) | (0x3 << 2) | (0x1 << 0);
-    s->ghwparams4       = 0x47822004;
-    s->ghwparams5       = 0x4202088;
-    s->ghwparams6       = 0x7850c20;
-    s->ghwparams7       = 0x0;
-    s->ghwparams8       = 0x478;
+    s->guctl1          = 0;
+    s->gevten          = 0;
+    s->gbuserraddrlo   = 0;
+    s->gbuserraddrhi   = 0;
+    s->gprtbimaplo     = 0;
+    s->gprtbimaphi     = 0;
+    s->gprtbimap_hs_lo = 0;
+    s->gprtbimap_hs_hi = 0;
+    s->gprtbimap_fs_lo = 0;
+    s->gprtbimap_fs_hi = 0;
+    s->ghwparams0      = 0x40204048 | (GHWPARAMS0_MODE_DRD);
+    s->ghwparams1      = 0x222493b;
+    s->ghwparams2      = 0x12345678;
+    s->ghwparams3      = (0x20 << 23) | GHWPARAMS3_NUM_IN_EPS(DWC3_NUM_EPS >> 1) | GHWPARAMS3_NUM_EPS(DWC3_NUM_EPS)
+                         | (0x2 << 6) | (0x3 << 2) | (0x1 << 0);
+    s->ghwparams4      = 0x47822004;
+    s->ghwparams5      = 0x4202088;
+    s->ghwparams6      = 0x7850c20;
+    s->ghwparams7      = 0x0;
+    s->ghwparams8      = 0x478;
     memset(s->gtxfifosiz, 0, sizeof(s->gtxfifosiz));
     memset(s->grxfifosiz, 0, sizeof(s->grxfifosiz));
     memset(s->gevntregs, 0, sizeof(s->gevntregs));
@@ -1048,7 +1050,7 @@ static void dwc3_reset_enter(Object* obj, ResetType type)
 {
     DWC3State* s = DWC3_USB(obj);
 
-    dwc3_dcore_reset(s);
+    dwc3_dcore_reset(s, false);
     s->gsts    = GSTS_CURMOD_DRD;
     s->gsnpsid = GSNPSID_REVISION_180A;
     s->ggpio   = 0;
@@ -1336,7 +1338,7 @@ static void usb_dwc3_dreg_write(void* opaque, hwaddr addr, int index, uint64_t v
         }
         case DCTL:
             if (!(old & DCTL_CSFTRST) && (val & DCTL_CSFTRST)) {
-                dwc3_dcore_reset(s);
+                dwc3_dcore_reset(s, true);
                 iflg = true;
             }
 
