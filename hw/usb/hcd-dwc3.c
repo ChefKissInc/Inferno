@@ -1471,6 +1471,8 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                           "par2: 0x%x par1: 0x%x par0: 0x%x\n",
                           dwc3_depcmd_name(DEPCMD_CMD_GET(val)), epid, par2, par1, par0);
 #endif
+            ep->not_ready = false;
+
             switch (DEPCMD_CMD_GET(val)) {
                 case DEPCMD_CFG: {
                     int epnum = DEPCFG_EP_NUMBER(par1);
@@ -1532,9 +1534,8 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                         /* Automatically cleared upon SETUP */
                         break;
                     }
-                    ep->stalled   = false;
-                    ep->not_ready = false;
-                    ep->dseqnum   = 0;
+                    ep->stalled = false;
+                    ep->dseqnum = 0;
                     dwc3_ep_run_schedule_update(s, ep);
                     break;
                 case DEPCMD_STARTXFER: {
@@ -1560,7 +1561,6 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                     val            &= ~DEPCMD_PARAM_MASK;
                     val            |= DEPCFG_RSC_IDX(ep->xfer->rsc_idx);
                     ioc.parameters |= ep->xfer->rsc_idx & 0x7f;
-                    ep->not_ready   = false;
                     dwc3_ep_run_schedule_update(s, ep);
                     break;
                 }
@@ -1590,7 +1590,6 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                         qemu_log_mask(LOG_GUEST_ERROR, "UPDATEXFER: empty xfer\n");
                         break;
                     }
-                    ep->not_ready = false;
                     dwc3_ep_run_schedule_update(s, ep);
                     break;
                 }
