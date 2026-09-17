@@ -813,6 +813,11 @@ static void dwc3_td_fetch(DWC3State* s, DWC3Transfer* xfer, dma_addr_t tdaddr)
             }
         }
         while (!ended);
+        if (desc->count == 0) {
+            dwc3_bd_free(s, desc);
+            ended = true;
+            break;
+        }
         QTAILQ_INSERT_TAIL(&xfer->buffers, desc, queue);
         xfer->count++;
     }
