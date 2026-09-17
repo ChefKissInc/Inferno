@@ -85,18 +85,6 @@ void qemu_unregister_resettable(Object* obj);
 void qemu_register_reset(QEMUResetHandler* func, void* opaque);
 
 /**
- * qemu_register_reset_nosnapshotload: Register a callback for system reset
- * @func: function to call
- * @opaque: opaque data to pass to @func
- *
- * This is the same as qemu_register_reset(), except that @func is
- * not called if the reason that the system is being reset is to
- * put it into a clean state prior to loading a snapshot (i.e. for
- * SHUTDOWN_CAUSE_SNAPSHOT_LOAD).
- */
-void qemu_register_reset_nosnapshotload(QEMUResetHandler* func, void* opaque);
-
-/**
  * qemu_unregister_reset: Unregister a system reset callback
  * @func: function registered with qemu_register_reset()
  * @opaque: the same opaque data that was passed to qemu_register_reset()

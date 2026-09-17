@@ -371,24 +371,18 @@ static int qemu_debug_requested(void)
 void qemu_system_reset(ShutdownCause reason)
 {
     MachineClass* mc;
-    ResetType     type;
 
     mc = current_machine ? MACHINE_GET_CLASS(current_machine) : NULL;
 
     cpu_synchronize_all_states();
 
-    switch (reason) {
-        case SHUTDOWN_CAUSE_SNAPSHOT_LOAD: type = RESET_TYPE_SNAPSHOT_LOAD; break;
-        default                          : type = RESET_TYPE_COLD;
-    }
-    if (mc && mc->reset) { mc->reset(current_machine, type); }
+    if (mc && mc->reset) { mc->reset(current_machine, RESET_TYPE_COLD); }
     else {
-        qemu_devices_reset(type);
+        qemu_devices_reset(RESET_TYPE_COLD);
     }
     switch (reason) {
         case SHUTDOWN_CAUSE_NONE           :
         case SHUTDOWN_CAUSE_SUBSYSTEM_RESET:
-        case SHUTDOWN_CAUSE_SNAPSHOT_LOAD  : break;
         default                            : qapi_event_send_reset(shutdown_caused_by_guest(reason), reason);
     }
 

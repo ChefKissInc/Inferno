@@ -34,7 +34,6 @@ typedef struct ResettableState ResettableState;
 typedef enum ResetType
 {
     RESET_TYPE_COLD,
-    RESET_TYPE_SNAPSHOT_LOAD,
     RESET_TYPE_WAKEUP,
 } ResetType;
 
