@@ -275,8 +275,12 @@
 #define DCFG_LPM_CAP   BIT(22)
 #define DCFG_IGNSTRMPP BIT(23)
 
-#define DCFG_INTRNUM(_intr)  ((_intr) << 12)
-#define DCFG_INTRNUM_MASK    DCFG_INTRNUM(0xf)
+#define DCFG_NUMP(_n)     (((_n) & 0x1f) << 17)
+#define DCFG_NUMP_MASK    DCFG_NUMP(0x1f)
+#define DCFG_NUMP_GET(_v) (((_v) >> 17) & 0x1f)
+
+#define DCFG_INTRNUM(_intr)  (((_intr) & 0x1f) << 12)
+#define DCFG_INTRNUM_MASK    DCFG_INTRNUM(0x1f)
 #define DCFG_INTRNUM_GET(_v) (((_v) & DCFG_INTRNUM_MASK) >> 12)
 
 #define DCFG_DEVADDR(addr)   ((addr) << 3)
@@ -428,8 +432,8 @@
 
 #define DEPCMD_XFERCFG     (0x02 << 0)
 #define DEPCMD_CFG         (0x01 << 0)
-#define DEPCMD_CMDMASK     (0xff << 0)
-#define DEPCMD_CMD_GET(_v) ((_v) & 0xff)
+#define DEPCMD_CMDMASK     (0xf << 0)
+#define DEPCMD_CMD_GET(_v) ((_v) & 0xf)
 
 /* The EP number goes 0..31 so ep0 is always out and ep1 is always in */
 #define DALEPENA_EP(n) BIT(n)
@@ -683,7 +687,7 @@ union dwc3_event
 #define DEPCFG_RSC_IDX_GET(x) (((x) >> DEPCMD_PARAM_SHIFT) & 0x7f)
 
 #define DEPCFG_EP_TYPE(n)         (((n) >> 1) & 0x3)
-#define DEPCFG_FIFO_NUMBER(n)     (((n) >> 17) & 0xf)
+#define DEPCFG_FIFO_NUMBER(n)     (((n) >> 17) & 0x1f)
 #define DEPCFG_MAX_PACKET_SIZE(n) (((n) >> 3) & 0x7ff)
 #define DEPCFG_ACTION(n)          (((n) >> 30) & 0x3)
 #define DEPCFG_BURST_SIZE(n)      (((n) >> 22) & 0xf)
