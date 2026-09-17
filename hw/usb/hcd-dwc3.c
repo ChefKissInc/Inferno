@@ -1631,11 +1631,6 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                                 "ep->xfer->rsc_idx 0x%x DEPCFG_RSC_IDX_GET(val) 0x%x\n",
                                 __func__, ep->epid, !ep->xfer, ep->xfer->rsc_idx, rsc_idx);
                     }
-                    if (rsc_idx != 0 && rsc_idx != 2) {
-                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
-                        qemu_log_mask(LOG_GUEST_ERROR, "DEPCMD_STARTCFG: invalid rsc_idx %d\n", rsc_idx);
-                        break;
-                    }
                     s->global_rsc_idx_counter = rsc_idx;
                     for (int i = 0; i < DWC3_NUM_EPS; i++) { s->eps[i].rsc_idx_counter = s->global_rsc_idx_counter; }
                     break;
