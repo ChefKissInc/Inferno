@@ -1100,6 +1100,35 @@ static void apple_scaler_bh(void* opaque)
     apple_scaler_signal_frame_done(scaler);
 }
 
+static void apple_scaler_reset_enter(Object* obj, ResetType type)
+{
+    AppleScalerState* scaler = APPLE_SCALER(obj);
+
+    QEMU_LOCK_GUARD(&scaler->lock);
+
+    qemu_bh_cancel(scaler->bh);
+    memset(&scaler->srcdst, 0, sizeof(scaler->srcdst));
+    scaler->flip_rotate_cfg = 0;
+    qatomic_set(&scaler->frame_count, 0);
+    qatomic_set(&scaler->irq_sts, 0);
+    qatomic_set(&scaler->running, false);
+}
+
+static void apple_scaler_reset_hold(Object* obj, ResetType type)
+{
+    AppleScalerState* scaler = APPLE_SCALER(obj);
+
+    QEMU_LOCK_GUARD(&scaler->lock);
+
+    apple_scaler_update_irqs(scaler);
+}
+
+static void apple_scaler_reset(AppleScalerState* scaler, ResetType type)
+{
+    apple_scaler_reset_enter(OBJECT(scaler), type);
+    apple_scaler_reset_hold(OBJECT(scaler), type);
+}
+
 static uint32_t* apple_scaler_reg_ptr(AppleScalerState* scaler, hwaddr index)
 {
     switch (index) {
@@ -1149,10 +1178,7 @@ static void apple_scaler_reg_write(void* opaque, hwaddr addr, uint64_t data, uns
             qemu_mutex_unlock(&scaler->lock);
             break;
         case R_GLBL_CTRL:
-            if (REG_FIELD_EX32(data, GLBL_CTRL, RESET)) {
-                BQL_LOCK_GUARD();
-                resettable_reset(OBJECT(scaler), RESET_TYPE_COLD);
-            }
+            if (REG_FIELD_EX32(data, GLBL_CTRL, RESET)) { apple_scaler_reset(scaler, RESET_TYPE_COLD); }
             break;
         case R_CTRL_COMMAND:
             if (REG_FIELD_EX32(data, CTRL_COMMAND, RUN) && !qatomic_cmpxchg(&scaler->running, false, true)) {
@@ -1238,29 +1264,6 @@ static const MemoryRegionOps apple_scaler_unk_reg_ops = {
     .valid.max_access_size = 4,
     .valid.unaligned       = false,
 };
-
-static void apple_scaler_reset_enter(Object* obj, ResetType type)
-{
-    AppleScalerState* scaler = APPLE_SCALER(obj);
-
-    QEMU_LOCK_GUARD(&scaler->lock);
-
-    qemu_bh_cancel(scaler->bh);
-    memset(&scaler->srcdst, 0, sizeof(scaler->srcdst));
-    scaler->flip_rotate_cfg = 0;
-    qatomic_set(&scaler->frame_count, 0);
-    qatomic_set(&scaler->irq_sts, 0);
-    qatomic_set(&scaler->running, false);
-}
-
-static void apple_scaler_reset_hold(Object* obj, ResetType type)
-{
-    AppleScalerState* scaler = APPLE_SCALER(obj);
-
-    QEMU_LOCK_GUARD(&scaler->lock);
-
-    apple_scaler_update_irqs(scaler);
-}
 
 static void apple_scaler_realize(DeviceState* dev, Error** errp)
 {
