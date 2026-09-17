@@ -1447,7 +1447,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
             uint32_t                 par1  = s->depcmdpar1(epid);
             uint32_t G_GNUC_UNUSED   par2  = s->depcmdpar2(epid);
             struct dwc3_event_depevt ioc   = {0, epid, DEPEVT_EPCMDCMPLT, 0, 0, DEPCMD_CMD_GET(val) << 8};
-            val                           &= ~(DEPCMD_STATUS);
+            val                           &= ~DEPCMD_STATUS_MASK;
             if (!(val & DEPCMD_CMDACT)) {
                 if (!(val & DEPCMD_CMDIOC) && DEPCMD_CMD_GET(val) == DEPCMD_UPDATEXFER) {
 #ifdef DEBUG_DWC3
@@ -1477,7 +1477,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                     assert_cmpuint(epnum, ==, epid);
                     if (epid == 0 || epid == 1 || (epnum >> 1) == 0) {
                         if (epnum != epid) {
-                            val |= DEPCMD_STATUS;
+                            val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
                             // this will be set below anyway
                             // ioc.status = 1;
                             break;
@@ -1514,8 +1514,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                 }
                 case DEPCMD_XFERCFG:
                     DPRINTF("%s: DEPCMD_XFERCFG: ep->epid: %d\n", __func__, ep->epid);
-                    ioc.status  = DEPXFERCFG_NUMXFERRES(par0) != 1;
-                    val        |= (ioc.status ? DEPCMD_STATUS : 0);
+                    if (DEPXFERCFG_NUMXFERRES(par0) != 1) { val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE); }
                     break;
                 case DEPCMD_GETSEQNUMBER:
                     // case DEPCMD_GETEPSTATE:
@@ -1541,7 +1540,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                     assert_cmphex(tdaddr, !=, UINT64_MAX);
                     if (ep->xfer) {
                         qemu_log_mask(LOG_GUEST_ERROR, "DEPCMD_STARTXFER: xfer existed\n");
-                        val |= DEPCMD_STATUS;
+                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
                         break;
                     }
                     if (ep->xfer) {
@@ -1553,7 +1552,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                     ep->xfer = dwc3_xfer_alloc(s, epid, tdaddr);
                     if (!ep->xfer) {
                         qemu_log_mask(LOG_GUEST_ERROR, "DEPCMD_STARTXFER: Cannot alloc xfer\n");
-                        val |= DEPCMD_STATUS;
+                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
                         break;
                     }
                     val            &= ~DEPCMD_PARAM_MASK;
@@ -1565,7 +1564,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                 }
                 case DEPCMD_UPDATEXFER: {
                     if (!ep->xfer || (ep->xfer->rsc_idx) != DEPCFG_RSC_IDX_GET(val)) {
-                        val |= DEPCMD_STATUS;
+                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
                         if (!ep->xfer) {
                             DPRINTF("%s: UPDATEXFER: Unknown rsc_idx: ep->epid: %d "
                                     "!ep->xfer %d ep->xfer->rsc_idx N/A "
@@ -1585,7 +1584,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                             ep->xfer->tdaddr);
                     dwc3_td_fetch(s, ep->xfer, ep->xfer->tdaddr);
                     if (ep->xfer->count == 0) {
-                        val |= DEPCMD_STATUS;
+                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
                         qemu_log_mask(LOG_GUEST_ERROR, "UPDATEXFER: empty xfer\n");
                         break;
                     }
@@ -1606,7 +1605,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                         }
                     }
                     else {
-                        val |= DEPCMD_STATUS;
+                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
                     }
                     break;
                 case DEPCMD_STARTCFG: {
@@ -1622,7 +1621,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                                 __func__, ep->epid, !ep->xfer, ep->xfer->rsc_idx, rsc_idx);
                     }
                     if (rsc_idx != 0 && rsc_idx != 2) {
-                        val |= DEPCMD_STATUS;
+                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
                         qemu_log_mask(LOG_GUEST_ERROR, "DEPCMD_STARTCFG: invalid rsc_idx %d\n", rsc_idx);
                         break;
                     }
@@ -1636,7 +1635,7 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
             val &= ~DEPCMD_CMDACT;
 
             if (val & DEPCMD_CMDIOC) {
-                if ((val & DEPCMD_STATUS) && (ioc.status == 0)) { ioc.status = 1; }
+                ioc.status = DEPCMD_STATUS_GET(val);
                 dwc3_ep_event(s, epid, ioc);
             }
             break;

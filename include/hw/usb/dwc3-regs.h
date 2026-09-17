@@ -410,13 +410,16 @@
 #define DGCMDPAR_LOOPBACK_ENA        BIT(0)
 
 /* Device Endpoint Command Register */
-#define DEPCMD_PARAM_SHIFT   16
-#define DEPCMD_PARAM(x)      ((x) << DEPCMD_PARAM_SHIFT)
-#define DEPCMD_PARAM_MASK    DEPCMD_PARAM(0xffff)
-#define DEPCMD_STATUS        BIT(15)
-#define DEPCMD_HIPRI_FORCERM BIT(11)
-#define DEPCMD_CMDACT        BIT(10)
-#define DEPCMD_CMDIOC        BIT(8)
+#define DEPCMD_PARAM_SHIFT    16
+#define DEPCMD_PARAM(x)       ((x) << DEPCMD_PARAM_SHIFT)
+#define DEPCMD_PARAM_MASK     DEPCMD_PARAM(0xffff)
+#define DEPCMD_STATUS_SHIFT   12
+#define DEPCMD_STATUS_MASK    (0xf << DEPCMD_STATUS_SHIFT)
+#define DEPCMD_STATUS_SET(_v) (((_v) & 0xf) << DEPCMD_STATUS_SHIFT)
+#define DEPCMD_STATUS_GET(_v) (((_v) >> DEPCMD_STATUS_SHIFT) & 0xf)
+#define DEPCMD_HIPRI_FORCERM  BIT(11)
+#define DEPCMD_CMDACT         BIT(10)
+#define DEPCMD_CMDIOC         BIT(8)
 
 #define DEPCMD_STARTCFG   (0x09 << 0)
 #define DEPCMD_ENDXFER    (0x08 << 0)
