@@ -382,7 +382,7 @@ void qemu_system_reset(ShutdownCause reason)
     }
     switch (reason) {
         case SHUTDOWN_CAUSE_NONE           :
-        case SHUTDOWN_CAUSE_SUBSYSTEM_RESET:
+        case SHUTDOWN_CAUSE_SUBSYSTEM_RESET: break;
         default                            : qapi_event_send_reset(shutdown_caused_by_guest(reason), reason);
     }
 
