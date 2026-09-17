@@ -915,11 +915,17 @@ static void dwc3_event(DWC3State* s, union dwc3_event event, uint32_t v)
     dwc3_update_irq(s);
 }
 
-static void dwc3_device_event(DWC3State* s, struct dwc3_event_devt devt)
+static void dwc3_device_event_ungated(DWC3State* s, struct dwc3_event_devt devt)
 {
     union dwc3_event event = {.devt = devt};
-    int              v     = DCFG_INTRNUM_GET(s->dcfg);
-    if (s->devten & (1 << (devt.type))) { dwc3_event(s, event, v); }
+
+    dwc3_event(s, event, DCFG_INTRNUM_GET(s->dcfg));
+}
+
+static void dwc3_device_event(DWC3State* s, struct dwc3_event_devt devt)
+{
+    if (!(s->devten & (1 << (devt.type)))) { return; }
+    dwc3_device_event_ungated(s, devt);
 }
 
 static void dwc3_ep_event(DWC3State* s, int epid, struct dwc3_event_depevt depevt)
@@ -1379,7 +1385,7 @@ static void usb_dwc3_dreg_write(void* opaque, hwaddr addr, int index, uint64_t v
             }
             if (val & DGCMD_CMDIOC) {
                 struct dwc3_event_devt ioc = {1, 0, DEVICE_EVENT_CMD_CMPL};
-                dwc3_device_event(s, ioc);
+                dwc3_device_event_ungated(s, ioc);
             }
             break;
         case DALEPENA:
