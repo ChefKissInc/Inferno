@@ -806,9 +806,8 @@ static void dwc3_td_fetch(DWC3State* s, DWC3Transfer* xfer, dma_addr_t tdaddr)
             tdaddr += sizeof(trb);
 
             if (trb.ctrl & TRB_CTRL_LST) {
-                xfer->can_free  = true;
-                trb.ctrl       &= ~TRB_CTRL_CHN;
-                ended           = true;
+                xfer->can_free = true;
+                ended          = true;
                 DPRINTF("%s: ended;break: (trb.ctrl & TRB_CTRL_LST)\n", __func__);
                 break;
             }
