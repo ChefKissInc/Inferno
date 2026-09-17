@@ -340,15 +340,13 @@ static bool dwc3_bd_writeback(DWC3State* s, DWC3BufferDesc* desc, USBPacket* p, 
                     __func__, p->pid, desc->epid, desc->actual_length, length, trb->size,
                     TRBControlType_names[setup_ep->last_control_command]);
             setup_ep->last_control_command = TRBCTL_CONTROL_SETUP;
-            assert_cmpuint(desc->epid, ==, 0x0);
-            if (desc->actual_length != 0x8) {
+            if ((desc->epid & 1) != 0 || desc->actual_length != 0x8) {
                 // maybe return true in this case, or let process_packet handle
                 // this as well. unsure which status to return. this assert got
                 // hit, because of further dwc3_process_packet xfer==NULL
                 // handling when setting ASYNC. assert_not_reached();
                 qemu_log_mask(LOG_GUEST_ERROR,
-                              "%s: TRBCTL_CONTROL_SETUP: desc->actual_length != 0x8 edge "
-                              "case got hit: p->pid: 0x%x desc->epid: 0x%x "
+                              "%s: TRBCTL_CONTROL_SETUP: bad setup stage: p->pid: 0x%x desc->epid: 0x%x "
                               "desc->actual_length 0x%x length 0x%x trb->size 0x%x\n",
                               __func__, p->pid, desc->epid, desc->actual_length, length, trb->size);
                 event.endpoint_event  = DEPEVT_XFERNOTREADY;
@@ -377,8 +375,10 @@ static bool dwc3_bd_writeback(DWC3State* s, DWC3BufferDesc* desc, USBPacket* p, 
                     "== 0x%x\n",
                     __func__, setup_ep->setup_packet.wLength, usb_packet_size(p), desc->actual_length);
             setup_ep->last_control_command = TRBCTL_CONTROL_DATA;
-            assert(p->pid == USB_TOKEN_IN || p->pid == USB_TOKEN_OUT);
-            assert_cmpuint(setup_ep->setup_packet.wLength, !=, 0x0);
+            if ((p->pid != USB_TOKEN_IN && p->pid != USB_TOKEN_OUT) || setup_ep->setup_packet.wLength == 0x0) {
+                qemu_log_mask(LOG_GUEST_ERROR, "%s: TRBCTL_CONTROL_DATA: pid 0x%x wLength 0x%x on ep %d\n", __func__,
+                              p->pid, setup_ep->setup_packet.wLength, desc->epid);
+            }
             // only do a xfercomplete here if returning here
             if (usb_packet_size(p) > setup_ep->setup_packet.wLength
                 || usb_packet_size(p) == 0x0 /* || desc->actual_length == 0*/)
