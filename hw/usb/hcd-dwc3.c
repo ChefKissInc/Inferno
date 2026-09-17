@@ -740,13 +740,20 @@ static void dwc3_td_fetch(DWC3State* s, DWC3Transfer* xfer, dma_addr_t tdaddr)
         do {
             if (dma_memory_read(desc->sgl.as, tdaddr, &trb, sizeof(trb), MEMTXATTRS_UNSPECIFIED) != MEMTX_OK) {
                 qemu_log_mask(LOG_GUEST_ERROR, "%s: failed to read trb\n", __func__);
-                return;
+                ended = true;
+                break;
             }
             uint32_t controlType = TRB_CTRL_TRBCTL(trb.ctrl);
             // everything but reserved and isochronous*
-            assert(controlType == TRBCTL_NORMAL || controlType == TRBCTL_CONTROL_SETUP
-                   || controlType == TRBCTL_CONTROL_STATUS2 || controlType == TRBCTL_CONTROL_STATUS3
-                   || controlType == TRBCTL_CONTROL_DATA || controlType == TRBCTL_LINK_TRB);
+            if (!(controlType == TRBCTL_NORMAL || controlType == TRBCTL_CONTROL_SETUP
+                  || controlType == TRBCTL_CONTROL_STATUS2 || controlType == TRBCTL_CONTROL_STATUS3
+                  || controlType == TRBCTL_CONTROL_DATA || controlType == TRBCTL_LINK_TRB))
+            {
+                qemu_log_mask(LOG_GUEST_ERROR, "%s: unsupported TRBCTL %d at 0x%" HWADDR_PRIx "\n", __func__,
+                              controlType, tdaddr);
+                ended = true;
+                break;
+            }
             DPRINTF("%s: tdaddr 0x%" HWADDR_PRIx " controlType: %d trb.ctrl: 0x%x\n", __func__, tdaddr, controlType,
                     trb.ctrl);
 
