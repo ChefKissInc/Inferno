@@ -100,14 +100,18 @@ static int dwc3_packet_find_epid(DWC3State* s, USBPacket* p)
     return -1;
 }
 
+static int dwc3_device_intr_level(DWC3State* s, int n)
+{
+    if (s->gevntsiz(n) & GEVNTSIZ_EVNTINTRPTMASK) { return 0; }
+    return qatomic_read(&s->intrs[n].count) > 0;
+}
+
 static void dwc3_update_irq(DWC3State* s)
 {
     int ip = 0;
     for (uint32_t i = 0; i < s->numintrs; i++) {
-        int level  = 1;
-        level     &= !(s->gevntsiz(i) & GEVNTSIZ_EVNTINTRPTMASK);
-        level     &= (s->intrs[i].count > 0);
-        qemu_set_irq(s->sysbus_xhci.irq[i], level);
+        int level = dwc3_device_intr_level(s, i);
+        qemu_set_irq(s->sysbus_xhci.irq[i], level || s->host_intr_state[i]);
         ip |= level;
     }
     if (ip) { s->gsts |= GSTS_DEVICE_IP; }
@@ -133,7 +137,7 @@ static bool dwc3_host_intr_raise(XHCIState* xhci, int n, bool level)
     else {
         s->gsts &= ~GSTS_HOST_IP;
     }
-    qemu_set_irq(xhci_sysbus->irq[n], level);
+    qemu_set_irq(xhci_sysbus->irq[n], level || dwc3_device_intr_level(s, n));
 
     return false;
 }
@@ -1711,6 +1715,7 @@ static void usb_dwc3_realize(DeviceState* dev, Error** errp)
         error_propagate(errp, err);
         return;
     }
+    QEMU_BUILD_BUG_ON(DWC3_NUM_INTRS < XHCI_MAXINTRS);
     s->numintrs = s->sysbus_xhci.xhci.numintrs;
 
     memory_region_add_subregion(&s->iomem, 0, sysbus_mmio_get_region(SYS_BUS_DEVICE(&s->sysbus_xhci), 0));
