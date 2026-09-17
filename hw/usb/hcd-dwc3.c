@@ -1482,14 +1482,11 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
             switch (DEPCMD_CMD_GET(val)) {
                 case DEPCMD_CFG: {
                     int epnum = DEPCFG_EP_NUMBER(par1);
-                    assert_cmpuint(epnum, ==, epid);
-                    if (epid == 0 || epid == 1 || (epnum >> 1) == 0) {
-                        if (epnum != epid) {
-                            val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
-                            // this will be set below anyway
-                            // ioc.status = 1;
-                            break;
-                        }
+                    if (epnum != (int)epid) {
+                        qemu_log_mask(LOG_GUEST_ERROR, "%s: DEPCFG: USB ep number %d does not match physical ep %d\n",
+                                      __func__, epnum, epid);
+                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
+                        break;
                     }
                     ep->epnum                = epnum;
                     ep->intrnum              = DEPCFG_INT_NUM(par1);
