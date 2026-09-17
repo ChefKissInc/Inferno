@@ -2065,16 +2065,15 @@ static void dwc3_ep_run(DWC3State* s, DWC3Endpoint* ep)
     assert(bql_locked());
     QEMU_LOCK_GUARD(&s->lock);
 
-    assert_cmpuint(ep->epid, ==, ep->epnum);
-
     if (!ep->uep) {
         DPRINTF("%s: !ep->uep\n", __func__);
         return;
     }
 
-    // still have to test whether the _first or _foreach variant is better
-    // this means both, correctness and speed. everywhere it's used
-    QTAILQ_FOREACH (p, &ep->uep->queue, queue) {
+    assert_cmpuint(ep->epid, ==, ep->epnum);
+
+    p = QTAILQ_FIRST(&ep->uep->queue);
+    if (p != NULL) {
         DPRINTF("%s: pid: 0x%x ep: %d epid: %d id: 0x%" PRIx64 "\n", __func__, p->pid, p->ep->nr, ep->epid, p->id);
         dwc3_process_packet(s, ep, p);
     }
