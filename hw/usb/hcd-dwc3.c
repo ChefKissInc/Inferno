@@ -1294,20 +1294,6 @@ static uint64_t usb_dwc3_dreg_read(void* opaque, hwaddr addr, int index)
     mmio = &s->dreg[index];
     val  = *mmio;
 
-    switch (addr) {
-        case DCTL:
-            /* Self-clearing bits */
-            val   &= ~(DCTL_CSFTRST);
-            *mmio  = val;
-            break;
-        case DGCMD:
-            /* Self-clearing bits */
-            val   &= ~(DGCMD_CMDACT);
-            *mmio  = val;
-            break;
-        default: break;
-    }
-
     return val;
 }
 
@@ -1337,7 +1323,7 @@ static void usb_dwc3_dreg_write(void* opaque, hwaddr addr, int index, uint64_t v
             break;
         }
         case DCTL:
-            if (!(old & DCTL_CSFTRST) && (val & DCTL_CSFTRST)) {
+            if (val & DCTL_CSFTRST) {
                 dwc3_dcore_reset(s, true);
                 iflg = true;
             }
@@ -1353,12 +1339,11 @@ static void usb_dwc3_dreg_write(void* opaque, hwaddr addr, int index, uint64_t v
                 s->dsts |= DSTS_DEVCTRLHLT;
             }
             /* Self clearing bits */
-            val |= old & (DCTL_CSFTRST);
+            val &= ~DCTL_CSFTRST;
             break;
         case DSTS: val = old; break;
         case DGCMD:
-            val &= ~(DGCMD_CMDSTATUS);
-            val |= (old & (DGCMD_CMDSTATUS | DGCMD_CMDACT));
+            val &= ~DGCMD_CMDSTATUS;
             if (!(val & DGCMD_CMDACT)) { break; }
             /* TODO DGCMD */
             switch (DGCMD_CMDTYPE_GET(val)) {
@@ -1385,6 +1370,7 @@ static void usb_dwc3_dreg_write(void* opaque, hwaddr addr, int index, uint64_t v
                     val |= (DGCMD_CMDSTATUS);
                     break;
             }
+            val &= ~DGCMD_CMDACT;
             if (val & DGCMD_CMDIOC) {
                 struct dwc3_event_devt ioc = {1, 0, DEVICE_EVENT_CMD_CMPL};
                 dwc3_device_event_ungated(s, ioc);
@@ -1415,14 +1401,6 @@ static uint64_t usb_dwc3_depcmdreg_read(void* opaque, hwaddr addr, int index)
     mmio = &s->depcmdreg[index];
     val  = *mmio;
 
-    switch (DEPCMDPAR2(0) + (addr & 0xc)) {
-        case DEPCMD(0):
-            /* Self-clearing bits */
-            val   &= ~(DEPCMD_CMDACT);
-            *mmio  = val;
-            break;
-        default: break;
-    }
     return val;
 }
 
@@ -1444,7 +1422,6 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
     DWC3State*    s    = opaque;
     USBDevice*    udev = &s->device.parent_obj;
     uint32_t*     mmio;
-    uint32_t      old;
     int           iflg = 0;
     uint32_t      epid = index >> 2;
     DWC3Endpoint* ep   = &s->eps[epid];
@@ -1456,7 +1433,6 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
     }
 
     mmio = &s->depcmdreg[index];
-    old  = *mmio;
 
     switch (DEPCMDPAR2(0) + (addr & 0xc)) {
         case DEPCMD(0): {
@@ -1465,7 +1441,6 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
             uint32_t G_GNUC_UNUSED   par2  = s->depcmdpar2(epid);
             struct dwc3_event_depevt ioc   = {0, epid, DEPEVT_EPCMDCMPLT, 0, 0, DEPCMD_CMD_GET(val) << 8};
             val                           &= ~(DEPCMD_STATUS);
-            val                           |= (old & (DEPCMD_CMDACT));
             if (!(val & DEPCMD_CMDACT)) {
                 if (!(val & DEPCMD_CMDIOC) && DEPCMD_CMD_GET(val) == DEPCMD_UPDATEXFER) {
 #ifdef DEBUG_DWC3
@@ -1652,10 +1627,13 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                 default: break;
             }
 
+            val &= ~DEPCMD_CMDACT;
+
             if (val & DEPCMD_CMDIOC) {
                 if ((val & DEPCMD_STATUS) && (ioc.status == 0)) { ioc.status = 1; }
                 dwc3_ep_event(s, epid, ioc);
             }
+            break;
         }
         default: break;
     }
