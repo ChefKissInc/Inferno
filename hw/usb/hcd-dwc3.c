@@ -1552,15 +1552,16 @@ static void usb_dwc3_depcmdreg_write(void* opaque, hwaddr addr, int index, uint6
                     break;
                 case DEPCMD_STARTXFER: {
                     dma_addr_t tdaddr = dwc3_addr64(par1, par0);
-                    assert_cmphex(tdaddr, !=, UINT64_MAX);
-                    if (ep->xfer) {
-                        qemu_log_mask(LOG_GUEST_ERROR, "DEPCMD_STARTXFER: xfer existed\n");
+                    if ((tdaddr & 0xf) != 0) {
+                        qemu_log_mask(LOG_GUEST_ERROR, "DEPCMD_STARTXFER: misaligned TD address 0x%" HWADDR_PRIx "\n",
+                                      tdaddr);
                         val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
                         break;
                     }
                     if (ep->xfer) {
-                        dwc3_td_free(s, ep->xfer);
-                        ep->xfer = NULL;
+                        qemu_log_mask(LOG_GUEST_ERROR, "DEPCMD_STARTXFER: xfer existed\n");
+                        val |= DEPCMD_STATUS_SET(DEPEVT_TRANSFER_NO_RESOURCE);
+                        break;
                     }
                     DPRINTF("%s: DEPCMD_STARTXFER: ep->epid: %d tdaddr: 0x%" HWADDR_PRIx "\n", __func__, ep->epid,
                             tdaddr);
