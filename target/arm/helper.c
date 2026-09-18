@@ -9974,7 +9974,7 @@ void arm_cpu_do_interrupt(CPUState* cs)
 
     arm_call_el_change_hook(cpu);
 
-    if (!kvm_enabled()) { cpu_set_interrupt(cs, CPU_INTERRUPT_EXITTB); }
+    if (tcg_enabled()) { cpu_set_interrupt(cs, CPU_INTERRUPT_EXITTB); }
 }
 
 uint64_t arm_sctlr(CPUARMState* env, int el)
