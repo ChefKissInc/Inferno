@@ -31,10 +31,10 @@ static int apple_spmi_baseband_send(SPMISlave* s, uint8_t* data, uint8_t len)
 {
     AppleSPMIBasebandState* p = APPLE_SPMI_BASEBAND(s);
     // bool aflg = false;
-    uint16_t addr;
+    uint16_t addr, end_addr;
     DPRINTF("%s: addr 0x%x len 0x%x\n", __func__, p->addr, len);
 
-    for (addr = p->addr; addr < p->addr + len; addr++) { p->reg[addr] = data[addr - p->addr]; }
+    for (addr = p->addr, end_addr = p->addr + len; addr < end_addr; addr++) { p->reg[addr] = data[addr - p->addr]; }
     if (p->addr == 0x147 && p->reg[p->addr] == 0x2f) {
         DPRINTF("%s: addr 0x%x valid\n", __func__, p->addr);
         // is this interrupt actually affecting anything?
@@ -50,10 +50,10 @@ static int apple_spmi_baseband_send(SPMISlave* s, uint8_t* data, uint8_t len)
 static int apple_spmi_baseband_recv(SPMISlave* s, uint8_t* data, uint8_t len)
 {
     AppleSPMIBasebandState* p = APPLE_SPMI_BASEBAND(s);
-    uint16_t                addr;
+    uint16_t                addr, end_addr;
     DPRINTF("%s: addr 0x%x len 0x%x\n", __func__, p->addr, len);
 
-    for (addr = p->addr; addr < p->addr + len; addr++) { data[addr - p->addr] = p->reg[addr]; }
+    for (addr = p->addr, end_addr = p->addr + len; addr < end_addr; addr++) { data[addr - p->addr] = p->reg[addr]; }
     p->addr = addr;
     return len;
 }
