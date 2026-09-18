@@ -9951,13 +9951,6 @@ void arm_cpu_do_interrupt(CPUState* cs)
                       env->exception.syndrome);
     }
 
-    if (tcg_enabled() && arm_is_psci_call(cpu, cs->exception_index)) {
-        BQL_LOCK_GUARD();
-        arm_handle_psci_call(cpu);
-        qemu_log_mask(CPU_LOG_INT, "...handled as PSCI call\n");
-        return;
-    }
-
     arm_call_pre_el_change_hook(cpu);
 
     assert(!excp_is_internal(cs->exception_index));

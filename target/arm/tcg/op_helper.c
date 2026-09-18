@@ -879,13 +879,6 @@ void HELPER(pre_hvc)(CPUARMState* env)
     bool secure = false;
     bool undef;
 
-    if (arm_is_psci_call(cpu, EXCP_HVC)) {
-        /* If PSCI is enabled and this looks like a valid PSCI call then
-         * that overrides the architecturally mandated HVC behaviour.
-         */
-        return;
-    }
-
     if (!arm_feature(env, ARM_FEATURE_EL2)) {
         /* If EL2 doesn't exist, HVC always UNDEFs */
         undef = true;
@@ -986,11 +979,8 @@ void HELPER(pre_smc)(CPUARMState* env, uint32_t syndrome)
         raise_exception(env, EXCP_HYP_TRAP, syndrome, 2);
     }
 
-    /* Catch the two remaining "Undef insn" cases of the previous table:
-     *    - PSCI conduit is SMC but we don't have a valid PCSI call,
-     *    - We don't have EL3 or SMD is set.
-     */
-    if (!arm_is_psci_call(cpu, EXCP_SMC) && (smd || !arm_feature(env, ARM_FEATURE_EL3))) {
+    /* Catch the remaining "Undef insn" case: no EL3, or SMD is set. */
+    if (smd || !arm_feature(env, ARM_FEATURE_EL3)) {
         raise_exception(env, EXCP_UDEF, syn_uncategorized(), exception_target_el(env));
     }
 }

@@ -46,7 +46,6 @@ arm_ss.add(when: 'TARGET_AARCH64', if_true: files(
 ))
 
 arm_system_ss.add(files(
-  'psci.c',
 ))
 
 arm_common_ss.add(zlib)
