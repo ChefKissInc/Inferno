@@ -797,6 +797,7 @@ static void apple_sep_aess_realize(DeviceState* dev, Error** errp)
     SysBusDevice*      sbd = SYS_BUS_DEVICE(dev);
 
     memory_region_init_io(&s->base_mr, OBJECT(dev), &apple_sep_aess_base_reg_ops, s, "base", AESS_BASE_REG_SIZE);
+    memory_region_enable_lockless_io(&s->base_mr);
     sysbus_init_mmio(sbd, &s->base_mr);
 }
 
