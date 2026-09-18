@@ -999,12 +999,9 @@ static void s8000_create_usb(AppleS8000MachineState* s8000)
     otg = apple_otg_from_node(complex);
     object_property_add_child(OBJECT(s8000), "otg", OBJECT(otg));
 
-    object_property_set_str(OBJECT(otg), "conn-type",
-                            qapi_enum_lookup(&USBTCPRemoteConnType_lookup, s8000->usb_conn_type), &error_fatal);
     if (s8000->usb_conn_addr != NULL) {
-        object_property_set_str(OBJECT(otg), "conn-addr", s8000->usb_conn_addr, &error_fatal);
+        object_property_set_str(OBJECT(otg), "addr", s8000->usb_conn_addr, &error_fatal);
     }
-    object_property_set_uint(OBJECT(otg), "conn-port", s8000->usb_conn_port, &error_fatal);
 
     prop = apple_dt_get_prop(phy, "reg");
     assert_nonnull(prop);
@@ -1460,14 +1457,12 @@ static char* s8000_get_boot_mode(Object* obj, Error** errp)
 PROP_VISIT_GETTER_SETTER(uint64, ecid);
 PROP_GETTER_SETTER(bool, kaslr_off);
 PROP_GETTER_SETTER(bool, force_dfu);
-PROP_GETTER_SETTER(int, usb_conn_type);
 PROP_STR_GETTER_SETTER(trustcache_filename);
 PROP_STR_GETTER_SETTER(ticket_filename);
 PROP_STR_GETTER_SETTER(sep_rom_filename);
 PROP_STR_GETTER_SETTER(sep_fw_filename);
 PROP_STR_GETTER_SETTER(securerom_filename);
 PROP_STR_GETTER_SETTER(usb_conn_addr);
-PROP_VISIT_GETTER_SETTER(uint16, usb_conn_port);
 
 static void s8000_class_init(ObjectClass* klass, const void* data)
 {
@@ -1503,14 +1498,8 @@ static void s8000_class_init(ObjectClass* klass, const void* data)
     object_class_property_set_description(klass, "ecid", "Device ECID");
     object_class_property_add_bool(klass, "force-dfu", s8000_get_force_dfu, s8000_set_force_dfu);
     object_class_property_set_description(klass, "force-dfu", "Force DFU");
-    object_class_property_add_enum(klass, "usb-conn-type", "USBTCPRemoteConnType", &USBTCPRemoteConnType_lookup,
-                                   s8000_get_usb_conn_type, s8000_set_usb_conn_type);
-    object_class_property_set_description(klass, "usb-conn-type", "USB Connection Type");
     object_class_property_add_str(klass, "usb-conn-addr", s8000_get_usb_conn_addr, s8000_set_usb_conn_addr);
     object_class_property_set_description(klass, "usb-conn-addr", "USB Connection Address");
-    object_class_property_add(klass, "usb-conn-port", "uint16", s8000_get_usb_conn_port, s8000_set_usb_conn_port, NULL,
-                              NULL);
-    object_class_property_set_description(klass, "usb-conn-port", "USB Connection Port");
 }
 
 static const TypeInfo s8000_info = {

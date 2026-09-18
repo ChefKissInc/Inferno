@@ -138,9 +138,7 @@ static void apple_typec_init(Object* obj)
     sysbus_init_mmio(sbd, &s->container);
 
     s->host = SYS_BUS_DEVICE(qdev_new(TYPE_USB_TCP_HOST));
-    object_property_add_alias(OBJECT(s), "conn-type", OBJECT(s->host), "conn-type");
-    object_property_add_alias(OBJECT(s), "conn-addr", OBJECT(s->host), "conn-addr");
-    object_property_add_alias(OBJECT(s), "conn-port", OBJECT(s->host), "conn-port");
+    object_property_add_alias(OBJECT(s), "addr", OBJECT(s->host), "addr");
 }
 
 static void apple_typec_class_init(ObjectClass* klass, const void* data)

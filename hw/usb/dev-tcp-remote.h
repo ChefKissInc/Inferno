@@ -63,15 +63,13 @@ struct USBTCPRemoteState
     QEMUBH* cleanup_bh;
     QEMUBH* send_bh;
 
-    USBTCPRemoteConnType conn_type;
-    char*                conn_addr;
-    uint16_t             conn_port;
-    int                  socket;
-    QIOChannel*          ioc;
-    uint8_t              addr;
-    bool                 closed;
-    bool                 stopped;
-    bool                 sending;
+    char*       listen_addr;
+    int         socket;
+    QIOChannel* ioc;
+    uint8_t     addr;
+    bool        closed;
+    bool        stopped;
+    bool        sending;
 };
 
 #define TYPE_USB_TCP_REMOTE "usb-tcp-remote"

@@ -334,148 +334,13 @@ static void coroutine_fn usb_tcp_host_msg_loop_co(void* opaque)
     return;
 }
 
-#ifdef WIN32
-static int usb_tcp_host_connect_unix(USBTCPHostState* s, Error** errp)
-{
-    error_setg(errp, "UNIX sockets are not supported on Windows");
-    return -1;
-}
-#else
-static int usb_tcp_host_connect_unix(USBTCPHostState* s, Error** errp)
-{
-    struct sockaddr_un addr = {0};
-    int                sock;
-
-    if (s->conn_port != 0) {
-        error_setg(errp, "Port specified for UNIX socket, this option is for "
-                         "IPv4/IPv6 connections");
-        return -1;
-    }
-
-    if (s->conn_addr == NULL) {
-        s->conn_addr = g_strdup(USB_TCP_REMOTE_UNIX_DEFAULT);
-        warn_report("No socket path specified, using default (`%s`).", USB_TCP_REMOTE_UNIX_DEFAULT);
-    }
-
-    addr.sun_family = AF_UNIX;
-    if (strlen(s->conn_addr) >= sizeof(addr.sun_path)) {
-        error_setg(errp, "Socket path too long: %s", s->conn_addr);
-        return -1;
-    }
-    strncpy(addr.sun_path, s->conn_addr, sizeof(addr.sun_path));
-
-    sock = qemu_socket(PF_UNIX, SOCK_STREAM, 0);
-    if (sock < 0) {
-        error_setg_errno(errp, errno, "Cannot open socket");
-        return -1;
-    }
-
-    if (connect(sock, (const struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        error_setg_errno(errp, errno, "Cannot connect to server");
-        close(sock);
-        return -1;
-    }
-
-    return sock;
-}
-#endif
-
-static int usb_tcp_host_connect_ipv4(USBTCPHostState* s, Error** errp)
-{
-    struct sockaddr_in addr = {0};
-    int                ret;
-    int                sock;
-
-    if (s->conn_port == 0) {
-        error_setg(errp, "Port must be specified.");
-        return -1;
-    }
-
-    if (s->conn_addr == NULL) {
-        error_setg(errp, "Address must be specified");
-        return -1;
-    }
-
-    addr.sin_family = AF_INET;
-    ret             = inet_pton(AF_INET, s->conn_addr, &addr.sin_addr.s_addr);
-    if (ret == 0) {
-        error_setg(errp, "Invalid IPv4 address: %s", s->conn_addr);
-        return -1;
-    }
-    else if (ret < 0) {
-        error_setg_errno(errp, errno, "inet_pton failed");
-        return -1;
-    }
-    addr.sin_port = htons(s->conn_port);
-
-    sock = qemu_socket(PF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
-        error_setg_errno(errp, errno, "Cannot open socket");
-        return -1;
-    }
-
-    if (socket_set_nodelay(sock) < 0) { warn_report("Failed to set nodelay for socket: %s", strerror(errno)); }
-
-    if (connect(sock, (const struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        error_setg_errno(errp, errno, "Cannot connect to server");
-        close(sock);
-        return -1;
-    }
-
-    return sock;
-}
-
-static int usb_tcp_host_connect_ipv6(USBTCPHostState* s, Error** errp)
-{
-    struct sockaddr_in6 addr = {0};
-    int                 ret;
-    int                 sock;
-
-    if (s->conn_port == 0) {
-        error_setg(errp, "Port must be specified.");
-        return -1;
-    }
-
-    if (s->conn_addr == NULL) {
-        error_setg(errp, "Address must be specified");
-        return -1;
-    }
-
-    addr.sin6_family = AF_INET6;
-    ret              = inet_pton(AF_INET6, s->conn_addr, &addr.sin6_addr);
-    if (ret == 0) {
-        error_setg(errp, "Invalid IPv6 address: %s", s->conn_addr);
-        return -1;
-    }
-    else if (ret < 0) {
-        error_setg_errno(errp, errno, "inet_pton failed");
-        return -1;
-    }
-    addr.sin6_port = htons(s->conn_port);
-
-    sock = qemu_socket(PF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
-        error_setg_errno(errp, errno, "Cannot open socket");
-        return -1;
-    }
-
-    if (socket_set_nodelay(sock) < 0) { warn_report("Failed to set nodelay for socket: %s", strerror(errno)); }
-
-    if (connect(sock, (const struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        error_setg_errno(errp, errno, "Cannot connect to server");
-        close(sock);
-        return -1;
-    }
-
-    return sock;
-}
-
 static bool usb_tcp_host_bus_populated(USBTCPHostState* s)
 {
     for (int i = 0; i < G_N_ELEMENTS(s->ports) - 1; i++) {
         USBDevice* dev = s->ports[i].dev;
         if (dev != NULL && dev->attached) { return true; }
     }
+
     return false;
 }
 
@@ -499,16 +364,14 @@ static bool usb_tcp_host_try_connect(USBTCPHostState* s)
     QIOChannel* ioc;
     Error*      err = NULL;
 
-    switch (s->conn_type) {
-        case TCP_REMOTE_CONN_TYPE_UNIX: sock = usb_tcp_host_connect_unix(s, &err); break;
-        case TCP_REMOTE_CONN_TYPE_IPV4: sock = usb_tcp_host_connect_ipv4(s, &err); break;
-        case TCP_REMOTE_CONN_TYPE_IPV6: sock = usb_tcp_host_connect_ipv6(s, &err); break;
-        default                       : assert_not_reached();
-    }
-
+    sock = socket_connect(s->sockaddr, &err);
     if (sock == -1) {
         error_free(err);
         return false;
+    }
+
+    if (s->sockaddr->type == SOCKET_ADDRESS_TYPE_INET && socket_set_nodelay(sock) < 0) {
+        warn_report("Failed to set nodelay for socket: %s", strerror(errno));
     }
 
     ioc = qio_channel_new_fd(sock, &err);
@@ -612,6 +475,14 @@ static void usb_tcp_host_realize(DeviceState* dev, Error** errp)
 
     s = USB_TCP_HOST(dev);
 
+    if (s->connect_addr == NULL) {
+        s->connect_addr = g_strdup(USB_TCP_REMOTE_ADDR_DEFAULT);
+        warn_report("No address specified, using default (`%s`).", USB_TCP_REMOTE_ADDR_DEFAULT);
+    }
+
+    s->sockaddr = socket_parse(s->connect_addr, errp);
+    if (s->sockaddr == NULL) { return; }
+
     usb_bus_new(&s->bus, sizeof(s->bus), &usb_tcp_bus_ops, dev);
     for (i = 0; i < G_N_ELEMENTS(s->ports); i++) {
         usb_register_port(&s->bus, &s->ports[i], s, i, &usb_tcp_host_port_ops,
@@ -641,6 +512,9 @@ static void usb_tcp_host_unrealize(DeviceState* dev)
         qemu_bh_delete(s->reset_bh);
         s->reset_bh = NULL;
     }
+
+    qapi_free_SocketAddress(s->sockaddr);
+    s->sockaddr = NULL;
 }
 
 static void usb_tcp_host_init(Object* obj)
@@ -650,9 +524,7 @@ static void usb_tcp_host_init(Object* obj)
 }
 
 static const Property usb_tcp_host_props[] = {
-    DEFINE_PROP_USB_TCP_REMOTE_CONN_TYPE("conn-type", USBTCPHostState, conn_type, TCP_REMOTE_CONN_TYPE_UNIX),
-    DEFINE_PROP_STRING("conn-addr", USBTCPHostState, conn_addr),
-    DEFINE_PROP_UINT16("conn-port", USBTCPHostState, conn_port, 0),
+    DEFINE_PROP_STRING("addr", USBTCPHostState, connect_addr),
 };
 
 static void usb_tcp_host_class_init(ObjectClass* klass, const void* data)

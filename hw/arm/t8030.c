@@ -1382,12 +1382,9 @@ static void t8030_create_usb(AppleT8030MachineState* t8030)
     atc = qdev_new(TYPE_APPLE_TYPEC);
     object_property_add_child(OBJECT(t8030), "atc", OBJECT(atc));
 
-    object_property_set_str(OBJECT(atc), "conn-type",
-                            qapi_enum_lookup(&USBTCPRemoteConnType_lookup, t8030->usb_conn_type), &error_fatal);
     if (t8030->usb_conn_addr != NULL) {
-        object_property_set_str(OBJECT(atc), "conn-addr", t8030->usb_conn_addr, &error_fatal);
+        object_property_set_str(OBJECT(atc), "addr", t8030->usb_conn_addr, &error_fatal);
     }
-    object_property_set_uint(OBJECT(atc), "conn-port", t8030->usb_conn_port, &error_fatal);
 
     prop = apple_dt_get_prop(dart_mapper, "reg");
     assert_nonnull(prop);
@@ -2716,14 +2713,12 @@ static char* t8030_get_boot_mode(Object* obj, Error** errp)
 PROP_VISIT_GETTER_SETTER(uint64, ecid);
 PROP_GETTER_SETTER(bool, kaslr_off);
 PROP_GETTER_SETTER(bool, force_dfu);
-PROP_GETTER_SETTER(int, usb_conn_type);
 PROP_STR_GETTER_SETTER(trustcache_filename);
 PROP_STR_GETTER_SETTER(ticket_filename);
 PROP_STR_GETTER_SETTER(sep_rom_filename);
 PROP_STR_GETTER_SETTER(sep_fw_filename);
 PROP_STR_GETTER_SETTER(securerom_filename);
 PROP_STR_GETTER_SETTER(usb_conn_addr);
-PROP_VISIT_GETTER_SETTER(uint16, usb_conn_port);
 PROP_STR_GETTER_SETTER(model_number);
 PROP_STR_GETTER_SETTER(region_info);
 PROP_STR_GETTER_SETTER(config_number);
@@ -2769,14 +2764,8 @@ static void t8030_class_init(ObjectClass* klass, const void* data)
     object_class_property_set_description(klass, "kaslr-off", "Disable KASLR");
     object_class_property_add_bool(klass, "force-dfu", t8030_get_force_dfu, t8030_set_force_dfu);
     object_class_property_set_description(klass, "force-dfu", "Force DFU");
-    object_class_property_add_enum(klass, "usb-conn-type", "USBTCPRemoteConnType", &USBTCPRemoteConnType_lookup,
-                                   t8030_get_usb_conn_type, t8030_set_usb_conn_type);
-    object_class_property_set_description(klass, "usb-conn-type", "USB Connection Type");
     object_class_property_add_str(klass, "usb-conn-addr", t8030_get_usb_conn_addr, t8030_set_usb_conn_addr);
     object_class_property_set_description(klass, "usb-conn-addr", "USB Connection Address");
-    object_class_property_add(klass, "usb-conn-port", "uint16", t8030_get_usb_conn_port, t8030_set_usb_conn_port, NULL,
-                              NULL);
-    object_class_property_set_description(klass, "usb-conn-port", "USB Connection Port");
     oprop = object_class_property_add_str(klass, "model", t8030_get_model_number, t8030_set_model_number);
     object_property_set_default_str(oprop, "CKI12");
     object_class_property_set_description(klass, "model", "Model Number");

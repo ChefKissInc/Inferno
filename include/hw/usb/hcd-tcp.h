@@ -25,6 +25,7 @@
 #include "qemu/timer.h"
 #include "hw/usb/tcp-usb.h"
 #include "io/channel.h"
+#include "qapi/qapi-types-sockets.h"
 #include "qemu/coroutine.h"
 #include "qom/object.h"
 
@@ -44,15 +45,14 @@ struct USBTCPHostState
 {
     SysBusDevice parent_obj;
 
-    USBBus               bus;
-    USBPort              ports[3];
-    QEMUTimer*           retry_timer;
-    QEMUBH*              reset_bh;
-    QIOChannel*          ioc;
-    CoMutex              write_mutex;
-    bool                 closed;
-    bool                 stopped;
-    USBTCPRemoteConnType conn_type;
-    char*                conn_addr;
-    uint16_t             conn_port;
+    USBBus         bus;
+    USBPort        ports[3];
+    QEMUTimer*     retry_timer;
+    QEMUBH*        reset_bh;
+    QIOChannel*    ioc;
+    CoMutex        write_mutex;
+    bool           closed;
+    bool           stopped;
+    char*          connect_addr;
+    SocketAddress* sockaddr;
 };
