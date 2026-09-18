@@ -23,6 +23,7 @@
  */
 
 #include "qemu/osdep.h"
+#include "qemu/main-loop.h"
 #include "qemu/module.h"
 #include "qemu/sockets.h"
 #include "qapi/error.h"
@@ -98,6 +99,8 @@ static gboolean fd_source_check(GSource* source)
 
 static gboolean fd_source_dispatch(GSource* source, GSourceFunc callback, gpointer user_data)
 {
+    BQL_LOCK_GUARD_SOURCE(source);
+
     FDSource*   src  = (FDSource*)source;
     FEWatchFunc func = (FEWatchFunc)callback;
     gboolean    ret  = G_SOURCE_CONTINUE;

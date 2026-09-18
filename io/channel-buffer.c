@@ -21,6 +21,7 @@
 #include "qemu/osdep.h"
 #include "io/channel-buffer.h"
 #include "io/channel-watch.h"
+#include "qemu/main-loop.h"
 #include "qemu/module.h"
 #include "qemu/sockets.h"
 #include "trace.h"
@@ -145,6 +146,8 @@ static gboolean qio_channel_buffer_source_check(GSource* source)
 
 static gboolean qio_channel_buffer_source_dispatch(GSource* source, GSourceFunc callback, gpointer user_data)
 {
+    BQL_LOCK_GUARD_SOURCE(source);
+
     QIOChannelFunc          func    = (QIOChannelFunc)callback;
     QIOChannelBufferSource* bsource = (QIOChannelBufferSource*)source;
 

@@ -20,6 +20,7 @@
 
 #include "qemu/osdep.h"
 #include "io/channel-watch.h"
+#include "qemu/main-loop.h"
 
 typedef struct QIOChannelFDSource QIOChannelFDSource;
 struct QIOChannelFDSource
@@ -70,6 +71,8 @@ static gboolean qio_channel_fd_source_check(GSource* source)
 
 static gboolean qio_channel_fd_source_dispatch(GSource* source, GSourceFunc callback, gpointer user_data)
 {
+    BQL_LOCK_GUARD_SOURCE(source);
+
     QIOChannelFunc      func    = (QIOChannelFunc)callback;
     QIOChannelFDSource* ssource = (QIOChannelFDSource*)source;
 
@@ -121,6 +124,8 @@ static gboolean qio_channel_socket_source_check(GSource* source)
 
 static gboolean qio_channel_socket_source_dispatch(GSource* source, GSourceFunc callback, gpointer user_data)
 {
+    BQL_LOCK_GUARD_SOURCE(source);
+
     QIOChannelFunc          func    = (QIOChannelFunc)callback;
     QIOChannelSocketSource* ssource = (QIOChannelSocketSource*)source;
 
@@ -155,6 +160,8 @@ static gboolean qio_channel_fd_pair_source_check(GSource* source)
 
 static gboolean qio_channel_fd_pair_source_dispatch(GSource* source, GSourceFunc callback, gpointer user_data)
 {
+    BQL_LOCK_GUARD_SOURCE(source);
+
     QIOChannelFunc          func           = (QIOChannelFunc)callback;
     QIOChannelFDPairSource* ssource        = (QIOChannelFDPairSource*)source;
     GIOCondition            poll_condition = ssource->fdread.revents | ssource->fdwrite.revents;

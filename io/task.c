@@ -19,6 +19,7 @@
  */
 
 #include "qemu/osdep.h"
+#include "qemu/main-loop.h"
 #include "io/task.h"
 #include "qapi/error.h"
 #include "qemu/thread.h"
@@ -93,6 +94,8 @@ static void qio_task_free(QIOTask* task)
 static gboolean qio_task_thread_result(gpointer opaque)
 {
     QIOTask* task = opaque;
+
+    BQL_LOCK_GUARD_CONTEXT(task->thread->context);
 
     trace_qio_task_thread_result(task);
     qio_task_complete(task);

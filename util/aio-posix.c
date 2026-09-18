@@ -361,6 +361,13 @@ static bool aio_dispatch_handlers(AioContext* ctx)
 
 void aio_dispatch(AioContext* ctx)
 {
+    /*
+     * Must cover the whole dispatch: the BQL is what keeps it from running
+     * concurrently with an aio_poll() on the same context, which a vCPU
+     * reaches holding the BQL via a synchronous blk_pread().
+     */
+    BQL_LOCK_GUARD_IF(ctx == qemu_get_aio_context());
+
     qemu_lockcnt_inc(&ctx->list_lock);
     aio_bh_poll(ctx);
     aio_dispatch_handlers(ctx);

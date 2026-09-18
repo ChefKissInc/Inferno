@@ -392,7 +392,12 @@ bool timerlist_run_timers(QEMUTimerList* timer_list)
 
         /* run the callback (the timer list can be modified) */
         qemu_mutex_unlock(&timer_list->active_timers_lock);
-        cb(opaque);
+        {
+            /* Main loop timers run under the BQL; IOThread ones must not. */
+            BQL_LOCK_GUARD_IF(timer_list == main_loop_tlg.tl[timer_list->clock->type]);
+
+            cb(opaque);
+        }
         qemu_mutex_lock(&timer_list->active_timers_lock);
 
         progress = true;

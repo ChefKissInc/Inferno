@@ -23,6 +23,7 @@
  */
 
 #include "qemu/osdep.h"
+#include "qemu/main-loop.h"
 #include "chardev/char.h"
 #include "io/channel-socket.h"
 #include "io/channel-websock.h"
@@ -1049,6 +1050,8 @@ static gboolean socket_reconnect_timeout(gpointer opaque)
 {
     Chardev*       chr = CHARDEV(opaque);
     SocketChardev* s   = SOCKET_CHARDEV(opaque);
+
+    BQL_LOCK_GUARD_CONTEXT(chr->gcontext);
 
     qemu_mutex_lock(&chr->chr_write_lock);
     g_source_unref(s->reconnect_timer);

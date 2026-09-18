@@ -21,6 +21,7 @@
 #include "qemu/osdep.h"
 #include "qapi/error.h"
 #include "qemu/bswap.h"
+#include "qemu/main-loop.h"
 #include "io/channel-websock.h"
 #include "crypto/hash.h"
 #include "trace.h"
@@ -1058,6 +1059,8 @@ static gboolean qio_channel_websock_source_prepare(GSource* source, gint* timeou
 
 static gboolean qio_channel_websock_source_dispatch(GSource* source, GSourceFunc callback, gpointer user_data)
 {
+    BQL_LOCK_GUARD_SOURCE(source);
+
     QIOChannelFunc           func    = (QIOChannelFunc)callback;
     QIOChannelWebsockSource* wsource = (QIOChannelWebsockSource*)source;
 

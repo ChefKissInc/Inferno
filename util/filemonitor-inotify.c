@@ -178,6 +178,8 @@ static gboolean qemu_file_monitor_free_idle(void* opaque)
 
     if (!mon) { return G_SOURCE_REMOVE; }
 
+    BQL_LOCK_GUARD();
+
     qemu_mutex_lock(&mon->lock);
 
     g_hash_table_unref(mon->idmap);

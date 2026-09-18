@@ -22,6 +22,7 @@
 #include "io/channel-null.h"
 #include "io/channel-watch.h"
 #include "qapi/error.h"
+#include "qemu/main-loop.h"
 #include "trace.h"
 #include "qemu/iov.h"
 
@@ -108,6 +109,8 @@ static gboolean qio_channel_null_source_check(GSource* source G_GNUC_UNUSED) { r
 
 static gboolean qio_channel_null_source_dispatch(GSource* source, GSourceFunc callback, gpointer user_data)
 {
+    BQL_LOCK_GUARD_SOURCE(source);
+
     QIOChannelFunc        func    = (QIOChannelFunc)callback;
     QIOChannelNullSource* ssource = (QIOChannelNullSource*)source;
 

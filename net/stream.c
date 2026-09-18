@@ -24,6 +24,7 @@
  */
 
 #include "qemu/osdep.h"
+#include "qemu/main-loop.h"
 
 #include "net/net.h"
 #include "clients.h"
@@ -205,6 +206,8 @@ static gboolean net_stream_reconnect(gpointer data)
 {
     NetStreamState*   s = data;
     QIOChannelSocket* sioc;
+
+    BQL_LOCK_GUARD();
 
     s->timer_tag = 0;
 

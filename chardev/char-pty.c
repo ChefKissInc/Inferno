@@ -23,6 +23,7 @@
  */
 
 #include "qemu/osdep.h"
+#include "qemu/main-loop.h"
 #include "qapi/error.h"
 #include "chardev/char.h"
 #include "io/channel-file.h"
@@ -65,6 +66,8 @@ static gboolean pty_chr_timer(gpointer opaque)
 {
     struct Chardev* chr = CHARDEV(opaque);
     PtyChardev*     s   = PTY_CHARDEV(opaque);
+
+    BQL_LOCK_GUARD_CONTEXT(chr->gcontext);
 
     pty_chr_timer_cancel(s);
     if (!s->connected) {
