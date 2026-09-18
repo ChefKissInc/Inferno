@@ -470,10 +470,7 @@ int kvm_arch_init(MachineState* ms, KVMState* s)
     /* For ARM interrupt delivery is always asynchronous. */
     kvm_async_interrupts_allowed = true;
 
-    /*
-     * PSCI wakes up secondary cores, so we always need to
-     * have vCPUs waiting in kernel space
-     */
+    /* Secondary cores are woken from outside, so vCPUs wait in kernel space. */
     kvm_halt_in_kernel_allowed = true;
 
     cap_has_mp_state = kvm_check_extension(s, KVM_CAP_MP_STATE);
@@ -1522,7 +1519,6 @@ int kvm_arch_init_vcpu(CPUState* cs)
     uint64_t     mpidr;
     ARMCPU*      cpu = ARM_CPU(cs);
     CPUARMState* env = &cpu->env;
-    uint64_t     psciver;
 
     if (cpu->kvm_target == QEMU_KVM_ARM_TARGET_NONE) {
         error_report("KVM is not supported for this guest CPU type");
@@ -1534,10 +1530,6 @@ int kvm_arch_init_vcpu(CPUState* cs)
     /* Determine init features for this CPU */
     memset(cpu->kvm_init_features, 0, sizeof(cpu->kvm_init_features));
     if (cs->start_powered_off) { cpu->kvm_init_features[0] |= 1 << KVM_ARM_VCPU_POWER_OFF; }
-    if (kvm_check_extension(cs->kvm_state, KVM_CAP_ARM_PSCI_0_2)) {
-        cpu->psci_version          = QEMU_PSCI_VERSION_0_2;
-        cpu->kvm_init_features[0] |= 1 << KVM_ARM_VCPU_PSCI_0_2;
-    }
     if (!arm_feature(env, ARM_FEATURE_AARCH64)) { cpu->kvm_init_features[0] |= 1 << KVM_ARM_VCPU_EL1_32BIT; }
     if (cpu->has_pmu) { cpu->kvm_init_features[0] |= 1 << KVM_ARM_VCPU_PMU_V3; }
     if (cpu_isar_feature(aa64_sve, cpu)) {
@@ -1561,16 +1553,6 @@ int kvm_arch_init_vcpu(CPUState* cs)
     }
 
     /*
-     * KVM reports the exact PSCI version it is implementing via a
-     * special sysreg. If it is present, use its contents to determine
-     * what to report to the guest in the dtb (it is the PSCI version,
-     * in the same 15-bits major 16-bits minor format that PSCI_VERSION
-     * returns).
-     */
-    if (!kvm_get_one_reg(cs, KVM_REG_ARM_PSCI_VERSION, &psciver)) { cpu->psci_version = psciver; }
-
-    /*
-     * When KVM is in use, PSCI is emulated in-kernel and not by qemu.
      * Currently KVM has its own idea about MPIDR assignment, so we
      * override our defaults with what we get from KVM.
      */
