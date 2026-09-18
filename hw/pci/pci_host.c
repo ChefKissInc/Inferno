@@ -206,14 +206,12 @@ static void pci_host_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo pci_host_type_info = {
-    .name          = TYPE_PCI_HOST_BRIDGE,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .abstract      = true,
-    .class_size    = sizeof(PCIHostBridgeClass),
-    .instance_size = sizeof(PCIHostState),
-    .class_init    = pci_host_class_init,
+    .name       = TYPE_PCI_HOST_BRIDGE,
+    .parent     = TYPE_SYS_BUS_DEVICE,
+    .abstract   = true,
+    .class_size = sizeof(PCIHostBridgeClass),
+    OBJECT_TYPE_INSTANCE(PCIHostState),
+    .class_init = pci_host_class_init,
 };
 
-static void pci_host_register_types(void) { type_register_static(&pci_host_type_info); }
-
-type_init(pci_host_register_types)
+DEFINE_TYPE(pci_host_type_info)

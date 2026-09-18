@@ -36,10 +36,10 @@ static void char_null_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_null_type_info = {
-    .name          = TYPE_CHARDEV_NULL,
-    .parent        = TYPE_CHARDEV,
-    .instance_size = sizeof(Chardev),
-    .class_init    = char_null_class_init,
+    .name   = TYPE_CHARDEV_NULL,
+    .parent = TYPE_CHARDEV,
+    OBJECT_TYPE_INSTANCE(Chardev),
+    .class_init = char_null_class_init,
 };
 
 static void register_types(void) { type_register_static(&char_null_type_info); }

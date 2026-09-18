@@ -7565,25 +7565,20 @@ static void nvme_instance_init(Object* obj)
                         NULL);
 }
 
-static const TypeInfo nvme_info = {
-    .name          = TYPE_NVME,
-    .parent        = TYPE_PCI_DEVICE,
-    .instance_size = sizeof(NvmeCtrl),
-    .instance_init = nvme_instance_init,
-    .class_init    = nvme_class_init,
-    .interfaces    = (const InterfaceInfo[]){{INTERFACE_PCIE_DEVICE}, {}},
+static const TypeInfo nvme_types[] = {
+    {
+        .name   = TYPE_NVME,
+        .parent = TYPE_PCI_DEVICE,
+        OBJECT_TYPE_INSTANCE(NvmeCtrl),
+        .instance_init = nvme_instance_init,
+        .class_init    = nvme_class_init,
+        .interfaces    = (const InterfaceInfo[]){{INTERFACE_PCIE_DEVICE}, {}},
+    },
+    {
+        .name   = TYPE_NVME_BUS,
+        .parent = TYPE_BUS,
+        OBJECT_TYPE_INSTANCE(NvmeBus),
+    },
 };
 
-static const TypeInfo nvme_bus_info = {
-    .name          = TYPE_NVME_BUS,
-    .parent        = TYPE_BUS,
-    .instance_size = sizeof(NvmeBus),
-};
-
-static void nvme_register_types(void)
-{
-    type_register_static(&nvme_info);
-    type_register_static(&nvme_bus_info);
-}
-
-type_init(nvme_register_types)
+DEFINE_TYPES(nvme_types)

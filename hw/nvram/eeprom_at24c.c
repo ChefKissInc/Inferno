@@ -262,11 +262,11 @@ static void at24c_eeprom_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo at24c_eeprom_type = {
-    .name          = TYPE_AT24C_EE,
-    .parent        = TYPE_I2C_SLAVE,
-    .instance_size = sizeof(EEPROMState),
-    .class_size    = sizeof(I2CSlaveClass),
-    .class_init    = at24c_eeprom_class_init,
+    .name   = TYPE_AT24C_EE,
+    .parent = TYPE_I2C_SLAVE,
+    OBJECT_TYPE_INSTANCE(EEPROMState),
+    .class_size = sizeof(I2CSlaveClass),
+    .class_init = at24c_eeprom_class_init,
 };
 
 static void at24c_eeprom_register(void) { type_register_static(&at24c_eeprom_type); }

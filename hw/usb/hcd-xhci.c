@@ -3060,13 +3060,4 @@ static void xhci_class_init(ObjectClass* klass, const void* data)
     dc->user_creatable = false;
 }
 
-static const TypeInfo xhci_info = {
-    .name          = TYPE_XHCI,
-    .parent        = TYPE_DEVICE,
-    .instance_size = sizeof(XHCIState),
-    .class_init    = xhci_class_init,
-};
-
-static void xhci_register_types(void) { type_register_static(&xhci_info); }
-
-type_init(xhci_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(XHCIState, xhci, XHCI, DEVICE)

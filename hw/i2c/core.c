@@ -21,12 +21,6 @@ static const Property i2c_props[] = {
     DEFINE_PROP_UINT8("address", struct I2CSlave, address, 0),
 };
 
-static const TypeInfo i2c_bus_info = {
-    .name          = TYPE_I2C_BUS,
-    .parent        = TYPE_BUS,
-    .instance_size = sizeof(I2CBus),
-};
-
 /* Create a new I2C bus.  */
 I2CBus* i2c_init_bus(DeviceState* parent, const char* name)
 {
@@ -320,19 +314,20 @@ static void i2c_slave_class_init(ObjectClass* klass, const void* data)
     sc->match_and_add = i2c_slave_match;
 }
 
-static const TypeInfo i2c_slave_type_info = {
-    .name          = TYPE_I2C_SLAVE,
-    .parent        = TYPE_DEVICE,
-    .instance_size = sizeof(I2CSlave),
-    .abstract      = true,
-    .class_size    = sizeof(I2CSlaveClass),
-    .class_init    = i2c_slave_class_init,
+static const TypeInfo i2c_slave_types[] = {
+    {
+        .name   = TYPE_I2C_BUS,
+        .parent = TYPE_BUS,
+        OBJECT_TYPE_INSTANCE(I2CBus),
+    },
+    {
+        .name   = TYPE_I2C_SLAVE,
+        .parent = TYPE_DEVICE,
+        OBJECT_TYPE_INSTANCE(I2CSlave),
+        .abstract   = true,
+        .class_size = sizeof(I2CSlaveClass),
+        .class_init = i2c_slave_class_init,
+    },
 };
 
-static void i2c_slave_register_types(void)
-{
-    type_register_static(&i2c_bus_info);
-    type_register_static(&i2c_slave_type_info);
-}
-
-type_init(i2c_slave_register_types)
+DEFINE_TYPES(i2c_slave_types)

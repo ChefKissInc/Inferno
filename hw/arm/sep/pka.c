@@ -36,36 +36,36 @@ struct AppleSEPPKAState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState* sep;
-    QEMUBH*        command_bh;    // currently unused
-    QemuMutex      lock;
-    MemoryRegion   base_mr;
-    MemoryRegion   tmm_mr;
-    uint32_t       command;                    // 0x0
-    uint32_t       status0;                    // 0x4
-    uint32_t       status_in0;                 // 0x8
-    uint32_t       img4out_dgst_locked;        // 0x40
-    uint8_t        img4out_dgst[32];           // 0x60
-    uint8_t        output0[32];                // 0x60 ; read_cmd_0x2
-    uint8_t        input0[0x80];               // 0x80 ; write_cmd_0x0 ; SMRK_pub ; 1024 bits ;
-                                               // measurement==0x34_bytes
-    uint8_t        public_key[32];             // 0x100 // for AESS ; read_cmd_0x0 ; read
-                                               // public_key ; status_in0 needs to be 0x1
-    uint8_t        attest_hash[32];            // 0x180 ; read_cmd_0x3 ; read attest_hash ;
-                                               // status_in0 needs to be 0x1
-    uint8_t        input1[0x20A];              // 0x200 .. 0x40A (not inclusive) ; write_cmd_0x1 ;
-                                               // 4176 bits, maybe rsa input?
-    uint32_t       chip_revision_locked;       // 0x800
-    uint32_t       chip_revision;              // 0x820 ; mod_PKA_read buffer_id 0xd asks for that
-    uint32_t       ecid_chipid_misc_locked;    // 0x840
-    uint32_t       ecid_chipid_misc[5];        // 0x860
-    uint8_t        pka_base_regs[PKA_BASE_REG_SIZE];
-    uint8_t        pka_tmm_regs[PKA_TMM_REG_SIZE];
+    AppleSEP*    sep;
+    QEMUBH*      command_bh;    // currently unused
+    QemuMutex    lock;
+    MemoryRegion base_mr;
+    MemoryRegion tmm_mr;
+    uint32_t     command;                    // 0x0
+    uint32_t     status0;                    // 0x4
+    uint32_t     status_in0;                 // 0x8
+    uint32_t     img4out_dgst_locked;        // 0x40
+    uint8_t      img4out_dgst[32];           // 0x60
+    uint8_t      output0[32];                // 0x60 ; read_cmd_0x2
+    uint8_t      input0[0x80];               // 0x80 ; write_cmd_0x0 ; SMRK_pub ; 1024 bits ;
+                                             // measurement==0x34_bytes
+    uint8_t      public_key[32];             // 0x100 // for AESS ; read_cmd_0x0 ; read
+                                             // public_key ; status_in0 needs to be 0x1
+    uint8_t      attest_hash[32];            // 0x180 ; read_cmd_0x3 ; read attest_hash ;
+                                             // status_in0 needs to be 0x1
+    uint8_t      input1[0x20A];              // 0x200 .. 0x40A (not inclusive) ; write_cmd_0x1 ;
+                                             // 4176 bits, maybe rsa input?
+    uint32_t     chip_revision_locked;       // 0x800
+    uint32_t     chip_revision;              // 0x820 ; mod_PKA_read buffer_id 0xd asks for that
+    uint32_t     ecid_chipid_misc_locked;    // 0x840
+    uint32_t     ecid_chipid_misc[5];        // 0x860
+    uint8_t      pka_base_regs[PKA_BASE_REG_SIZE];
+    uint8_t      pka_tmm_regs[PKA_TMM_REG_SIZE];
 };
 
 static void pka_handle_cmd(AppleSEPPKAState* s)
 {
-    AppleSEPState* sep = s->sep;
+    AppleSEP* sep = s->sep;
 
     // values: 0x4/0x8/0x10/0x20/0x40/0x80/0x100
     if (s->command == 0x40) {    // migrate data with PKA
@@ -95,7 +95,7 @@ static void pka_handle_cmd_bh(void* opaque)
 static void pka_base_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigned size)
 {
     AppleSEPPKAState* s   = opaque;
-    AppleSEPState*    sep = s->sep;
+    AppleSEP*         sep = s->sep;
 
     QEMU_LOCK_GUARD(&s->lock);
 
@@ -160,7 +160,7 @@ static void pka_base_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigne
 static uint64_t pka_base_reg_read(void* opaque, hwaddr addr, unsigned size)
 {
     AppleSEPPKAState* s   = opaque;
-    AppleSEPState*    sep = s->sep;
+    AppleSEP*         sep = s->sep;
     uint64_t          ret = 0;
 
     QEMU_LOCK_GUARD(&s->lock);
@@ -326,20 +326,9 @@ static void apple_sep_pka_class_init(ObjectClass* klass, const void* class_data)
     dc->realize      = apple_sep_pka_realize;
 }
 
-static const TypeInfo apple_sep_pka_type_info = {
-    .name           = TYPE_APPLE_SEP_PKA,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_pka_class_init,
-    .instance_size  = sizeof(AppleSEPPKAState),
-    .instance_align = __alignof__(AppleSEPPKAState),
-    .instance_init  = apple_sep_pka_init,
-};
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(AppleSEPPKAState, apple_sep_pka, APPLE_SEP_PKA, SYS_BUS_DEVICE)
 
-static void apple_sep_pka_register_types(void) { type_register_static(&apple_sep_pka_type_info); }
-
-type_init(apple_sep_pka_register_types);
-
-AppleSEPPKAState* apple_sep_pka_create(AppleSEPState* sep)
+AppleSEPPKAState* apple_sep_pka_create(AppleSEP* sep)
 {
     AppleSEPPKAState* s = APPLE_SEP_PKA(qdev_new(TYPE_APPLE_SEP_PKA));
 

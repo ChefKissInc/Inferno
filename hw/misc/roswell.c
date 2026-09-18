@@ -158,13 +158,4 @@ static void apple_roswell_class_init(ObjectClass* klass, const void* data)
     c->send = apple_roswell_tx;
 }
 
-static const TypeInfo apple_roswell_type_info = {
-    .name          = TYPE_APPLE_ROSWELL,
-    .parent        = TYPE_I2C_SLAVE,
-    .instance_size = sizeof(AppleRoswellState),
-    .class_init    = apple_roswell_class_init,
-};
-
-static void apple_roswell_register_types(void) { type_register_static(&apple_roswell_type_info); }
-
-type_init(apple_roswell_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleRoswellState, apple_roswell, APPLE_ROSWELL, I2C_SLAVE)

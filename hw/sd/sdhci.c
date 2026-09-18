@@ -1664,15 +1664,15 @@ static void sdhci_s3c_init(Object* obj)
 
 static const TypeInfo sdhci_types[] = {
     {
-        .name          = TYPE_SDHCI_BUS,
-        .parent        = TYPE_SD_BUS,
-        .instance_size = sizeof(SDBus),
-        .class_init    = sdhci_bus_class_init,
+        .name   = TYPE_SDHCI_BUS,
+        .parent = TYPE_SD_BUS,
+        OBJECT_TYPE_INSTANCE(SDBus),
+        .class_init = sdhci_bus_class_init,
     },
     {
-        .name              = TYPE_SYSBUS_SDHCI,
-        .parent            = TYPE_SYS_BUS_DEVICE,
-        .instance_size     = sizeof(SDHCIState),
+        .name   = TYPE_SYSBUS_SDHCI,
+        .parent = TYPE_SYS_BUS_DEVICE,
+        OBJECT_TYPE_INSTANCE(SDHCIState),
         .instance_init     = sdhci_sysbus_init,
         .instance_finalize = sdhci_sysbus_finalize,
         .class_init        = sdhci_sysbus_class_init,

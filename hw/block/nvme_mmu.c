@@ -265,13 +265,4 @@ static void apple_nvme_mmu_class_init(ObjectClass* klass, const void* data)
     dc->fw_name = "pci";
 }
 
-static const TypeInfo apple_nvme_mmu_info = {
-    .name          = TYPE_APPLE_NVME_MMU,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleNVMeMMUState),
-    .class_init    = apple_nvme_mmu_class_init,
-};
-
-static void apple_nvme_mmu_register_types(void) { type_register_static(&apple_nvme_mmu_info); }
-
-type_init(apple_nvme_mmu_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleNVMeMMUState, apple_nvme_mmu, APPLE_NVME_MMU, SYS_BUS_DEVICE)

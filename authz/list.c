@@ -200,13 +200,11 @@ ssize_t qauthz_list_delete_rule(QAuthZList* auth, const char* match)
     return -1;
 }
 
-static const TypeInfo qauthz_list_info = {.parent            = TYPE_QAUTHZ,
-                                          .name              = TYPE_QAUTHZ_LIST,
-                                          .instance_size     = sizeof(QAuthZList),
+static const TypeInfo qauthz_list_info = {.parent = TYPE_QAUTHZ,
+                                          .name   = TYPE_QAUTHZ_LIST,
+                                          OBJECT_TYPE_INSTANCE(QAuthZList),
                                           .instance_finalize = qauthz_list_finalize,
                                           .class_init        = qauthz_list_class_init,
                                           .interfaces        = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void qauthz_list_register_types(void) { type_register_static(&qauthz_list_info); }
-
-type_init(qauthz_list_register_types);
+DEFINE_TYPE(qauthz_list_info)

@@ -270,7 +270,7 @@ static void can_host_socketcan_set_if(Object* obj, const char* value, Error** er
     c->ifname = g_strdup(value);
 }
 
-static void can_host_socketcan_instance_init(Object* obj)
+static void can_host_socketcan_init(Object* obj)
 {
     CanHostSocketCAN* c = CAN_HOST_SOCKETCAN(obj);
 
@@ -286,14 +286,4 @@ static void can_host_socketcan_class_init(ObjectClass* klass, const void* class_
     chc->disconnect = can_host_socketcan_disconnect;
 }
 
-static const TypeInfo can_host_socketcan_info = {
-    .parent        = TYPE_CAN_HOST,
-    .name          = TYPE_CAN_HOST_SOCKETCAN,
-    .instance_size = sizeof(CanHostSocketCAN),
-    .instance_init = can_host_socketcan_instance_init,
-    .class_init    = can_host_socketcan_class_init,
-};
-
-static void can_host_register_types(void) { type_register_static(&can_host_socketcan_info); }
-
-type_init(can_host_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(CanHostSocketCAN, can_host_socketcan, CAN_HOST_SOCKETCAN, CAN_HOST)

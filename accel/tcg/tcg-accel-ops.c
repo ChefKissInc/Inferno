@@ -211,5 +211,4 @@ static const TypeInfo tcg_accel_ops_type = {
 };
 module_obj(ACCEL_OPS_NAME("tcg"));
 
-static void tcg_accel_ops_register_types(void) { type_register_static(&tcg_accel_ops_type); }
-type_init(tcg_accel_ops_register_types);
+DEFINE_TYPE(tcg_accel_ops_type)

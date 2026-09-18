@@ -414,7 +414,7 @@ static void pmu_d2255_class_init(ObjectClass* klass, const void* data)
     c->send  = pmu_d2255_tx;
 }
 
-static void pmu_d2255_instance_init(Object* obj)
+static void pmu_d2255_init(Object* obj)
 {
     PMUD2255State* s;
 
@@ -429,14 +429,4 @@ static void pmu_d2255_instance_init(Object* obj)
     qdev_init_gpio_out(DEVICE(s), &s->irq, 1);
 }
 
-static const TypeInfo pmu_d2255_type_info = {
-    .name          = TYPE_PMU_D2255,
-    .parent        = TYPE_I2C_SLAVE,
-    .instance_size = sizeof(PMUD2255State),
-    .instance_init = pmu_d2255_instance_init,
-    .class_init    = pmu_d2255_class_init,
-};
-
-static void pmu_d2255_register_types(void) { type_register_static(&pmu_d2255_type_info); }
-
-type_init(pmu_d2255_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(PMUD2255State, pmu_d2255, PMU_D2255, I2C_SLAVE)

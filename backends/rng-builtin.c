@@ -63,9 +63,9 @@ static void rng_builtin_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo rng_builtin_info = {
-    .name              = TYPE_RNG_BUILTIN,
-    .parent            = TYPE_RNG_BACKEND,
-    .instance_size     = sizeof(RngBuiltin),
+    .name   = TYPE_RNG_BUILTIN,
+    .parent = TYPE_RNG_BACKEND,
+    OBJECT_TYPE_INSTANCE(RngBuiltin),
     .instance_init     = rng_builtin_init,
     .instance_finalize = rng_builtin_finalize,
     .class_init        = rng_builtin_class_init,

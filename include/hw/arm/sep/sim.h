@@ -26,7 +26,7 @@
 #include "qom/object.h"
 
 #define TYPE_APPLE_SEP_SIM "apple-sep-sim"
-OBJECT_DECLARE_TYPE(AppleSEPSimState, AppleSEPSimClass, APPLE_SEP_SIM)
+OBJECT_DECLARE_TYPE(AppleSEPSim, AppleSEPSimClass, APPLE_SEP_SIM)
 
 struct AppleSEPSimClass
 {
@@ -55,7 +55,7 @@ typedef struct
     uint32_t out_size;
 } AppleSEPSimOOLState;
 
-struct AppleSEPSimState
+struct AppleSEPSim
 {
     /*< private >*/
     AppleA7IOP parent_obj;
@@ -69,4 +69,4 @@ struct AppleSEPSimState
     AppleSEPSimOOLState ool_state[SEP_ENDPOINT_MAX];
 };
 
-AppleSEPSimState* apple_sep_sim_from_node(AppleDTNode* node, bool modern);
+AppleSEPSim* apple_sep_sim_from_node(AppleDTNode* node, bool modern);

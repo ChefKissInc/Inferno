@@ -247,10 +247,10 @@ void sdbus_reparent_card(SDBus* from, SDBus* to)
 
 static const TypeInfo sd_bus_types[] = {
     {
-        .name          = TYPE_SD_BUS,
-        .parent        = TYPE_BUS,
-        .instance_size = sizeof(SDBus),
-        .class_size    = sizeof(SDBusClass),
+        .name   = TYPE_SD_BUS,
+        .parent = TYPE_BUS,
+        OBJECT_TYPE_INSTANCE(SDBus),
+        .class_size = sizeof(SDBusClass),
     },
 };
 

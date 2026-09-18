@@ -100,7 +100,7 @@ struct AppleSEPTRNGState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState*             sep;
+    AppleSEP*                  sep;
     MemoryRegion               regs_mr;
     uint8_t                    key[32];
     uint8_t                    fifo[16];
@@ -151,7 +151,7 @@ static void drbg_ctr_aes256_update(struct aes256_ctx* key, union nettle_block16*
 static void trng_regs_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigned size)
 {
     AppleSEPTRNGState* s   = opaque;
-    AppleSEPState*     sep = s->sep;
+    AppleSEP*          sep = s->sep;
     uint32_t           enabled;
 
 #ifdef ENABLE_CPU_DUMP_STATE
@@ -254,7 +254,7 @@ static void trng_regs_reg_write(void* opaque, hwaddr addr, uint64_t data, unsign
 static uint64_t trng_regs_reg_read(void* opaque, hwaddr addr, unsigned size)
 {
     AppleSEPTRNGState* s   = opaque;
-    AppleSEPState*     sep = s->sep;
+    AppleSEP*          sep = s->sep;
     uint64_t           ret = 0;
 
 #ifdef ENABLE_CPU_DUMP_STATE
@@ -344,19 +344,9 @@ static void apple_sep_trng_class_init(ObjectClass* klass, const void* class_data
     dc->realize = apple_sep_trng_realize;
 }
 
-static const TypeInfo apple_sep_trng_type_info = {
-    .name           = TYPE_APPLE_SEP_TRNG,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_trng_class_init,
-    .instance_size  = sizeof(AppleSEPTRNGState),
-    .instance_align = __alignof__(AppleSEPTRNGState),
-};
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPTRNGState, apple_sep_trng, APPLE_SEP_TRNG, SYS_BUS_DEVICE)
 
-static void apple_sep_trng_register_types(void) { type_register_static(&apple_sep_trng_type_info); }
-
-type_init(apple_sep_trng_register_types);
-
-AppleSEPTRNGState* apple_sep_trng_create(AppleSEPState* sep)
+AppleSEPTRNGState* apple_sep_trng_create(AppleSEP* sep)
 {
     AppleSEPTRNGState* s = APPLE_SEP_TRNG(qdev_new(TYPE_APPLE_SEP_TRNG));
 

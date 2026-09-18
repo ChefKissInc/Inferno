@@ -88,13 +88,5 @@ static void qcrypto_secret_keyring_class_init(ObjectClass* oc, const void* data)
                               NULL);
 }
 
-static const TypeInfo qcrypto_secret_info = {
-    .parent        = TYPE_QCRYPTO_SECRET_COMMON,
-    .name          = TYPE_QCRYPTO_SECRET_KEYRING,
-    .instance_size = sizeof(QCryptoSecretKeyring),
-    .class_init    = qcrypto_secret_keyring_class_init,
-};
-
-static void qcrypto_secret_register_types(void) { type_register_static(&qcrypto_secret_info); }
-
-type_init(qcrypto_secret_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(QCryptoSecretKeyring, qcrypto_secret_keyring, QCRYPTO_SECRET_KEYRING,
+                                     QCRYPTO_SECRET_COMMON)

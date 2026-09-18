@@ -954,14 +954,4 @@ static void apple_mt_spi_init(Object* obj)
     qemu_mutex_init(&s->lock);
 }
 
-static const TypeInfo apple_mt_spi_type_info = {
-    .name          = TYPE_APPLE_MT_SPI,
-    .parent        = TYPE_SSI_PERIPHERAL,
-    .class_init    = apple_mt_spi_class_init,
-    .instance_size = sizeof(AppleMTSPIState),
-    .instance_init = apple_mt_spi_init,
-};
-
-static void apple_mt_spi_register_types(void) { type_register_static(&apple_mt_spi_type_info); }
-
-type_init(apple_mt_spi_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(AppleMTSPIState, apple_mt_spi, APPLE_MT_SPI, SSI_PERIPHERAL)

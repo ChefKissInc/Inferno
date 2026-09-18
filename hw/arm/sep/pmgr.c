@@ -30,11 +30,11 @@ struct AppleSEPPMGRState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState* sep;
-    MemoryRegion   base_mr;
-    uint8_t        base_regs[PMGR_BASE_REG_SIZE];
-    bool           fuse_changer_bit0_was_set;
-    bool           fuse_changer_bit1_was_set;
+    AppleSEP*    sep;
+    MemoryRegion base_mr;
+    uint8_t      base_regs[PMGR_BASE_REG_SIZE];
+    bool         fuse_changer_bit0_was_set;
+    bool         fuse_changer_bit1_was_set;
 };
 
 static const char* sepos_powerstate_name(uint64_t powerstate_offset)
@@ -177,19 +177,9 @@ static void apple_sep_pmgr_class_init(ObjectClass* klass, const void* class_data
     dc->realize      = apple_sep_pmgr_realize;
 }
 
-static const TypeInfo apple_sep_pmgr_type_info = {
-    .name           = TYPE_APPLE_SEP_PMGR,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_pmgr_class_init,
-    .instance_size  = sizeof(AppleSEPPMGRState),
-    .instance_align = __alignof__(AppleSEPPMGRState),
-};
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPPMGRState, apple_sep_pmgr, APPLE_SEP_PMGR, SYS_BUS_DEVICE)
 
-static void apple_sep_pmgr_register_types(void) { type_register_static(&apple_sep_pmgr_type_info); }
-
-type_init(apple_sep_pmgr_register_types);
-
-AppleSEPPMGRState* apple_sep_pmgr_create(AppleSEPState* sep)
+AppleSEPPMGRState* apple_sep_pmgr_create(AppleSEP* sep)
 {
     AppleSEPPMGRState* s = APPLE_SEP_PMGR(qdev_new(TYPE_APPLE_SEP_PMGR));
     s->sep               = sep;

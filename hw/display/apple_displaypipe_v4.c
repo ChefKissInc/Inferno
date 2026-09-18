@@ -804,16 +804,7 @@ static void adp_v4_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_DISPLAY, dc->categories);
 }
 
-static const TypeInfo adp_v4_type_info = {
-    .name          = TYPE_APPLE_DISPLAY_PIPE_V4,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleDisplayPipeV4State),
-    .class_init    = adp_v4_class_init,
-};
-
-static void adp_v4_register_types(void) { type_register_static(&adp_v4_type_info); }
-
-type_init(adp_v4_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleDisplayPipeV4State, adp_v4, APPLE_DISPLAY_PIPE_V4, SYS_BUS_DEVICE)
 
 // TODO: handle source/dest position, etc.
 static void adp_v4_gp_draw(ADPV4GenPipe* genpipe, AddressSpace* dma_as, pixman_image_t* disp_image,

@@ -26,7 +26,7 @@
 #include "hw/sysbus.h"
 
 #define TYPE_APPLE_SMC_IOP "apple-smc"
-OBJECT_DECLARE_TYPE(AppleSMCState, AppleSMCClass, APPLE_SMC_IOP)
+OBJECT_DECLARE_TYPE(AppleSMC, AppleSMCClass, APPLE_SMC_IOP)
 
 #define SMC_KEY_FORMAT(v) (((v) >> 24) & 0xFF), (((v) >> 16) & 0xFF), (((v) >> 8) & 0xFF), ((v) & 0xFF)
 
@@ -214,12 +214,12 @@ struct SMCKeyData
 
 SysBusDevice* apple_smc_create(AppleDTNode* node, AppleA7IOPVersion version, uint64_t sram_size);
 
-SMCKey*     apple_smc_get_key(AppleSMCState* s, uint32_t key);
-SMCKeyData* apple_smc_get_key_data(AppleSMCState* s, uint32_t key);
-void        apple_smc_add_key(AppleSMCState* s, uint32_t key, uint8_t size, SMCKeyType type, SMCKeyAttribute attr,
+SMCKey*     apple_smc_get_key(AppleSMC* s, uint32_t key);
+SMCKeyData* apple_smc_get_key_data(AppleSMC* s, uint32_t key);
+void        apple_smc_add_key(AppleSMC* s, uint32_t key, uint8_t size, SMCKeyType type, SMCKeyAttribute attr,
                               const void* data);
-void        apple_smc_add_sensor(AppleSMCState* s, uint32_t key, uint8_t size, SMCKeyType type, SMCKeyAttribute attr,
+void        apple_smc_add_sensor(AppleSMC* s, uint32_t key, uint8_t size, SMCKeyType type, SMCKeyAttribute attr,
                                  const void* data);
-void        apple_smc_add_key_func(AppleSMCState* s, uint32_t key, uint8_t size, SMCKeyType type, SMCKeyAttribute attr,
+void        apple_smc_add_key_func(AppleSMC* s, uint32_t key, uint8_t size, SMCKeyType type, SMCKeyAttribute attr,
                                    void* opaque, SMCKeyFunc* reader, SMCKeyFunc* writer);
-void        apple_smc_send_hid_button(AppleSMCState* s, AppleSMCHIDButton button, bool state);
+void        apple_smc_send_hid_button(AppleSMC* s, AppleSMCHIDButton button, bool state);

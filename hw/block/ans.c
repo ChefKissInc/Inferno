@@ -305,13 +305,4 @@ static void apple_ans_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_BRIDGE, dc->categories);
 }
 
-static const TypeInfo apple_ans_info = {
-    .name          = TYPE_APPLE_ANS,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleANSState),
-    .class_init    = apple_ans_class_init,
-};
-
-static void apple_ans_register_types(void) { type_register_static(&apple_ans_info); }
-
-type_init(apple_ans_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleANSState, apple_ans, APPLE_ANS, SYS_BUS_DEVICE)

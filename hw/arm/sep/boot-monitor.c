@@ -42,9 +42,9 @@ struct AppleSEPBootMonitorState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState* sep;
-    MemoryRegion   boot_monitor_mr;
-    uint8_t        boot_monitor_regs[BOOT_MONITOR_REG_SIZE];
+    AppleSEP*    sep;
+    MemoryRegion boot_monitor_mr;
+    uint8_t      boot_monitor_regs[BOOT_MONITOR_REG_SIZE];
 };
 
 static uint32_t boot_monitor_reg_get(AppleSEPBootMonitorState* s, hwaddr addr)
@@ -205,7 +205,7 @@ static void apple_sep_boot_monitor_jump_work(CPUState* cpu, run_on_cpu_data data
 }
 
 #ifdef SEP_DISABLE_ASLR
-static void disable_aslr_SYS_ACC_PWR_DN_SAVE(AppleSEPState* s)
+static void disable_aslr_SYS_ACC_PWR_DN_SAVE(AppleSEP* s)
 {
     DPRINTF("SEP_BOOT_MONITOR_JUMP: Disable ASLR SYS_ACC_PWR_DN_SAVE\n");
     AppleA13State* acpu        = APPLE_A13(s->cpu);
@@ -217,8 +217,8 @@ static void disable_aslr_SYS_ACC_PWR_DN_SAVE(AppleSEPState* s)
 
 void apple_sep_boot_monitor_jump(AppleSEPBootMonitorState* s)
 {
-    AppleSEPState* sep = s->sep;
-    hwaddr         load_addr;
+    AppleSEP* sep = s->sep;
+    hwaddr    load_addr;
 
     assert(bql_locked());
 
@@ -267,19 +267,10 @@ static void apple_sep_boot_monitor_class_init(ObjectClass* klass, const void* cl
     dc->realize      = apple_sep_boot_monitor_realize;
 }
 
-static const TypeInfo apple_sep_boot_monitor_type_info = {
-    .name           = TYPE_APPLE_SEP_BOOT_MONITOR,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_boot_monitor_class_init,
-    .instance_size  = sizeof(AppleSEPBootMonitorState),
-    .instance_align = __alignof__(AppleSEPBootMonitorState),
-};
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPBootMonitorState, apple_sep_boot_monitor, APPLE_SEP_BOOT_MONITOR,
+                                     SYS_BUS_DEVICE)
 
-static void apple_sep_boot_monitor_register_types(void) { type_register_static(&apple_sep_boot_monitor_type_info); }
-
-type_init(apple_sep_boot_monitor_register_types);
-
-AppleSEPBootMonitorState* apple_sep_boot_monitor_create(AppleSEPState* sep)
+AppleSEPBootMonitorState* apple_sep_boot_monitor_create(AppleSEP* sep)
 {
     AppleSEPBootMonitorState* s = APPLE_SEP_BOOT_MONITOR(qdev_new(TYPE_APPLE_SEP_BOOT_MONITOR));
     s->sep                      = sep;

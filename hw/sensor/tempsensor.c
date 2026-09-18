@@ -106,13 +106,4 @@ static void apple_temp_sensor_class_init(ObjectClass* oc, const void* data)
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 }
 
-static const TypeInfo apple_temp_sensor_info = {
-    .name          = TYPE_APPLE_TEMP_SENSOR,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleTempSensorState),
-    .class_init    = apple_temp_sensor_class_init,
-};
-
-static void apple_temp_sensor_register_types(void) { type_register_static(&apple_temp_sensor_info); }
-
-type_init(apple_temp_sensor_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleTempSensorState, apple_temp_sensor, APPLE_TEMP_SENSOR, SYS_BUS_DEVICE)

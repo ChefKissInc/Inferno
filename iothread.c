@@ -276,18 +276,17 @@ static void iothread_class_init(ObjectClass* klass, const void* class_data)
 }
 
 static const TypeInfo iothread_info = {
-    .name              = TYPE_IOTHREAD,
-    .parent            = TYPE_EVENT_LOOP_BASE,
-    .class_init        = iothread_class_init,
-    .instance_size     = sizeof(IOThread),
+    .name       = TYPE_IOTHREAD,
+    .parent     = TYPE_EVENT_LOOP_BASE,
+    .class_init = iothread_class_init,
+    OBJECT_TYPE_INSTANCE(IOThread),
     .instance_init     = iothread_instance_init,
     .instance_finalize = iothread_instance_finalize,
 };
 
-static void iothread_register_types(void) { type_register_static(&iothread_info); }
+DEFINE_TYPE(iothread_info)
 
-type_init(iothread_register_types) char* iothread_get_id(IOThread* iothread)
-{ return g_strdup(object_get_canonical_path_component(OBJECT(iothread))); }
+char* iothread_get_id(IOThread* iothread) { return g_strdup(object_get_canonical_path_component(OBJECT(iothread))); }
 
 AioContext* iothread_get_aio_context(IOThread* iothread) { return iothread->ctx; }
 

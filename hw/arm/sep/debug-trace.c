@@ -34,11 +34,11 @@ struct AppleSEPDebugTraceState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState* sep;
-    MemoryRegion   mr;
-    hwaddr         size;
-    hwaddr         offset;
-    uint8_t        regs[DEBUG_TRACE_SIZE];
+    AppleSEP*    sep;
+    MemoryRegion mr;
+    hwaddr       size;
+    hwaddr       offset;
+    uint8_t      regs[DEBUG_TRACE_SIZE];
 };
 
 void apple_sep_debug_trace_enable(AppleSEPDebugTraceState* s)
@@ -925,19 +925,9 @@ static void apple_sep_debug_trace_class_init(ObjectClass* klass, const void* cla
     dc->realize      = apple_sep_debug_trace_realize;
 }
 
-static const TypeInfo apple_sep_debug_trace_type_info = {
-    .name           = TYPE_APPLE_SEP_DEBUG_TRACE,
-    .parent         = TYPE_I2C_SLAVE,
-    .class_init     = apple_sep_debug_trace_class_init,
-    .instance_size  = sizeof(AppleSEPDebugTraceState),
-    .instance_align = __alignof__(AppleSEPDebugTraceState),
-};
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPDebugTraceState, apple_sep_debug_trace, APPLE_SEP_DEBUG_TRACE, I2C_SLAVE)
 
-static void apple_sep_debug_trace_register_types(void) { type_register_static(&apple_sep_debug_trace_type_info); }
-
-type_init(apple_sep_debug_trace_register_types);
-
-AppleSEPDebugTraceState* apple_sep_debug_trace_create(AppleSEPState* sep)
+AppleSEPDebugTraceState* apple_sep_debug_trace_create(AppleSEP* sep)
 {
     AppleSEPDebugTraceState* s = APPLE_SEP_DEBUG_TRACE(qdev_new(TYPE_APPLE_SEP_DEBUG_TRACE));
 
@@ -953,8 +943,8 @@ AppleSEPDebugTraceState* apple_sep_debug_trace_create(AppleSEPState* sep)
 
 void apple_sep_dump_cpu_handler(void)
 {
-    MachineState*  machine = MACHINE(qdev_get_machine());
-    AppleSEPState* sep     = APPLE_SEP(object_property_get_link(OBJECT(machine), "sep", &error_fatal));
+    MachineState* machine = MACHINE(qdev_get_machine());
+    AppleSEP*     sep     = APPLE_SEP(object_property_get_link(OBJECT(machine), "sep", &error_fatal));
     assert_nonnull(sep);
     cpu_dump_state(CPU(sep->cpu), stderr, CPU_DUMP_CODE);
 }

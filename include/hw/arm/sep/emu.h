@@ -27,7 +27,7 @@
 #include "qom/object.h"
 
 #define TYPE_APPLE_SEP "apple-sep"
-OBJECT_DECLARE_TYPE(AppleSEPState, AppleSEPClass, APPLE_SEP)
+OBJECT_DECLARE_TYPE(AppleSEP, AppleSEPClass, APPLE_SEP)
 
 #define SEPFW_MAPPING_SIZE   (16 * MiB)
 #define SEP_DMA_MAPPING_SIZE (SEPFW_MAPPING_SIZE * 2)
@@ -62,11 +62,11 @@ typedef enum AppleSEPMMIOIndex
     SEP_MMIO_INDEX_BOOT_MONITOR,
 } AppleSEPMMIOIndex;
 
-void           ck_sep_seprom_patches(CKPatcherRange* range);
-AppleSEPState* apple_sep_from_node(AppleDTNode* node, MemoryRegion* ool_mr, vaddr base, uint32_t cpu_id, bool modern,
-                                   uint32_t chip_id);
-bool           apple_sep_get_fuse_changer_bit(AppleSEPState* s, uint8_t bit);
-void           apple_sep_set_fw(AppleSEPState* s, hwaddr sep_fw_addr, gchar* fw_data, gsize sep_fw_size);
-void           apple_sep_map_mmio(AppleSEPState* s, AppleSEPMMIOIndex mmio_index, hwaddr addr);
-void           apple_sep_setup_tz0(AppleSEPState* s, MemoryRegion* dram, hwaddr tz0_off, hwaddr tz0_size);
-ARMCPU*        apple_sep_get_cpu(AppleSEPState* s);    // FIXME: remove
+void      ck_sep_seprom_patches(CKPatcherRange* range);
+AppleSEP* apple_sep_from_node(AppleDTNode* node, MemoryRegion* ool_mr, vaddr base, uint32_t cpu_id, bool modern,
+                              uint32_t chip_id);
+bool      apple_sep_get_fuse_changer_bit(AppleSEP* s, uint8_t bit);
+void      apple_sep_set_fw(AppleSEP* s, hwaddr sep_fw_addr, gchar* fw_data, gsize sep_fw_size);
+void      apple_sep_map_mmio(AppleSEP* s, AppleSEPMMIOIndex mmio_index, hwaddr addr);
+void      apple_sep_setup_tz0(AppleSEP* s, MemoryRegion* dram, hwaddr tz0_off, hwaddr tz0_size);
+ARMCPU*   apple_sep_get_cpu(AppleSEP* s);    // FIXME: remove

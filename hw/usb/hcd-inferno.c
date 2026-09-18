@@ -539,14 +539,4 @@ static void usb_inferno_host_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, usb_inferno_host_props);
 }
 
-static const TypeInfo usb_inferno_host_type_info = {
-    .name          = TYPE_USB_INFERNO_HOST,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(USBInfernoHostState),
-    .class_init    = usb_inferno_host_class_init,
-    .instance_init = usb_inferno_host_init,
-};
-
-static void usb_inferno_host_register_types(void) { type_register_static(&usb_inferno_host_type_info); }
-
-type_init(usb_inferno_host_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(USBInfernoHostState, usb_inferno_host, USB_INFERNO_HOST, SYS_BUS_DEVICE)

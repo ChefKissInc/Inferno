@@ -22,6 +22,4 @@ static const TypeInfo stream_sink_info = {
     .class_size = sizeof(StreamSinkClass),
 };
 
-static void stream_sink_register_types(void) { type_register_static(&stream_sink_info); }
-
-type_init(stream_sink_register_types)
+DEFINE_TYPE(stream_sink_info)

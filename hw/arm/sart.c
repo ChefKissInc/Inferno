@@ -232,23 +232,18 @@ static void apple_sart_iommu_memory_region_class_init(ObjectClass* klass, const 
     imrc->translate = apple_sart_translate;
 }
 
-static const TypeInfo apple_sart_info = {
-    .name          = TYPE_APPLE_SART,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleSARTState),
-    .class_init    = apple_sart_class_init,
+static const TypeInfo apple_sart_types[] = {
+    {
+        .name   = TYPE_APPLE_SART,
+        .parent = TYPE_SYS_BUS_DEVICE,
+        OBJECT_TYPE_INSTANCE(AppleSARTState),
+        .class_init = apple_sart_class_init,
+    },
+    {
+        .parent     = TYPE_IOMMU_MEMORY_REGION,
+        .name       = TYPE_APPLE_SART_IOMMU_MEMORY_REGION,
+        .class_init = apple_sart_iommu_memory_region_class_init,
+    },
 };
 
-static const TypeInfo apple_sart_iommu_memory_region_info = {
-    .parent     = TYPE_IOMMU_MEMORY_REGION,
-    .name       = TYPE_APPLE_SART_IOMMU_MEMORY_REGION,
-    .class_init = apple_sart_iommu_memory_region_class_init,
-};
-
-static void apple_sart_register_types(void)
-{
-    type_register_static(&apple_sart_info);
-    type_register_static(&apple_sart_iommu_memory_region_info);
-}
-
-type_init(apple_sart_register_types);
+DEFINE_TYPES(apple_sart_types)

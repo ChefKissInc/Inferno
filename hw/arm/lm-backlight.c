@@ -46,13 +46,4 @@ static void apple_lm_backlight_class_init(ObjectClass* klass, const void* data)
     c->send = apple_lm_backlight_tx;
 }
 
-static const TypeInfo apple_lm_backlight_type_info = {
-    .name          = TYPE_APPLE_LM_BACKLIGHT,
-    .parent        = TYPE_I2C_SLAVE,
-    .instance_size = sizeof(AppleLMBacklightState),
-    .class_init    = apple_lm_backlight_class_init,
-};
-
-static void apple_lm_backlight_register_types(void) { type_register_static(&apple_lm_backlight_type_info); }
-
-type_init(apple_lm_backlight_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleLMBacklightState, apple_lm_backlight, APPLE_LM_BACKLIGHT, I2C_SLAVE)

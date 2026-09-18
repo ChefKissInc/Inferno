@@ -20,7 +20,7 @@ static inline uint8_t chrp_checksum(ChrpNvramPartHdr* header)
     return sum & 0xff;
 }
 
-env_var* env_find(AppleNvramState* s, const char* name)
+env_var* env_find(AppleNvram* s, const char* name)
 {
     env_var* v;
     QTAILQ_FOREACH (v, &s->env, entry) {
@@ -29,7 +29,7 @@ env_var* env_find(AppleNvramState* s, const char* name)
     return NULL;
 }
 
-const char* env_get(AppleNvramState* s, const char* name)
+const char* env_get(AppleNvram* s, const char* name)
 {
     env_var* v;
 
@@ -39,7 +39,7 @@ const char* env_get(AppleNvramState* s, const char* name)
     return NULL;
 }
 
-size_t env_get_uint(AppleNvramState* s, const char* name, size_t default_val)
+size_t env_get_uint(AppleNvram* s, const char* name, size_t default_val)
 {
     env_var* v;
 
@@ -49,7 +49,7 @@ size_t env_get_uint(AppleNvramState* s, const char* name, size_t default_val)
     return default_val;
 }
 
-bool env_get_bool(AppleNvramState* s, const char* name, bool default_val)
+bool env_get_bool(AppleNvram* s, const char* name, bool default_val)
 {
     env_var* v;
 
@@ -62,7 +62,7 @@ bool env_get_bool(AppleNvramState* s, const char* name, bool default_val)
     return false;
 }
 
-int env_unset(AppleNvramState* s, const char* name)
+int env_unset(AppleNvram* s, const char* name)
 {
     env_var* v;
 
@@ -78,7 +78,7 @@ int env_unset(AppleNvramState* s, const char* name)
     return 1;
 }
 
-int env_set(AppleNvramState* s, const char* name, const char* val, uint32_t flags)
+int env_set(AppleNvram* s, const char* name, const char* val, uint32_t flags)
 {
     g_autofree env_var* v;
 
@@ -107,7 +107,7 @@ int env_set(AppleNvramState* s, const char* name, const char* val, uint32_t flag
     return 0;
 }
 
-int env_set_uint(AppleNvramState* s, const char* name, size_t val, uint32_t flags)
+int env_set_uint(AppleNvram* s, const char* name, size_t val, uint32_t flags)
 {
     g_autofree char* buf = NULL;
 
@@ -115,10 +115,10 @@ int env_set_uint(AppleNvramState* s, const char* name, size_t val, uint32_t flag
     return env_set(s, name, buf, flags);
 }
 
-int env_set_bool(AppleNvramState* s, const char* name, bool val, uint32_t flags)
+int env_set_bool(AppleNvram* s, const char* name, bool val, uint32_t flags)
 { return env_set(s, name, val ? "true" : "false", flags); }
 
-static ssize_t env_serialize(AppleNvramState* s, uint8_t* buffer, size_t len)
+static ssize_t env_serialize(AppleNvram* s, uint8_t* buffer, size_t len)
 {
     env_var*         v;
     size_t           pos = 0;
@@ -285,7 +285,7 @@ void nvram_free(NvramBank* bank)
     g_free(bank);
 }
 
-static void apple_nvram_load_env(AppleNvramState* s)
+static void apple_nvram_load_env(AppleNvram* s)
 {
     NvramPartition* part     = nvram_find_part(s->bank, "common");
     uint32_t        cnt      = 0;
@@ -323,7 +323,7 @@ static void apple_nvram_load_env(AppleNvramState* s)
     }
 }
 
-ssize_t apple_nvram_serialize(AppleNvramState* s, void* buffer, size_t size)
+ssize_t apple_nvram_serialize(AppleNvram* s, void* buffer, size_t size)
 {
     NvramPartition*  p   = nvram_find_part(s->bank, "common");
     g_autofree void* buf = NULL;
@@ -350,7 +350,7 @@ ssize_t apple_nvram_serialize(AppleNvramState* s, void* buffer, size_t size)
     return len;
 }
 
-static void apple_nvram_cleanup(AppleNvramState* s)
+static void apple_nvram_cleanup(AppleNvram* s)
 {
     env_var* v = QTAILQ_FIRST(&s->env);
     if (s->bank) {
@@ -367,7 +367,7 @@ static void apple_nvram_cleanup(AppleNvramState* s)
     QTAILQ_INIT(&s->env);
 }
 
-void apple_nvram_save(AppleNvramState* s)
+void apple_nvram_save(AppleNvram* s)
 {
     NvmeNamespace*   ns  = NVME_NS(s);
     g_autofree void* buf = g_malloc0(s->len);
@@ -384,7 +384,7 @@ void apple_nvram_save(AppleNvramState* s)
     }
 }
 
-void apple_nvram_load(AppleNvramState* s)
+void apple_nvram_load(AppleNvram* s)
 {
     NvmeNamespace*   ns     = NVME_NS(s);
     g_autofree void* buffer = NULL;
@@ -420,7 +420,7 @@ void apple_nvram_load(AppleNvramState* s)
 
 static void apple_nvram_realize(DeviceState* dev, Error** errp)
 {
-    AppleNvramState* s         = APPLE_NVRAM(dev);
+    AppleNvram*      s         = APPLE_NVRAM(dev);
     AppleNvramClass* anc       = APPLE_NVRAM_GET_CLASS(dev);
     Error*           local_err = NULL;
 
@@ -434,7 +434,7 @@ static void apple_nvram_realize(DeviceState* dev, Error** errp)
 
 static void apple_nvram_unrealize(DeviceState* dev)
 {
-    AppleNvramState* s   = APPLE_NVRAM(dev);
+    AppleNvram*      s   = APPLE_NVRAM(dev);
     AppleNvramClass* anc = APPLE_NVRAM_GET_CLASS(dev);
 
     anc->parent_unrealize(dev);
@@ -454,17 +454,6 @@ static void apple_nvram_class_init(ObjectClass* klass, const void* data)
     dc->desc = "Apple NVRAM";
 }
 
-static void apple_nvram_instance_init(Object* obj) { }
+static void apple_nvram_init(Object* obj) { }
 
-static const TypeInfo apple_nvram_info = {
-    .name          = TYPE_APPLE_NVRAM,
-    .parent        = TYPE_NVME_NS,
-    .class_size    = sizeof(AppleNvramClass),
-    .class_init    = apple_nvram_class_init,
-    .instance_size = sizeof(AppleNvramState),
-    .instance_init = apple_nvram_instance_init,
-};
-
-static void apple_nvram_register_types(void) { type_register_static(&apple_nvram_info); }
-
-type_init(apple_nvram_register_types)
+OBJECT_DEFINE_TYPE_INSTANCE_INIT(AppleNvram, apple_nvram, APPLE_NVRAM, NVME_NS)

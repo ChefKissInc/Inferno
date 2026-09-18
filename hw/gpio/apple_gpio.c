@@ -417,13 +417,4 @@ static void apple_gpio_class_init(ObjectClass* klass, const void* data)
     dc->realize = apple_gpio_realize;
 }
 
-static const TypeInfo apple_gpio_info = {
-    .name          = TYPE_APPLE_GPIO,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleGPIOState),
-    .class_init    = apple_gpio_class_init,
-};
-
-static void apple_gpio_register_types(void) { type_register_static(&apple_gpio_info); }
-
-type_init(apple_gpio_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleGPIOState, apple_gpio, APPLE_GPIO, SYS_BUS_DEVICE)

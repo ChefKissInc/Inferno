@@ -218,10 +218,10 @@ static void char_ringbuf_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_ringbuf_type_info = {
-    .name              = TYPE_CHARDEV_RINGBUF,
-    .parent            = TYPE_CHARDEV,
-    .class_init        = char_ringbuf_class_init,
-    .instance_size     = sizeof(RingBufChardev),
+    .name       = TYPE_CHARDEV_RINGBUF,
+    .parent     = TYPE_CHARDEV,
+    .class_init = char_ringbuf_class_init,
+    OBJECT_TYPE_INSTANCE(RingBufChardev),
     .instance_finalize = char_ringbuf_finalize,
 };
 

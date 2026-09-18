@@ -42,7 +42,7 @@ static void xhci_sysbus_realize(DeviceState* dev, Error** errp)
     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->xhci.mem);
 }
 
-static void xhci_sysbus_instance_init(Object* obj)
+static void xhci_sysbus_init(Object* obj)
 {
     XHCISysbusState* s = XHCI_SYSBUS(obj);
 
@@ -68,12 +68,4 @@ static void xhci_sysbus_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, xhci_sysbus_props);
 }
 
-static const TypeInfo xhci_sysbus_info = {.name          = TYPE_XHCI_SYSBUS,
-                                          .parent        = TYPE_SYS_BUS_DEVICE,
-                                          .instance_size = sizeof(XHCISysbusState),
-                                          .class_init    = xhci_sysbus_class_init,
-                                          .instance_init = xhci_sysbus_instance_init};
-
-static void xhci_sysbus_register_types(void) { type_register_static(&xhci_sysbus_info); }
-
-type_init(xhci_sysbus_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(XHCISysbusState, xhci_sysbus, XHCI_SYSBUS, SYS_BUS_DEVICE)

@@ -303,13 +303,4 @@ static void apple_i2c_class_init(ObjectClass* klass, const void* data)
     dc->desc = "Apple I2C Controller";
 }
 
-static const TypeInfo apple_i2c_type_info = {
-    .name          = TYPE_APPLE_I2C,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleI2CState),
-    .class_init    = apple_i2c_class_init,
-};
-
-static void apple_i2c_register_types(void) { type_register_static(&apple_i2c_type_info); }
-
-type_init(apple_i2c_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleI2CState, apple_i2c, APPLE_I2C, SYS_BUS_DEVICE)

@@ -1590,10 +1590,10 @@ default: warn_report("gtk: unexpected touch event type\n"); return FALSE;
     }
 
     static const TypeInfo char_gd_vc_type_info = {
-        .name          = TYPE_CHARDEV_VC,
-        .parent        = TYPE_CHARDEV,
-        .instance_size = sizeof(VCChardev),
-        .class_init    = char_gd_vc_class_init,
+        .name   = TYPE_CHARDEV_VC,
+        .parent = TYPE_CHARDEV,
+        OBJECT_TYPE_INSTANCE(VCChardev),
+        .class_init = char_gd_vc_class_init,
     };
 
     static gboolean gd_vc_in(VteTerminal* terminal, gchar* text, guint size, gpointer user_data)

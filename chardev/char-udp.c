@@ -211,9 +211,9 @@ static void char_udp_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_udp_type_info = {
-    .name              = TYPE_CHARDEV_UDP,
-    .parent            = TYPE_CHARDEV,
-    .instance_size     = sizeof(UdpChardev),
+    .name   = TYPE_CHARDEV_UDP,
+    .parent = TYPE_CHARDEV,
+    OBJECT_TYPE_INSTANCE(UdpChardev),
     .instance_finalize = char_udp_finalize,
     .class_init        = char_udp_class_init,
 };

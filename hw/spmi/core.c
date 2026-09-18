@@ -18,12 +18,6 @@ static const Property spmi_props[] = {
     DEFINE_PROP_UINT8("sid", struct SPMISlave, sid, 0),
 };
 
-static const TypeInfo spmi_bus_info = {
-    .name          = TYPE_SPMI_BUS,
-    .parent        = TYPE_BUS,
-    .instance_size = sizeof(SPMIBus),
-};
-
 /* Create a new SPMI bus.  */
 SPMIBus* spmi_init_bus(DeviceState* parent, const char* name)
 {
@@ -172,19 +166,20 @@ static void spmi_slave_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(k, spmi_props);
 }
 
-static const TypeInfo spmi_slave_type_info = {
-    .name          = TYPE_SPMI_SLAVE,
-    .parent        = TYPE_DEVICE,
-    .instance_size = sizeof(SPMISlave),
-    .abstract      = true,
-    .class_size    = sizeof(SPMISlaveClass),
-    .class_init    = spmi_slave_class_init,
+static const TypeInfo spmi_slave_types[] = {
+    {
+        .name   = TYPE_SPMI_BUS,
+        .parent = TYPE_BUS,
+        OBJECT_TYPE_INSTANCE(SPMIBus),
+    },
+    {
+        .name   = TYPE_SPMI_SLAVE,
+        .parent = TYPE_DEVICE,
+        OBJECT_TYPE_INSTANCE(SPMISlave),
+        .abstract   = true,
+        .class_size = sizeof(SPMISlaveClass),
+        .class_init = spmi_slave_class_init,
+    },
 };
 
-static void spmi_slave_register_types(void)
-{
-    type_register_static(&spmi_bus_info);
-    type_register_static(&spmi_slave_type_info);
-}
-
-type_init(spmi_slave_register_types)
+DEFINE_TYPES(spmi_slave_types)

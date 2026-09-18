@@ -277,13 +277,4 @@ static void apple_cs42l77_class_init(ObjectClass* klass, const void* data)
     c->transfer = apple_cs42l77_transfer;
 }
 
-static const TypeInfo apple_cs42l77_type_info = {
-    .name          = TYPE_APPLE_CS42L77,
-    .parent        = TYPE_SSI_PERIPHERAL,
-    .instance_size = sizeof(AppleCS42L77State),
-    .class_init    = apple_cs42l77_class_init,
-};
-
-static void apple_cs42l77_register_types(void) { type_register_static(&apple_cs42l77_type_info); }
-
-type_init(apple_cs42l77_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleCS42L77State, apple_cs42l77, APPLE_CS42L77, SSI_PERIPHERAL)

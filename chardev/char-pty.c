@@ -379,9 +379,9 @@ static void char_pty_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_pty_type_info = {
-    .name              = TYPE_CHARDEV_PTY,
-    .parent            = TYPE_CHARDEV,
-    .instance_size     = sizeof(PtyChardev),
+    .name   = TYPE_CHARDEV_PTY,
+    .parent = TYPE_CHARDEV,
+    OBJECT_TYPE_INSTANCE(PtyChardev),
     .instance_finalize = char_pty_finalize,
     .class_init        = char_pty_class_init,
 };

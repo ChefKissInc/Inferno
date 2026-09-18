@@ -173,14 +173,12 @@ static void clock_finalizefn(Object* obj)
 static void clock_class_init(ObjectClass* klass, const void* data) { klass->unparent = clock_unparent; }
 
 static const TypeInfo clock_info = {
-    .name              = TYPE_CLOCK,
-    .parent            = TYPE_OBJECT,
-    .instance_size     = sizeof(Clock),
+    .name   = TYPE_CLOCK,
+    .parent = TYPE_OBJECT,
+    OBJECT_TYPE_INSTANCE(Clock),
     .instance_init     = clock_initfn,
     .class_init        = clock_class_init,
     .instance_finalize = clock_finalizefn,
 };
 
-static void clock_register_types(void) { type_register_static(&clock_info); }
-
-type_init(clock_register_types)
+DEFINE_TYPE(clock_info)

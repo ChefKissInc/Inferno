@@ -240,14 +240,12 @@ static void qio_channel_file_class_init(ObjectClass* klass, const void* class_da
 }
 
 static const TypeInfo qio_channel_file_info = {
-    .parent            = TYPE_QIO_CHANNEL,
-    .name              = TYPE_QIO_CHANNEL_FILE,
-    .instance_size     = sizeof(QIOChannelFile),
+    .parent = TYPE_QIO_CHANNEL,
+    .name   = TYPE_QIO_CHANNEL_FILE,
+    OBJECT_TYPE_INSTANCE(QIOChannelFile),
     .instance_init     = qio_channel_file_init,
     .instance_finalize = qio_channel_file_finalize,
     .class_init        = qio_channel_file_class_init,
 };
 
-static void qio_channel_file_register_types(void) { type_register_static(&qio_channel_file_info); }
-
-type_init(qio_channel_file_register_types);
+DEFINE_TYPE(qio_channel_file_info)

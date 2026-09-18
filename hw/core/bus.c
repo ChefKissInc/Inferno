@@ -213,9 +213,9 @@ static void qbus_finalize(Object* obj)
 }
 
 static const TypeInfo bus_info = {
-    .name              = TYPE_BUS,
-    .parent            = TYPE_OBJECT,
-    .instance_size     = sizeof(BusState),
+    .name   = TYPE_BUS,
+    .parent = TYPE_OBJECT,
+    OBJECT_TYPE_INSTANCE(BusState),
     .abstract          = true,
     .class_size        = sizeof(BusClass),
     .instance_init     = qbus_initfn,
@@ -224,6 +224,4 @@ static const TypeInfo bus_info = {
     .interfaces        = (const InterfaceInfo[]){{TYPE_RESETTABLE_INTERFACE}, {}},
 };
 
-static void bus_register_types(void) { type_register_static(&bus_info); }
-
-type_init(bus_register_types)
+DEFINE_TYPE(bus_info)

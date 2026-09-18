@@ -1941,7 +1941,7 @@ static const Property usbredir_properties[] = {
     DEFINE_PROP_BOOL("suppress-remote-wake", USBRedirDevice, suppress_remote_wake, true),
 };
 
-static void usbredir_class_initfn(ObjectClass* klass, const void* data)
+static void usbredir_class_init(ObjectClass* klass, const void* data)
 {
     USBDeviceClass* uc = USB_DEVICE_CLASS(klass);
     DeviceClass*    dc = DEVICE_CLASS(klass);
@@ -1961,15 +1961,6 @@ static void usbredir_class_initfn(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 }
 
-static const TypeInfo usbredir_dev_info = {
-    .name          = TYPE_USB_REDIR,
-    .parent        = TYPE_USB_DEVICE,
-    .instance_size = sizeof(USBRedirDevice),
-    .class_init    = usbredir_class_initfn,
-};
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(USBRedirDevice, usbredir, USB_REDIR, USB_DEVICE)
 module_obj(TYPE_USB_REDIR);
 module_kconfig(USB);
-
-static void usbredir_register_types(void) { type_register_static(&usbredir_dev_info); }
-
-type_init(usbredir_register_types)

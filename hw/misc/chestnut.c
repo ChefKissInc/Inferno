@@ -58,13 +58,4 @@ static void apple_chestnut_class_init(ObjectClass* klass, const void* data)
     c->send = apple_chestnut_tx;
 }
 
-static const TypeInfo apple_chestnut_type_info = {
-    .name          = TYPE_APPLE_CHESTNUT,
-    .parent        = TYPE_I2C_SLAVE,
-    .instance_size = sizeof(AppleChestnutState),
-    .class_init    = apple_chestnut_class_init,
-};
-
-static void apple_chestnut_register_types(void) { type_register_static(&apple_chestnut_type_info); }
-
-type_init(apple_chestnut_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleChestnutState, apple_chestnut, APPLE_CHESTNUT, I2C_SLAVE)

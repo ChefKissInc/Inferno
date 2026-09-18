@@ -156,13 +156,4 @@ static void synopsys_mipi_dsim_class_init(ObjectClass* oc, const void* data)
     set_bit(DEVICE_CATEGORY_DISPLAY, dc->categories);
 }
 
-static const TypeInfo synopsys_mipi_dsim_info = {
-    .name          = TYPE_SYNOPSYS_MIPI_DSIM,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(SynopsysMIPIDSIMState),
-    .class_init    = synopsys_mipi_dsim_class_init,
-};
-
-static void synopsys_mipi_dsim_register_types(void) { type_register_static(&synopsys_mipi_dsim_info); }
-
-type_init(synopsys_mipi_dsim_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(SynopsysMIPIDSIMState, synopsys_mipi_dsim, SYNOPSYS_MIPI_DSIM, SYS_BUS_DEVICE)

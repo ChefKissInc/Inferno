@@ -1519,10 +1519,10 @@ static void usb_host_class_initfn(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo usb_host_dev_info = {
-    .name          = TYPE_USB_HOST_DEVICE,
-    .parent        = TYPE_USB_DEVICE,
-    .instance_size = sizeof(USBHostDevice),
-    .class_init    = usb_host_class_initfn,
+    .name   = TYPE_USB_HOST_DEVICE,
+    .parent = TYPE_USB_DEVICE,
+    OBJECT_TYPE_INSTANCE(USBHostDevice),
+    .class_init = usb_host_class_initfn,
 };
 module_obj(TYPE_USB_HOST_DEVICE);
 module_kconfig(USB);
@@ -1535,9 +1535,9 @@ static void usb_host_register_types(void)
 
 type_init(usb_host_register_types)
 
-    /* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
 
-    static QEMUTimer* usb_auto_timer;
+static QEMUTimer*          usb_auto_timer;
 static VMChangeStateEntry* usb_vmstate;
 
 static void usb_host_vm_state(void* unused, bool running, RunState state)

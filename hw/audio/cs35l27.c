@@ -162,13 +162,4 @@ static void apple_cs35l27_class_init(ObjectClass* klass, const void* data)
     c->event = apple_cs35l27_event;
 }
 
-static const TypeInfo apple_cs35l27_type_info = {
-    .name          = TYPE_APPLE_CS35L27,
-    .parent        = TYPE_I2C_SLAVE,
-    .instance_size = sizeof(AppleCS35L27State),
-    .class_init    = apple_cs35l27_class_init,
-};
-
-static void apple_cs35l27_register_types(void) { type_register_static(&apple_cs35l27_type_info); }
-
-type_init(apple_cs35l27_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleCS35L27State, apple_cs35l27, APPLE_CS35L27, I2C_SLAVE)

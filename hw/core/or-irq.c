@@ -81,14 +81,4 @@ static void or_irq_class_init(ObjectClass* klass, const void* data)
     dc->user_creatable = false;
 }
 
-static const TypeInfo or_irq_type_info = {
-    .name          = TYPE_OR_IRQ,
-    .parent        = TYPE_DEVICE,
-    .instance_size = sizeof(OrIRQState),
-    .instance_init = or_irq_init,
-    .class_init    = or_irq_class_init,
-};
-
-static void or_irq_register_types(void) { type_register_static(&or_irq_type_info); }
-
-type_init(or_irq_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(OrIRQState, or_irq, OR_IRQ, DEVICE)

@@ -200,13 +200,4 @@ static void platform_bus_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, platform_bus_properties);
 }
 
-static const TypeInfo platform_bus_info = {
-    .name          = TYPE_PLATFORM_BUS_DEVICE,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(PlatformBusDevice),
-    .class_init    = platform_bus_class_init,
-};
-
-static void platform_bus_register_types(void) { type_register_static(&platform_bus_info); }
-
-type_init(platform_bus_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(PlatformBusDevice, platform_bus, PLATFORM_BUS_DEVICE, SYS_BUS_DEVICE)

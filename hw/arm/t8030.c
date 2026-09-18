@@ -351,9 +351,9 @@ static void t8030_load_kernelcache(AppleT8030MachineState* t8030, const char* cm
     phys_ptr += info->sep_fw_size;
 
     if (t8030->sep_fw_filename != NULL) {
-        AppleSEPState* sep     = APPLE_SEP(object_property_get_link(OBJECT(t8030), "sep", &error_fatal));
-        gchar*         fw_data = NULL;
-        gsize          sep_fw_size;
+        AppleSEP* sep     = APPLE_SEP(object_property_get_link(OBJECT(t8030), "sep", &error_fatal));
+        gchar*    fw_data = NULL;
+        gsize     sep_fw_size;
         if (!g_file_get_contents(t8030->sep_fw_filename, &fw_data, &sep_fw_size, NULL)) {
             error_setg(&error_fatal, "Failed to read SEP Firmware from `%s`", t8030->sep_fw_filename);
             return;
@@ -430,7 +430,7 @@ static void t8030_memory_setup(AppleT8030MachineState* t8030)
     AppleDTNode*       carveout_memory_map;
     MachineState*      machine;
     MachoHeader64*     hdr;
-    AppleNvramState*   nvram;
+    AppleNvram*        nvram;
     AppleBootInfo*     info;
     AppleDTNode*       memory_map;
     bool               have_autoboot;
@@ -646,7 +646,7 @@ static void pmgr_unk_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigne
 static uint64_t pmgr_unk_reg_read(void* opaque, hwaddr addr, unsigned size)
 {
     AppleT8030MachineState* t8030 = APPLE_T8030(qdev_get_machine());
-    AppleSEPState*          sep;
+    AppleSEP*               sep;
     hwaddr                  base = (hwaddr)opaque;
 
 #if 0
@@ -767,7 +767,7 @@ static const MemoryRegionOps pmgr_unk_reg_ops = {
 static void pmgr_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigned size)
 {
     AppleT8030MachineState* t8030 = opaque;
-    AppleSEPState*          sep;
+    AppleSEP*               sep;
 
 #if 0
     qemu_log_mask(LOG_UNIMP,
@@ -1985,7 +1985,7 @@ static void t8030_create_sep(AppleT8030MachineState* t8030)
 {
     AppleDTNode*    armio;
     AppleDTNode*    child;
-    AppleSEPState*  sep;
+    AppleSEP*       sep;
     AppleDTProp*    prop;
     uint32_t*       ints;
     AppleDARTState* dart;
@@ -2050,13 +2050,13 @@ static void t8030_create_sep(AppleT8030MachineState* t8030)
 
 static void t8030_create_sep_sim(AppleT8030MachineState* t8030)
 {
-    AppleDTNode*      armio;
-    AppleDTNode*      child;
-    AppleSEPSimState* sep;
-    AppleDTProp*      prop;
-    uint64_t*         reg;
-    uint32_t*         ints;
-    AppleDARTState*   dart;
+    AppleDTNode*    armio;
+    AppleDTNode*    child;
+    AppleSEPSim*    sep;
+    AppleDTProp*    prop;
+    uint64_t*       reg;
+    uint32_t*       ints;
+    AppleDARTState* dart;
 
     armio = apple_dt_get_node(t8030->device_tree, "arm-io");
     assert_nonnull(armio);
@@ -2197,8 +2197,8 @@ static void t8030_create_aop(AppleT8030MachineState* t8030)
 
 static void t8030_create_mca(AppleT8030MachineState* t8030)
 {
-    AppleDTNode*   child;
-    AppleSIOState* sio;
+    AppleDTNode* child;
+    AppleSIO*    sio;
     // DTBNode *mca5;
     SysBusDevice* sbd;
     AppleDTProp*  prop;
@@ -2813,11 +2813,11 @@ static void t8030_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo t8030_info = {
-    .name          = TYPE_APPLE_T8030,
-    .parent        = TYPE_MACHINE,
-    .instance_size = sizeof(AppleT8030MachineState),
-    .class_size    = sizeof(AppleT8030MachineClass),
-    .class_init    = t8030_class_init,
+    .name   = TYPE_APPLE_T8030,
+    .parent = TYPE_MACHINE,
+    OBJECT_TYPE_INSTANCE(AppleT8030MachineState),
+    .class_size = sizeof(AppleT8030MachineClass),
+    .class_init = t8030_class_init,
 };
 
 static void t8030_types(void) { type_register_static(&t8030_info); }

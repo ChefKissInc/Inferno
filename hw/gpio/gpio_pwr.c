@@ -51,12 +51,10 @@ static void gpio_pwr_init(Object* obj)
 }
 
 static const TypeInfo gpio_pwr_info = {
-    .name          = TYPE_GPIOPWR,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(GPIO_PWR_State),
+    .name   = TYPE_GPIOPWR,
+    .parent = TYPE_SYS_BUS_DEVICE,
+    OBJECT_TYPE_INSTANCE(GPIO_PWR_State),
     .instance_init = gpio_pwr_init,
 };
 
-static void gpio_pwr_register_types(void) { type_register_static(&gpio_pwr_info); }
-
-type_init(gpio_pwr_register_types)
+DEFINE_TYPE(gpio_pwr_info)

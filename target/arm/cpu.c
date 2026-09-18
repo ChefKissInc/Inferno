@@ -1587,10 +1587,9 @@ void arm_cpu_register(const ARMCPUInfo* info)
 }
 
 static const TypeInfo arm_cpu_type_info = {
-    .name              = TYPE_ARM_CPU,
-    .parent            = TYPE_CPU,
-    .instance_size     = sizeof(ARMCPU),
-    .instance_align    = __alignof__(ARMCPU),
+    .name   = TYPE_ARM_CPU,
+    .parent = TYPE_CPU,
+    OBJECT_TYPE_INSTANCE(ARMCPU),
     .instance_init     = arm_cpu_initfn,
     .instance_finalize = arm_cpu_finalizefn,
     .abstract          = true,
@@ -1598,6 +1597,4 @@ static const TypeInfo arm_cpu_type_info = {
     .class_init        = arm_cpu_class_init,
 };
 
-static void arm_cpu_register_types(void) { type_register_static(&arm_cpu_type_info); }
-
-type_init(arm_cpu_register_types)
+DEFINE_TYPE(arm_cpu_type_info)

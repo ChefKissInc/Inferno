@@ -217,9 +217,9 @@ static void char_fd_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_fd_type_info = {
-    .name              = TYPE_CHARDEV_FD,
-    .parent            = TYPE_CHARDEV,
-    .instance_size     = sizeof(FDChardev),
+    .name   = TYPE_CHARDEV_FD,
+    .parent = TYPE_CHARDEV,
+    OBJECT_TYPE_INSTANCE(FDChardev),
     .instance_finalize = char_fd_finalize,
     .class_init        = char_fd_class_init,
     .abstract          = true,

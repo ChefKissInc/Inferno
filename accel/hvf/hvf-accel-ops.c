@@ -356,6 +356,4 @@ static const TypeInfo hvf_accel_ops_type = {
     .abstract   = true,
 };
 
-static void hvf_accel_ops_register_types(void) { type_register_static(&hvf_accel_ops_type); }
-
-type_init(hvf_accel_ops_register_types);
+DEFINE_TYPE(hvf_accel_ops_type)

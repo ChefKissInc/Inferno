@@ -41,6 +41,4 @@ static const TypeInfo fw_path_provider_info = {
     .class_size = sizeof(FWPathProviderClass),
 };
 
-static void fw_path_provider_register_types(void) { type_register_static(&fw_path_provider_info); }
-
-type_init(fw_path_provider_register_types)
+DEFINE_TYPE(fw_path_provider_info)

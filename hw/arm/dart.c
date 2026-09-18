@@ -1061,23 +1061,18 @@ static void apple_dart_iommu_memory_region_class_init(ObjectClass* klass, const 
     imrc->notify_flag_changed = apple_dart_mapper_notify_flag_changed;
 }
 
-static const TypeInfo apple_dart_info = {
-    .name          = TYPE_APPLE_DART,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleDARTState),
-    .class_init    = apple_dart_class_init,
+static const TypeInfo apple_dart_types[] = {
+    {
+        .name   = TYPE_APPLE_DART,
+        .parent = TYPE_SYS_BUS_DEVICE,
+        OBJECT_TYPE_INSTANCE(AppleDARTState),
+        .class_init = apple_dart_class_init,
+    },
+    {
+        .parent     = TYPE_IOMMU_MEMORY_REGION,
+        .name       = TYPE_APPLE_DART_IOMMU_MEMORY_REGION,
+        .class_init = apple_dart_iommu_memory_region_class_init,
+    },
 };
 
-static const TypeInfo apple_dart_iommu_memory_region_info = {
-    .parent     = TYPE_IOMMU_MEMORY_REGION,
-    .name       = TYPE_APPLE_DART_IOMMU_MEMORY_REGION,
-    .class_init = apple_dart_iommu_memory_region_class_init,
-};
-
-static void apple_dart_register_types(void)
-{
-    type_register_static(&apple_dart_info);
-    type_register_static(&apple_dart_iommu_memory_region_info);
-}
-
-type_init(apple_dart_register_types);
+DEFINE_TYPES(apple_dart_types)

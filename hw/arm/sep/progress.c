@@ -29,9 +29,9 @@ struct AppleSEPProgressState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState* sep;
-    MemoryRegion   progress_mr;
-    uint8_t        progress_regs[PROGRESS_REG_SIZE];
+    AppleSEP*    sep;
+    MemoryRegion progress_mr;
+    uint8_t      progress_regs[PROGRESS_REG_SIZE];
 };
 
 #ifdef SEP_DISABLE_ASLR
@@ -296,19 +296,9 @@ static void apple_sep_progress_class_init(ObjectClass* klass, const void* class_
     dc->realize      = apple_sep_progress_realize;
 }
 
-static const TypeInfo apple_sep_progress_type_info = {
-    .name           = TYPE_APPLE_SEP_PROGRESS,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_progress_class_init,
-    .instance_size  = sizeof(AppleSEPProgressState),
-    .instance_align = __alignof__(AppleSEPProgressState),
-};
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPProgressState, apple_sep_progress, APPLE_SEP_PROGRESS, SYS_BUS_DEVICE)
 
-static void apple_sep_progress_register_types(void) { type_register_static(&apple_sep_progress_type_info); }
-
-type_init(apple_sep_progress_register_types);
-
-AppleSEPProgressState* apple_sep_progress_create(AppleSEPState* sep)
+AppleSEPProgressState* apple_sep_progress_create(AppleSEP* sep)
 {
     AppleSEPProgressState* s = APPLE_SEP_PROGRESS(qdev_new(TYPE_APPLE_SEP_PROGRESS));
 

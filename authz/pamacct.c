@@ -99,13 +99,11 @@ QAuthZPAM* qauthz_pam_new(const char* id, const char* service, Error** errp)
         object_new_with_props(TYPE_QAUTHZ_PAM, object_get_objects_root(), id, errp, "service", service, NULL));
 }
 
-static const TypeInfo qauthz_pam_info = {.parent            = TYPE_QAUTHZ,
-                                         .name              = TYPE_QAUTHZ_PAM,
-                                         .instance_size     = sizeof(QAuthZPAM),
+static const TypeInfo qauthz_pam_info = {.parent = TYPE_QAUTHZ,
+                                         .name   = TYPE_QAUTHZ_PAM,
+                                         OBJECT_TYPE_INSTANCE(QAuthZPAM),
                                          .instance_finalize = qauthz_pam_finalize,
                                          .class_init        = qauthz_pam_class_init,
                                          .interfaces        = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void qauthz_pam_register_types(void) { type_register_static(&qauthz_pam_info); }
-
-type_init(qauthz_pam_register_types);
+DEFINE_TYPE(qauthz_pam_info)

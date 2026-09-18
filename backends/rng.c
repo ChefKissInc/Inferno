@@ -104,9 +104,9 @@ static void rng_backend_class_init(ObjectClass* oc, const void* data)
     object_class_property_add_bool(oc, "opened", rng_backend_prop_get_opened, NULL);
 }
 
-static const TypeInfo rng_backend_info = {.name              = TYPE_RNG_BACKEND,
-                                          .parent            = TYPE_OBJECT,
-                                          .instance_size     = sizeof(RngBackend),
+static const TypeInfo rng_backend_info = {.name   = TYPE_RNG_BACKEND,
+                                          .parent = TYPE_OBJECT,
+                                          OBJECT_TYPE_INSTANCE(RngBackend),
                                           .instance_init     = rng_backend_init,
                                           .instance_finalize = rng_backend_finalize,
                                           .class_size        = sizeof(RngBackendClass),

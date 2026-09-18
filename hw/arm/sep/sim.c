@@ -283,31 +283,31 @@ enum
     BOOTSTRAP_OP_PANIC                        = 255,
 };
 
-static void apple_sep_sim_set_ool_in_size(AppleSEPSimState* s, uint8_t ep, uint32_t size)
+static void apple_sep_sim_set_ool_in_size(AppleSEPSim* s, uint8_t ep, uint32_t size)
 {
     assert_cmpuint(ep, <, SEP_ENDPOINT_MAX);
     s->ool_state[ep].in_size = size;
 }
 
-static void apple_sep_sim_set_ool_in_addr(AppleSEPSimState* s, uint8_t ep, uint64_t addr)
+static void apple_sep_sim_set_ool_in_addr(AppleSEPSim* s, uint8_t ep, uint64_t addr)
 {
     assert_cmpuint(ep, <, SEP_ENDPOINT_MAX);
     s->ool_state[ep].in_addr = addr;
 }
 
-static void apple_sep_sim_set_ool_out_size(AppleSEPSimState* s, uint8_t ep, uint32_t size)
+static void apple_sep_sim_set_ool_out_size(AppleSEPSim* s, uint8_t ep, uint32_t size)
 {
     assert_cmpuint(ep, <, SEP_ENDPOINT_MAX);
     s->ool_state[ep].out_size = size;
 }
 
-static void apple_sep_sim_set_ool_out_addr(AppleSEPSimState* s, uint8_t ep, uint64_t addr)
+static void apple_sep_sim_set_ool_out_addr(AppleSEPSim* s, uint8_t ep, uint64_t addr)
 {
     assert_cmpuint(ep, <, SEP_ENDPOINT_MAX);
     s->ool_state[ep].out_addr = addr;
 }
 
-static void apple_sep_sim_send_message(AppleSEPSimState* s, uint8_t ep, uint8_t tag, uint8_t op, uint8_t param,
+static void apple_sep_sim_send_message(AppleSEPSim* s, uint8_t ep, uint8_t tag, uint8_t op, uint8_t param,
                                        uint32_t data)
 {
     AppleA7IOP*        a7iop;
@@ -326,13 +326,13 @@ static void apple_sep_sim_send_message(AppleSEPSimState* s, uint8_t ep, uint8_t 
     apple_a7iop_send_ap(a7iop, sent_msg);
 }
 
-static void apple_sep_sim_message_reply(AppleSEPSimState* s, SEPMessage* msg, uint8_t op, uint8_t param, uint32_t data)
+static void apple_sep_sim_message_reply(AppleSEPSim* s, SEPMessage* msg, uint8_t op, uint8_t param, uint32_t data)
 { apple_sep_sim_send_message(s, msg->ep, msg->tag, op, param, data); }
 
-static void apple_sep_sim_control_send_ack(AppleSEPSimState* s, SEPMessage* msg, uint8_t param, uint32_t data)
+static void apple_sep_sim_control_send_ack(AppleSEPSim* s, SEPMessage* msg, uint8_t param, uint32_t data)
 { apple_sep_sim_message_reply(s, msg, CONTROL_OP_ACK, param, data); }
 
-static void apple_sep_sim_handle_control_msg(AppleSEPSimState* s, SEPMessage* msg)
+static void apple_sep_sim_handle_control_msg(AppleSEPSim* s, SEPMessage* msg)
 {
     SetOOLMessage* set_ool_msg;
 
@@ -414,7 +414,7 @@ static void apple_sep_sim_handle_control_msg(AppleSEPSimState* s, SEPMessage* ms
     }
 }
 
-static void apple_sep_sim_handle_arts_msg(AppleSEPSimState* s, SEPMessage* msg)
+static void apple_sep_sim_handle_arts_msg(AppleSEPSim* s, SEPMessage* msg)
 {
     switch (msg->op) {
         case ART_STORAGE_OP_RECEIVED: qemu_log_mask(LOG_GUEST_ERROR, "EP_ART_STORAGE: ART_RECEIVED\n"); break;
@@ -422,10 +422,10 @@ static void apple_sep_sim_handle_arts_msg(AppleSEPSimState* s, SEPMessage* msg)
     }
 }
 
-static void apple_sep_sim_xart_send_ack(AppleSEPSimState* s, SEPMessage* message, uint8_t param, uint32_t data)
+static void apple_sep_sim_xart_send_ack(AppleSEPSim* s, SEPMessage* message, uint8_t param, uint32_t data)
 { apple_sep_sim_message_reply(s, message, XART_OP_ACK, param, data); }
 
-static void apple_sep_sim_handle_xart_msg(AppleSEPSimState* s, bool slave, SEPMessage* message)
+static void apple_sep_sim_handle_xart_msg(AppleSEPSim* s, bool slave, SEPMessage* message)
 {
     const char* xart_name;
 
@@ -459,7 +459,7 @@ static void apple_sep_sim_handle_xart_msg(AppleSEPSimState* s, bool slave, SEPMe
     }
 }
 
-static void apple_sep_sim_handle_l4info(AppleSEPSimState* s, L4InfoMessage* msg)
+static void apple_sep_sim_handle_l4info(AppleSEPSim* s, L4InfoMessage* msg)
 {
     qemu_log_mask(LOG_GUEST_ERROR, "EP_L4INFO: address 0x%" PRIx64 " size 0x%X\n", (uint64_t)msg->address << 12,
                   msg->size << 12);
@@ -477,7 +477,7 @@ static const uint32_t apple_sep_sim_endpoint_names[] = {
     'cntl', 'log ', 'arts', 'artr', 'scrd', 'xars', 'sks ', 'xarm',
 };
 
-static void apple_sep_sim_advertise_eps(AppleSEPSimState* s)
+static void apple_sep_sim_advertise_eps(AppleSEPSim* s)
 {
     AppleA7IOP*              a7iop;
     AppleA7IOPMessage*       msg;
@@ -506,7 +506,7 @@ static void apple_sep_sim_advertise_eps(AppleSEPSimState* s)
     }
 }
 
-static void apple_sep_sim_handle_bootstrap_msg(AppleSEPSimState* s, SEPMessage* msg)
+static void apple_sep_sim_handle_bootstrap_msg(AppleSEPSim* s, SEPMessage* msg)
 {
     uint32_t randval = 0;
     switch (msg->op) {
@@ -593,7 +593,7 @@ static uint8_t* apple_sep_sim_gen_sks_hash(uint8_t* buf, const uint32_t msg_size
     return hash;
 }
 
-static void apple_sep_sim_keystore_send_ipc_resp(AppleSEPSimState* s, const KeystoreMessage* msg, uint8_t* resp_buf,
+static void apple_sep_sim_keystore_send_ipc_resp(AppleSEPSim* s, const KeystoreMessage* msg, uint8_t* resp_buf,
                                                  const uint32_t resp_size)
 {
     KeystoreIPCHeader* resp_hdr;
@@ -610,7 +610,7 @@ static void apple_sep_sim_keystore_send_ipc_resp(AppleSEPSimState* s, const Keys
     apple_sep_sim_send_message(s, msg->ep, msg->tag | KEYSTORE_MSG_TAG_REPLY, msg->id, 0, resp_size << 16);
 }
 
-static void apple_sep_sim_handle_keystore_msg(AppleSEPSimState* s, KeystoreMessage* msg)
+static void apple_sep_sim_handle_keystore_msg(AppleSEPSim* s, KeystoreMessage* msg)
 {
     uint8_t  msg_code = msg->tag & KEYSTORE_MSG_TAG_CODE_MASK;
     uint8_t* msg_buf  = g_new0(uint8_t, msg->size);
@@ -912,9 +912,9 @@ static void apple_sep_sim_handle_keystore_msg(AppleSEPSimState* s, KeystoreMessa
 
 static void apple_sep_sim_handle_messages(void* opaque)
 {
-    AppleSEPSimState* s     = opaque;
-    AppleA7IOP*       a7iop = opaque;
-    SEPMessage        sep_message;
+    AppleSEPSim* s     = opaque;
+    AppleA7IOP*  a7iop = opaque;
+    SEPMessage   sep_message;
 
     QEMU_LOCK_GUARD(&s->lock);
 
@@ -943,14 +943,14 @@ static void apple_sep_sim_handle_messages(void* opaque)
     }
 }
 
-AppleSEPSimState* apple_sep_sim_from_node(AppleDTNode* node, bool modern)
+AppleSEPSim* apple_sep_sim_from_node(AppleDTNode* node, bool modern)
 {
-    DeviceState*      dev;
-    AppleA7IOP*       a7iop;
-    AppleSEPSimState* s;
-    AppleDTProp*      prop;
-    uint64_t*         reg;
-    AppleDTNode*      child;
+    DeviceState* dev;
+    AppleA7IOP*  a7iop;
+    AppleSEPSim* s;
+    AppleDTProp* prop;
+    uint64_t*    reg;
+    AppleDTNode* child;
 
     dev   = qdev_new(TYPE_APPLE_SEP_SIM);
     a7iop = APPLE_A7IOP(dev);
@@ -973,7 +973,7 @@ AppleSEPSimState* apple_sep_sim_from_node(AppleDTNode* node, bool modern)
 
 static void apple_sep_sim_realize(DeviceState* dev, Error** errp)
 {
-    AppleSEPSimState* s;
+    AppleSEPSim*      s;
     AppleSEPSimClass* sc;
 
     s  = APPLE_SEP_SIM(dev);
@@ -984,7 +984,7 @@ static void apple_sep_sim_realize(DeviceState* dev, Error** errp)
 
 static void apple_sep_sim_reset_hold(Object* obj, ResetType type)
 {
-    AppleSEPSimState*  s;
+    AppleSEPSim*       s;
     AppleSEPSimClass*  sc;
     AppleA7IOP*        a7iop;
     size_t             i;
@@ -1059,14 +1059,4 @@ static void apple_sep_sim_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 }
 
-static const TypeInfo apple_sep_sim_info = {
-    .name          = TYPE_APPLE_SEP_SIM,
-    .parent        = TYPE_APPLE_A7IOP,
-    .instance_size = sizeof(AppleSEPSimState),
-    .class_size    = sizeof(AppleSEPSimClass),
-    .class_init    = apple_sep_sim_class_init,
-};
-
-static void apple_sep_sim_register_types(void) { type_register_static(&apple_sep_sim_info); }
-
-type_init(apple_sep_sim_register_types);
+OBJECT_DEFINE_TYPE_CLASS_INIT(AppleSEPSim, apple_sep_sim, APPLE_SEP_SIM, APPLE_A7IOP)

@@ -121,7 +121,7 @@ struct AppleAOPClass
     ResettablePhases parent_reset;
 };
 
-struct AppleAOPState
+struct AppleAOP
 {
     /*< private >*/
     AppleRTKit parent_obj;
@@ -145,7 +145,7 @@ typedef enum
 
 struct AppleAOPEndpoint
 {
-    AppleAOPState*                     aop;
+    AppleAOP*                          aop;
     QemuMutex                          mutex;
     uint32_t                           num;
     uint32_t                           rx_off;
@@ -592,7 +592,7 @@ static void apple_aop_ep_hello_foreach(gpointer data, gpointer user_data)
 
 static void apple_aop_boot_done(void* opaque)
 {
-    AppleAOPState* s = opaque;
+    AppleAOP* s = opaque;
 
     g_list_foreach(s->endpoints, apple_aop_ep_hello_foreach, NULL);
 }
@@ -618,7 +618,7 @@ static const MemoryRegionOps ascv2_core_reg_ops = {
 
 static void apple_aop_realize(DeviceState* dev, Error** errp)
 {
-    AppleAOPState* s;
+    AppleAOP*      s;
     AppleAOPClass* aopc;
     Object*        obj;
 
@@ -647,7 +647,7 @@ static void apple_aop_ep_reset_foreach(gpointer data, gpointer user_data)
 
 static void apple_aop_reset_hold(Object* obj, ResetType type)
 {
-    AppleAOPState* s;
+    AppleAOP*      s;
     AppleAOPClass* aopc;
 
     s    = APPLE_AOP(obj);
@@ -675,27 +675,17 @@ static void apple_aop_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 }
 
-static const TypeInfo apple_aop_info = {
-    .name          = TYPE_APPLE_AOP,
-    .parent        = TYPE_APPLE_RTKIT,
-    .instance_size = sizeof(AppleAOPState),
-    .class_size    = sizeof(AppleAOPClass),
-    .class_init    = apple_aop_class_init,
-};
-
-static void apple_aop_register_types(void) { type_register_static(&apple_aop_info); }
-
-type_init(apple_aop_register_types);
+OBJECT_DEFINE_TYPE_CLASS_INIT(AppleAOP, apple_aop, APPLE_AOP, APPLE_RTKIT)
 
 SysBusDevice* apple_aop_create(AppleDTNode* node, AppleA7IOPVersion version)
 {
-    DeviceState*   dev;
-    AppleAOPState* s;
-    SysBusDevice*  sbd;
-    AppleRTKit*    rtk;
-    AppleDTNode*   child;
-    AppleDTProp*   prop;
-    uint64_t*      reg;
+    DeviceState*  dev;
+    AppleAOP*     s;
+    SysBusDevice* sbd;
+    AppleRTKit*   rtk;
+    AppleDTNode*  child;
+    AppleDTProp*  prop;
+    uint64_t*     reg;
 
     dev     = qdev_new(TYPE_APPLE_AOP);
     s       = APPLE_AOP(dev);
@@ -725,7 +715,7 @@ SysBusDevice* apple_aop_create(AppleDTNode* node, AppleA7IOPVersion version)
     return sbd;
 }
 
-AppleAOPEndpoint* apple_aop_ep_create(AppleAOPState* s, void* opaque, const AppleAOPEndpointDescription* descr)
+AppleAOPEndpoint* apple_aop_ep_create(AppleAOP* s, void* opaque, const AppleAOPEndpointDescription* descr)
 {
     AppleAOPEndpoint* ep;
     AppleRTKit*       rtk = &s->parent_obj;

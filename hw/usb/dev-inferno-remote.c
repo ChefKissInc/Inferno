@@ -628,13 +628,4 @@ static void usb_inferno_remote_dev_class_init(ObjectClass* klass, const void* da
     device_class_set_props(dc, usb_inferno_remote_dev_props);
 }
 
-static const TypeInfo usb_inferno_remote_dev_type_info = {
-    .name          = TYPE_USB_INFERNO_REMOTE,
-    .parent        = TYPE_USB_DEVICE,
-    .instance_size = sizeof(USBInfernoRemoteState),
-    .class_init    = usb_inferno_remote_dev_class_init,
-};
-
-static void usb_inferno_register_types(void) { type_register_static(&usb_inferno_remote_dev_type_info); }
-
-type_init(usb_inferno_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(USBInfernoRemoteState, usb_inferno_remote_dev, USB_INFERNO_REMOTE, USB_DEVICE)

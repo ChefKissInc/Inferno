@@ -47,7 +47,7 @@ static void apple_buttons_handle_event(DeviceState* dev, QemuConsole* src, Input
 
     QEMU_LOCK_GUARD(&s->mutex);
 
-    AppleSMCState* smc = APPLE_SMC_IOP(object_property_get_link(OBJECT(qdev_get_machine()), "smc", &error_fatal));
+    AppleSMC* smc = APPLE_SMC_IOP(object_property_get_link(OBJECT(qdev_get_machine()), "smc", &error_fatal));
 
     qemu_system_wakeup_request(QEMU_WAKEUP_REASON_OTHER, NULL);
 
@@ -110,7 +110,7 @@ SysBusDevice* apple_buttons_create(AppleDTNode* node)
     s   = APPLE_BUTTONS(dev);
     sbd = SYS_BUS_DEVICE(dev);
 
-    AppleSMCState* smc = APPLE_SMC_IOP(object_property_get_link(OBJECT(qdev_get_machine()), "smc", &error_fatal));
+    AppleSMC* smc = APPLE_SMC_IOP(object_property_get_link(OBJECT(qdev_get_machine()), "smc", &error_fatal));
     apple_smc_add_key_func(smc, 'bVUP', 4, SMC_KEY_TYPE_UINT32, SMC_ATTR_LE, s, apple_buttons_smc_read_vol_up, NULL);
     apple_smc_add_key_func(smc, 'bVDN', 4, SMC_KEY_TYPE_UINT32, SMC_ATTR_LE, s, apple_buttons_smc_read_vol_down, NULL);
     apple_smc_add_key_func(smc, 'bHLD', 4, SMC_KEY_TYPE_UINT32, SMC_ATTR_LE, s, apple_buttons_smc_read_hold, NULL);
@@ -159,10 +159,10 @@ static void apple_buttons_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo apple_buttons_types = {
-    .name          = TYPE_APPLE_BUTTONS,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleButtonsState),
-    .class_init    = apple_buttons_class_init,
+    .name   = TYPE_APPLE_BUTTONS,
+    .parent = TYPE_SYS_BUS_DEVICE,
+    OBJECT_TYPE_INSTANCE(AppleButtonsState),
+    .class_init = apple_buttons_class_init,
 };
 
 static void apple_buttons_init(void) { type_register_static(&apple_buttons_types); }

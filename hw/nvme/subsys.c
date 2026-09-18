@@ -161,13 +161,4 @@ static void nvme_subsys_class_init(ObjectClass* oc, const void* data)
     device_class_set_props(dc, nvme_subsystem_props);
 }
 
-static const TypeInfo nvme_subsys_info = {
-    .name          = TYPE_NVME_SUBSYS,
-    .parent        = TYPE_DEVICE,
-    .class_init    = nvme_subsys_class_init,
-    .instance_size = sizeof(NvmeSubsystem),
-};
-
-static void nvme_subsys_register_types(void) { type_register_static(&nvme_subsys_info); }
-
-type_init(nvme_subsys_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(NvmeSubsystem, nvme_subsys, NVME_SUBSYS, DEVICE)

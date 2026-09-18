@@ -459,7 +459,7 @@ static void apple_spi_realize(DeviceState* dev, struct Error** errp)
 {
     AppleSPIState* spi = APPLE_SPI(dev);
     char           name[32];
-    AppleSIOState* sio;
+    AppleSIO*      sio;
 
     snprintf(name, sizeof(name), "%s.bus", dev->id);
     spi->ssi_bus = ssi_create_bus(dev, name);
@@ -507,7 +507,7 @@ SysBusDevice* apple_spi_from_node(AppleDTNode* node)
     return sbd;
 }
 
-static void apple_spi_instance_init(Object* obj)
+static void apple_spi_init(Object* obj)
 {
     AppleSPIState* spi = APPLE_SPI(obj);
     DeviceState*   dev = DEVICE(spi);
@@ -538,14 +538,4 @@ static void apple_spi_class_init(ObjectClass* klass, const void* data)
     dc->realize = apple_spi_realize;
 }
 
-static const TypeInfo apple_spi_type_info = {
-    .name          = TYPE_APPLE_SPI,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleSPIState),
-    .instance_init = apple_spi_instance_init,
-    .class_init    = apple_spi_class_init,
-};
-
-static void apple_spi_register_types(void) { type_register_static(&apple_spi_type_info); }
-
-type_init(apple_spi_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(AppleSPIState, apple_spi, APPLE_SPI, SYS_BUS_DEVICE)

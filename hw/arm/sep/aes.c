@@ -143,17 +143,17 @@ struct AppleSEPAESSState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState* sep;
-    QEMUBH*        command_bh;
-    QemuMutex      lock;
-    uint32_t       status;                                 // 0x4
-    uint32_t       command;                                // 0x8
-    uint32_t       interrupt_status;                       // 0xc
-    uint32_t       interrupt_enabled;                      // 0x10
-    uint32_t       reg_0x14_keywrap_iterations_counter;    // 0x14
-    uint32_t       reg_0x18_keydisable;                    // 0x18
-    uint32_t       seed_bits;                              // 0x1c
-    uint32_t       seed_bits_lock;                         // 0x20
+    AppleSEP* sep;
+    QEMUBH*   command_bh;
+    QemuMutex lock;
+    uint32_t  status;                                 // 0x4
+    uint32_t  command;                                // 0x8
+    uint32_t  interrupt_status;                       // 0xc
+    uint32_t  interrupt_enabled;                      // 0x10
+    uint32_t  reg_0x14_keywrap_iterations_counter;    // 0x14
+    uint32_t  reg_0x18_keydisable;                    // 0x18
+    uint32_t  seed_bits;                              // 0x1c
+    uint32_t  seed_bits_lock;                         // 0x20
     union
     {
         struct
@@ -223,7 +223,7 @@ static void xor_32bit_value(uint8_t* dest, uint32_t val, int size)
 
 static void aess_raise_interrupt(AppleSEPAESSState* s)
 {
-    AppleSEPState* sep   = s->sep;
+    AppleSEP* sep        = s->sep;
     s->interrupt_status |= SEP_AESS_REGISTER_INTERRUPT_STATUS_DONE;
     if ((s->interrupt_enabled & SEP_AESS_REGISTER_INTERRUPT_ENABLED_MASK)
         == (SEP_AESS_REGISTER_INTERRUPT_ENABLED_INTERRUPT_ENABLED
@@ -600,7 +600,7 @@ static void apple_sep_aess_handle_cmd_bh(void* opaque)
 static void apple_sep_aess_base_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigned size)
 {
     AppleSEPAESSState* s         = opaque;
-    AppleSEPState*     sep       = s->sep;
+    AppleSEP*          sep       = s->sep;
     uint64_t           orig_data = data;
 
     // QEMU_LOCK_GUARD(&s->lock);
@@ -687,7 +687,7 @@ static void apple_sep_aess_base_reg_write(void* opaque, hwaddr addr, uint64_t da
 static uint64_t apple_sep_aess_base_reg_read(void* opaque, hwaddr addr, unsigned size)
 {
     AppleSEPAESSState* s   = opaque;
-    AppleSEPState*     sep = s->sep;
+    AppleSEP*          sep = s->sep;
     uint64_t           ret = 0;
 
     // QEMU_LOCK_GUARD(&s->lock);
@@ -809,26 +809,17 @@ static void apple_sep_aess_class_init(ObjectClass* klass, const void* class_data
     dc->realize      = apple_sep_aess_realize;
 }
 
-static const TypeInfo apple_sep_aess_type_info = {
-    .name           = TYPE_APPLE_SEP_AESS,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_aess_class_init,
-    .instance_size  = sizeof(AppleSEPAESSState),
-    .instance_align = __alignof__(AppleSEPAESSState),
-    .instance_init  = apple_sep_aess_init,
-};
-
 struct AppleSEPAESHState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState* sep;
-    QEMUBH*        command_bh;
-    QemuMutex      lock;
-    uint32_t       status;               // 0x4
-    uint32_t       command;              // 0x8
-    uint32_t       interrupt_status;     // 0xc
-    uint32_t       interrupt_enabled;    // 0x10
+    AppleSEP* sep;
+    QEMUBH*   command_bh;
+    QemuMutex lock;
+    uint32_t  status;               // 0x4
+    uint32_t  command;              // 0x8
+    uint32_t  interrupt_status;     // 0xc
+    uint32_t  interrupt_enabled;    // 0x10
     // uint32_t reg_0x14_keywrap_iterations_counter; // 0x14
     // uint32_t reg_0x18_keydisable; // 0x18
     // uint32_t seed_bits; // 0x1c
@@ -872,7 +863,7 @@ struct AppleSEPAESHState
 
 static void apple_sep_aesh_raise_interrupt(AppleSEPAESHState* s)
 {
-    AppleSEPState* sep   = s->sep;
+    AppleSEP* sep        = s->sep;
     s->interrupt_status |= SEP_AESS_REGISTER_INTERRUPT_STATUS_DONE;
     if ((s->interrupt_enabled & SEP_AESS_REGISTER_INTERRUPT_ENABLED_MASK)
         == (SEP_AESS_REGISTER_INTERRUPT_ENABLED_INTERRUPT_ENABLED
@@ -934,7 +925,7 @@ static void apple_sep_aesh_handle_cmd_bh(void* opaque)
 static void apple_sep_aesh_base_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigned size)
 {
     AppleSEPAESHState* s   = opaque;
-    AppleSEPState*     sep = s->sep;
+    AppleSEP*          sep = s->sep;
 
 #ifdef ENABLE_CPU_DUMP_STATE
     cpu_dump_state(CPU(sep->cpu), stderr, CPU_DUMP_CODE);
@@ -989,7 +980,7 @@ static void apple_sep_aesh_base_reg_write(void* opaque, hwaddr addr, uint64_t da
 static uint64_t apple_sep_aesh_base_reg_read(void* opaque, hwaddr addr, unsigned size)
 {
     AppleSEPAESHState* s   = opaque;
-    AppleSEPState*     sep = s->sep;
+    AppleSEP*          sep = s->sep;
     uint64_t           ret = 0;
 
 #ifdef ENABLE_CPU_DUMP_STATE
@@ -1085,16 +1076,7 @@ static void apple_sep_aesh_class_init(ObjectClass* klass, const void* class_data
     dc->realize      = apple_sep_aesh_realize;
 }
 
-static const TypeInfo apple_sep_aesh_type_info = {
-    .name           = TYPE_APPLE_SEP_AESH,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_aesh_class_init,
-    .instance_size  = sizeof(AppleSEPAESHState),
-    .instance_align = __alignof__(AppleSEPAESHState),
-    .instance_init  = apple_sep_aesh_init,
-};
-
-AppleSEPAESHState* apple_sep_aesh_create(AppleSEPState* sep)
+AppleSEPAESHState* apple_sep_aesh_create(AppleSEP* sep)
 {
     AppleSEPAESHState* s = APPLE_SEP_AESH(qdev_new(TYPE_APPLE_SEP_AESH));
 
@@ -1180,26 +1162,34 @@ static void apple_sep_aesc_class_init(ObjectClass* klass, const void* class_data
     dc->realize      = apple_sep_aesc_realize;
 }
 
-static const TypeInfo apple_sep_aesc_type_info = {
-    .name           = TYPE_APPLE_SEP_AESC,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_aesc_class_init,
-    .instance_size  = sizeof(AppleSEPAESCState),
-    .instance_align = __alignof__(AppleSEPAESCState),
+static const TypeInfo apple_sep_aes_types[] = {
+    {
+        .name       = TYPE_APPLE_SEP_AESS,
+        .parent     = TYPE_SYS_BUS_DEVICE,
+        .class_init = apple_sep_aess_class_init,
+        OBJECT_TYPE_INSTANCE(AppleSEPAESSState),
+        .instance_init = apple_sep_aess_init,
+    },
+    {
+        .name       = TYPE_APPLE_SEP_AESH,
+        .parent     = TYPE_SYS_BUS_DEVICE,
+        .class_init = apple_sep_aesh_class_init,
+        OBJECT_TYPE_INSTANCE(AppleSEPAESHState),
+        .instance_init = apple_sep_aesh_init,
+    },
+    {
+        .name       = TYPE_APPLE_SEP_AESC,
+        .parent     = TYPE_SYS_BUS_DEVICE,
+        .class_init = apple_sep_aesc_class_init,
+        OBJECT_TYPE_INSTANCE(AppleSEPAESCState),
+    },
 };
+
+DEFINE_TYPES(apple_sep_aes_types)
 
 AppleSEPAESCState* apple_sep_aesc_create(void) { return APPLE_SEP_AESC(qdev_new(TYPE_APPLE_SEP_AESC)); }
 
-static void apple_sep_aes_register_types(void)
-{
-    type_register_static(&apple_sep_aess_type_info);
-    type_register_static(&apple_sep_aesh_type_info);
-    type_register_static(&apple_sep_aesc_type_info);
-}
-
-type_init(apple_sep_aes_register_types);
-
-AppleSEPAESSState* apple_sep_aess_create(AppleSEPState* sep)
+AppleSEPAESSState* apple_sep_aess_create(AppleSEP* sep)
 {
     AppleSEPAESSState* s = APPLE_SEP_AESS(qdev_new(TYPE_APPLE_SEP_AESS));
 

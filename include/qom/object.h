@@ -285,6 +285,38 @@ struct Object
     DO_OBJECT_DECLARE_SIMPLE_TYPE(InstanceType, MODULE_OBJ_NAME)
 
 /**
+ * OBJECT_TYPE_INSTANCE:
+ * @InstanceType: instance struct name
+ *
+ * Expands to the #TypeInfo instance size and alignment fields for
+ * @InstanceType.  An object is only correctly aligned if both are stated.
+ */
+#define OBJECT_TYPE_INSTANCE(InstanceType)                                             \
+    .instance_size = sizeof(InstanceType), .instance_align = __alignof__(InstanceType)
+
+/**
+ * DO_OBJECT_DEFINE_TYPE:
+ * @ModuleObjName: the object name with initial caps
+ * @module_obj_name: the object name in lowercase with underscore separators
+ * @MODULE_OBJ_NAME: the object name in uppercase with underscore separators
+ * @PARENT_MODULE_OBJ_NAME: the parent object name in uppercase with underscore
+ *                          separators
+ * @...: the remaining #TypeInfo field initializers
+ *
+ * This is the base macro used to implement all the OBJECT_DEFINE_* macros.
+ * It should never be used directly in a source file.
+ */
+#define DO_OBJECT_DEFINE_TYPE(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME, ...) \
+    static const TypeInfo module_obj_name##_info = {                                                        \
+        .parent = TYPE_##PARENT_MODULE_OBJ_NAME,                                                            \
+        .name   = TYPE_##MODULE_OBJ_NAME,                                                                   \
+        OBJECT_TYPE_INSTANCE(ModuleObjName),                                                                \
+        __VA_ARGS__,                                                                                        \
+    };                                                                                                      \
+                                                                                                            \
+    DEFINE_TYPE(module_obj_name##_info)
+
+/**
  * DO_OBJECT_DEFINE_TYPE_EXTENDED:
  * @ModuleObjName: the object name with initial caps
  * @module_obj_name: the object name in lowercase with underscore separators
@@ -298,27 +330,16 @@ struct Object
  * This is the base macro used to implement all the OBJECT_DEFINE_*
  * macros. It should never be used directly in a source file.
  */
-#define DO_OBJECT_DEFINE_TYPE_EXTENDED(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME, \
-                                       ABSTRACT, CLASS_SIZE, ...)                                               \
-    static void module_obj_name##_finalize(Object* obj);                                                        \
-    static void module_obj_name##_class_init(ObjectClass* oc, const void* data);                                \
-    static void module_obj_name##_init(Object* obj);                                                            \
-                                                                                                                \
-    static const TypeInfo module_obj_name##_info = {                                                            \
-        .parent            = TYPE_##PARENT_MODULE_OBJ_NAME,                                                     \
-        .name              = TYPE_##MODULE_OBJ_NAME,                                                            \
-        .instance_size     = sizeof(ModuleObjName),                                                             \
-        .instance_align    = __alignof__(ModuleObjName),                                                        \
-        .instance_init     = module_obj_name##_init,                                                            \
-        .instance_finalize = module_obj_name##_finalize,                                                        \
-        .class_size        = CLASS_SIZE,                                                                        \
-        .class_init        = module_obj_name##_class_init,                                                      \
-        .abstract          = ABSTRACT,                                                                          \
-        .interfaces        = (const InterfaceInfo[]){__VA_ARGS__},                                              \
-    };                                                                                                          \
-                                                                                                                \
-    static void module_obj_name##_register_types(void) { type_register_static(&module_obj_name##_info); }       \
-    type_init(module_obj_name##_register_types);
+#define DO_OBJECT_DEFINE_TYPE_EXTENDED(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME,       \
+                                       ABSTRACT, CLASS_SIZE, ...)                                                     \
+    static void module_obj_name##_finalize(Object* obj);                                                              \
+    static void module_obj_name##_class_init(ObjectClass* oc, const void* data);                                      \
+    static void module_obj_name##_init(Object* obj);                                                                  \
+                                                                                                                      \
+    DO_OBJECT_DEFINE_TYPE(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME,                    \
+                          .instance_init = module_obj_name##_init, .instance_finalize = module_obj_name##_finalize,   \
+                          .class_size = CLASS_SIZE, .class_init = module_obj_name##_class_init, .abstract = ABSTRACT, \
+                          .interfaces = (const InterfaceInfo[]){__VA_ARGS__})
 
 /**
  * OBJECT_DEFINE_TYPE_EXTENDED:
@@ -431,6 +452,76 @@ struct Object
 #define OBJECT_DEFINE_SIMPLE_TYPE(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME)             \
     OBJECT_DEFINE_SIMPLE_TYPE_WITH_INTERFACES(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME, \
                                               {NULL})
+
+/**
+ * OBJECT_DEFINE_TYPE_CLASS_INIT:
+ * @ModuleObjName: the object name with initial caps
+ * @module_obj_name: the object name in lowercase with underscore separators
+ * @MODULE_OBJ_NAME: the object name in uppercase with underscore separators
+ * @PARENT_MODULE_OBJ_NAME: the parent object name in uppercase with underscore
+ *                          separators
+ *
+ * Defines a type whose only method is _class_init.
+ */
+#define OBJECT_DEFINE_TYPE_CLASS_INIT(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME)    \
+    static void module_obj_name##_class_init(ObjectClass* oc, const void* data);                                  \
+                                                                                                                  \
+    DO_OBJECT_DEFINE_TYPE(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME,                \
+                          .class_size = sizeof(ModuleObjName##Class), .class_init = module_obj_name##_class_init)
+
+/**
+ * OBJECT_DEFINE_TYPE_INSTANCE_INIT:
+ * @ModuleObjName: the object name with initial caps
+ * @module_obj_name: the object name in lowercase with underscore separators
+ * @MODULE_OBJ_NAME: the object name in uppercase with underscore separators
+ * @PARENT_MODULE_OBJ_NAME: the parent object name in uppercase with underscore
+ *                          separators
+ *
+ * Does the same as OBJECT_DEFINE_TYPE_CLASS_INIT(), for a type which also has
+ * an _init.
+ */
+#define OBJECT_DEFINE_TYPE_INSTANCE_INIT(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME) \
+    static void module_obj_name##_class_init(ObjectClass* oc, const void* data);                                  \
+    static void module_obj_name##_init(Object* obj);                                                              \
+                                                                                                                  \
+    DO_OBJECT_DEFINE_TYPE(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME,                \
+                          .class_size = sizeof(ModuleObjName##Class), .instance_init = module_obj_name##_init,    \
+                          .class_init = module_obj_name##_class_init)
+
+/**
+ * OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT:
+ * @ModuleObjName: the object name with initial caps
+ * @module_obj_name: the object name in lowercase with underscore separators
+ * @MODULE_OBJ_NAME: the object name in uppercase with underscore separators
+ * @PARENT_MODULE_OBJ_NAME: the parent object name in uppercase with underscore
+ *                          separators
+ *
+ * Defines a type with no class struct, whose only method is _class_init.
+ */
+#define OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME) \
+    static void module_obj_name##_class_init(ObjectClass* oc, const void* data);                                      \
+                                                                                                                      \
+    DO_OBJECT_DEFINE_TYPE(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME,                    \
+                          .class_init = module_obj_name##_class_init)
+
+/**
+ * OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT:
+ * @ModuleObjName: the object name with initial caps
+ * @module_obj_name: the object name in lowercase with underscore separators
+ * @MODULE_OBJ_NAME: the object name in uppercase with underscore separators
+ * @PARENT_MODULE_OBJ_NAME: the parent object name in uppercase with underscore
+ *                          separators
+ *
+ * Does the same as OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(), for a type which
+ * also has an _init.
+ */
+#define OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(ModuleObjName, module_obj_name, MODULE_OBJ_NAME,               \
+                                                PARENT_MODULE_OBJ_NAME)                                        \
+    static void module_obj_name##_class_init(ObjectClass* oc, const void* data);                               \
+    static void module_obj_name##_init(Object* obj);                                                           \
+                                                                                                               \
+    DO_OBJECT_DEFINE_TYPE(ModuleObjName, module_obj_name, MODULE_OBJ_NAME, PARENT_MODULE_OBJ_NAME,             \
+                          .instance_init = module_obj_name##_init, .class_init = module_obj_name##_class_init)
 
 /**
  * struct TypeInfo:
@@ -949,15 +1040,35 @@ Type type_register_static(const TypeInfo* info);
 void type_register_static_array(const TypeInfo* infos, int nr_infos);
 
 /**
+ * DO_DEFINE_TYPE:
+ * @type_symbol: The symbol the registration constructor is named after
+ * @registration: The call registering the type(s) held by @type_symbol
+ *
+ * This is the base macro used to implement DEFINE_TYPE() and DEFINE_TYPES().
+ * It should never be used directly in a source file.
+ */
+#define DO_DEFINE_TYPE(type_symbol, registration)                  \
+    static void do_qemu_init_##type_symbol(void) { registration; } \
+    type_init(do_qemu_init_##type_symbol)
+
+/**
+ * DEFINE_TYPE:
+ * @type_info: The #TypeInfo structure to register
+ *
+ * The single type counterpart of DEFINE_TYPES().  @type_info should be a
+ * static constant that exists for the life time that the type is registered.
+ */
+#define DEFINE_TYPE(type_info) DO_DEFINE_TYPE(type_info, type_register_static(&type_info))
+
+/**
  * DEFINE_TYPES:
  * @type_array: The array containing #TypeInfo structures to register
  *
  * @type_array should be static constant that exists for the life time
  * that the type is registered.
  */
-#define DEFINE_TYPES(type_array)                                                                                    \
-    static void do_qemu_init_##type_array(void) { type_register_static_array(type_array, ARRAY_SIZE(type_array)); } \
-    type_init(do_qemu_init_##type_array)
+#define DEFINE_TYPES(type_array)                                                               \
+    DO_DEFINE_TYPE(type_array, type_register_static_array(type_array, ARRAY_SIZE(type_array)))
 
 /**
  * type_print_class_properties:

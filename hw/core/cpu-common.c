@@ -326,9 +326,9 @@ static void cpu_common_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo cpu_type_info = {
-    .name              = TYPE_CPU,
-    .parent            = TYPE_DEVICE,
-    .instance_size     = sizeof(CPUState),
+    .name   = TYPE_CPU,
+    .parent = TYPE_DEVICE,
+    OBJECT_TYPE_INSTANCE(CPUState),
     .instance_init     = cpu_common_initfn,
     .instance_finalize = cpu_common_finalize,
     .abstract          = true,
@@ -336,9 +336,9 @@ static const TypeInfo cpu_type_info = {
     .class_init        = cpu_common_class_init,
 };
 
-static void cpu_register_types(void) { type_register_static(&cpu_type_info); }
+DEFINE_TYPE(cpu_type_info)
 
-type_init(cpu_register_types) static void cpu_list_entry(gpointer data, gpointer user_data)
+static void cpu_list_entry(gpointer data, gpointer user_data)
 {
     CPUClass*        cc       = CPU_CLASS(OBJECT_CLASS(data));
     const char*      typename = object_class_get_name(OBJECT_CLASS(data));

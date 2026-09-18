@@ -108,5 +108,4 @@ static const TypeInfo accel_ops_type_info = {
     .class_init = accel_ops_class_init,
 };
 
-static void accel_system_register_types(void) { type_register_static(&accel_ops_type_info); }
-type_init(accel_system_register_types);
+DEFINE_TYPE(accel_ops_type_info)

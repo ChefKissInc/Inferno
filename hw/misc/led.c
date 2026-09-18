@@ -92,15 +92,9 @@ static void led_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, led_properties);
 }
 
-static const TypeInfo led_info = {.name          = TYPE_LED,
-                                  .parent        = TYPE_DEVICE,
-                                  .instance_size = sizeof(LEDState),
-                                  .class_init    = led_class_init};
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(LEDState, led, LED, DEVICE)
 
-static void led_register_types(void) { type_register_static(&led_info); }
-
-type_init(led_register_types) LEDState* led_create_simple(Object* parentobj, GpioPolarity gpio_polarity, LEDColor color,
-                                                          const char* description)
+LEDState* led_create_simple(Object* parentobj, GpioPolarity gpio_polarity, LEDColor color, const char* description)
 {
     g_autofree char* name = NULL;
     DeviceState*     dev;

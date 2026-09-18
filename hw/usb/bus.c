@@ -34,12 +34,6 @@ static void usb_bus_class_init(ObjectClass* klass, const void* data)
     hc->unplug         = qdev_simple_device_unplug_cb;
 }
 
-static const TypeInfo usb_bus_info = {.name          = TYPE_USB_BUS,
-                                      .parent        = TYPE_BUS,
-                                      .instance_size = sizeof(USBBus),
-                                      .class_init    = usb_bus_class_init,
-                                      .interfaces    = (const InterfaceInfo[]){{TYPE_HOTPLUG_HANDLER}, {}}};
-
 static int next_usb_bus = 0;
 static QTAILQ_HEAD(, USBBus) busses = QTAILQ_HEAD_INITIALIZER(busses);
 
@@ -633,20 +627,21 @@ static void usb_device_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(k, usb_props);
 }
 
-static const TypeInfo usb_device_type_info = {
-    .name          = TYPE_USB_DEVICE,
-    .parent        = TYPE_DEVICE,
-    .instance_size = sizeof(USBDevice),
-    .instance_init = usb_device_instance_init,
-    .abstract      = true,
-    .class_size    = sizeof(USBDeviceClass),
-    .class_init    = usb_device_class_init,
+static const TypeInfo usb_types[] = {
+    {.name   = TYPE_USB_BUS,
+     .parent = TYPE_BUS,
+     OBJECT_TYPE_INSTANCE(USBBus),
+     .class_init = usb_bus_class_init,
+     .interfaces = (const InterfaceInfo[]){{TYPE_HOTPLUG_HANDLER}, {}}},
+    {
+        .name   = TYPE_USB_DEVICE,
+        .parent = TYPE_DEVICE,
+        OBJECT_TYPE_INSTANCE(USBDevice),
+        .instance_init = usb_device_instance_init,
+        .abstract      = true,
+        .class_size    = sizeof(USBDeviceClass),
+        .class_init    = usb_device_class_init,
+    },
 };
 
-static void usb_register_types(void)
-{
-    type_register_static(&usb_bus_info);
-    type_register_static(&usb_device_type_info);
-}
-
-type_init(usb_register_types)
+DEFINE_TYPES(usb_types)

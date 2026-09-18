@@ -705,13 +705,4 @@ static void apple_aic_class_init(ObjectClass* klass, const void* data)
     dc->desc      = "Apple Interrupt Controller";
 }
 
-static const TypeInfo apple_aic_info = {
-    .name          = TYPE_APPLE_AIC,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleAICState),
-    .class_init    = apple_aic_class_init,
-};
-
-static void apple_aic_register_types(void) { type_register_static(&apple_aic_info); }
-
-type_init(apple_aic_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleAICState, apple_aic, APPLE_AIC, SYS_BUS_DEVICE)

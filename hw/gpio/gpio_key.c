@@ -83,13 +83,4 @@ static void gpio_key_class_init(ObjectClass* klass, const void* data)
     dc->realize      = gpio_key_realize;
 }
 
-static const TypeInfo gpio_key_info = {
-    .name          = TYPE_GPIOKEY,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(GPIOKEYState),
-    .class_init    = gpio_key_class_init,
-};
-
-static void gpio_key_register_types(void) { type_register_static(&gpio_key_info); }
-
-type_init(gpio_key_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(GPIOKEYState, gpio_key, GPIOKEY, SYS_BUS_DEVICE)

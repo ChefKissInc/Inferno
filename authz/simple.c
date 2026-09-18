@@ -81,13 +81,11 @@ QAuthZSimple* qauthz_simple_new(const char* id, const char* identity, Error** er
         object_new_with_props(TYPE_QAUTHZ_SIMPLE, object_get_objects_root(), id, errp, "identity", identity, NULL));
 }
 
-static const TypeInfo qauthz_simple_info = {.parent            = TYPE_QAUTHZ,
-                                            .name              = TYPE_QAUTHZ_SIMPLE,
-                                            .instance_size     = sizeof(QAuthZSimple),
+static const TypeInfo qauthz_simple_info = {.parent = TYPE_QAUTHZ,
+                                            .name   = TYPE_QAUTHZ_SIMPLE,
+                                            OBJECT_TYPE_INSTANCE(QAuthZSimple),
                                             .instance_finalize = qauthz_simple_finalize,
                                             .class_init        = qauthz_simple_class_init,
                                             .interfaces        = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void qauthz_simple_register_types(void) { type_register_static(&qauthz_simple_info); }
-
-type_init(qauthz_simple_register_types);
+DEFINE_TYPE(qauthz_simple_info)

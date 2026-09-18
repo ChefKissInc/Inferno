@@ -2346,10 +2346,10 @@ static void register_types(void)
     };
 
     static const TypeInfo object_info = {
-        .name          = TYPE_OBJECT,
-        .instance_size = sizeof(Object),
-        .class_init    = object_class_init,
-        .abstract      = true,
+        .name = TYPE_OBJECT,
+        OBJECT_TYPE_INSTANCE(Object),
+        .class_init = object_class_init,
+        .abstract   = true,
     };
 
     type_interface = type_register_internal(&interface_info);

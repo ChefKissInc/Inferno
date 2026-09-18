@@ -2460,10 +2460,10 @@ static void emmc_class_init(ObjectClass* klass, const void* data)
 
 static const TypeInfo sd_types[] = {
     {
-        .name              = TYPE_SDMMC_COMMON,
-        .parent            = TYPE_DEVICE,
-        .abstract          = true,
-        .instance_size     = sizeof(SDState),
+        .name     = TYPE_SDMMC_COMMON,
+        .parent   = TYPE_DEVICE,
+        .abstract = true,
+        OBJECT_TYPE_INSTANCE(SDState),
         .class_size        = sizeof(SDCardClass),
         .class_init        = sdmmc_common_class_init,
         .instance_init     = sd_instance_init,

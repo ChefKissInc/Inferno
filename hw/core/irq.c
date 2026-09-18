@@ -103,11 +103,9 @@ qemu_irq qemu_irq_invert(qemu_irq irq)
 }
 
 static const TypeInfo irq_type_info = {
-    .name          = TYPE_IRQ,
-    .parent        = TYPE_OBJECT,
-    .instance_size = sizeof(IRQState),
+    .name   = TYPE_IRQ,
+    .parent = TYPE_OBJECT,
+    OBJECT_TYPE_INSTANCE(IRQState),
 };
 
-static void irq_register_types(void) { type_register_static(&irq_type_info); }
-
-type_init(irq_register_types)
+DEFINE_TYPE(irq_type_info)

@@ -210,11 +210,6 @@ AUXReply aux_request(AUXBus* bus, AUXCommand cmd, uint32_t address, uint8_t len,
     return ret;
 }
 
-static const TypeInfo aux_bus_info = {.name          = TYPE_AUX_BUS,
-                                      .parent        = TYPE_BUS,
-                                      .instance_size = sizeof(AUXBus),
-                                      .class_init    = aux_bus_class_init};
-
 /* aux-i2c implementation (internal not public) */
 struct AUXTOI2CState
 {
@@ -243,12 +238,6 @@ static void aux_bridge_init(Object* obj)
 }
 
 static inline I2CBus* aux_bridge_get_i2c_bus(AUXTOI2CState* bridge) { return bridge->i2c_bus; }
-
-static const TypeInfo aux_to_i2c_type_info = {.name          = TYPE_AUXTOI2C,
-                                              .parent        = TYPE_AUX_SLAVE,
-                                              .class_init    = aux_bridge_class_init,
-                                              .instance_size = sizeof(AUXTOI2CState),
-                                              .instance_init = aux_bridge_init};
 
 /* aux-slave implementation */
 static void aux_slave_dev_print(Monitor* mon, DeviceState* dev, int indent)
@@ -279,19 +268,20 @@ static void aux_slave_class_init(ObjectClass* klass, const void* data)
     k->bus_type = TYPE_AUX_BUS;
 }
 
-static const TypeInfo aux_slave_type_info = {
-    .name          = TYPE_AUX_SLAVE,
-    .parent        = TYPE_DEVICE,
-    .instance_size = sizeof(AUXSlave),
-    .abstract      = true,
-    .class_init    = aux_slave_class_init,
+static const TypeInfo aux_types[] = {
+    {.name = TYPE_AUX_BUS, .parent = TYPE_BUS, OBJECT_TYPE_INSTANCE(AUXBus), .class_init = aux_bus_class_init},
+    {
+        .name   = TYPE_AUX_SLAVE,
+        .parent = TYPE_DEVICE,
+        OBJECT_TYPE_INSTANCE(AUXSlave),
+        .abstract   = true,
+        .class_init = aux_slave_class_init,
+    },
+    {.name       = TYPE_AUXTOI2C,
+     .parent     = TYPE_AUX_SLAVE,
+     .class_init = aux_bridge_class_init,
+     OBJECT_TYPE_INSTANCE(AUXTOI2CState),
+     .instance_init = aux_bridge_init},
 };
 
-static void aux_register_types(void)
-{
-    type_register_static(&aux_bus_info);
-    type_register_static(&aux_slave_type_info);
-    type_register_static(&aux_to_i2c_type_info);
-}
-
-type_init(aux_register_types)
+DEFINE_TYPES(aux_types)

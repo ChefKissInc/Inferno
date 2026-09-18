@@ -151,14 +151,4 @@ static void apple_typec_class_init(ObjectClass* klass, const void* data)
     dc->desc        = "Apple Type C USB PHY";
 }
 
-static const TypeInfo apple_typec_info = {
-    .name          = TYPE_APPLE_TYPEC,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleTypeCState),
-    .instance_init = apple_typec_init,
-    .class_init    = apple_typec_class_init,
-};
-
-static void apple_typec_register_types(void) { type_register_static(&apple_typec_info); }
-
-type_init(apple_typec_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(AppleTypeCState, apple_typec, APPLE_TYPEC, SYS_BUS_DEVICE)

@@ -85,9 +85,9 @@ static void ehci_sysbus_class_init(ObjectClass* klass, const void* data)
 
 static const TypeInfo ehci_sysbus_types[] = {
     {
-        .name              = TYPE_SYS_BUS_EHCI,
-        .parent            = TYPE_SYS_BUS_DEVICE,
-        .instance_size     = sizeof(EHCISysBusState),
+        .name   = TYPE_SYS_BUS_EHCI,
+        .parent = TYPE_SYS_BUS_DEVICE,
+        OBJECT_TYPE_INSTANCE(EHCISysBusState),
         .instance_init     = ehci_sysbus_init,
         .instance_finalize = ehci_sysbus_finalize,
         .abstract          = true,

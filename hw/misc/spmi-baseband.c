@@ -99,13 +99,4 @@ static void apple_spmi_baseband_class_init(ObjectClass* klass, const void* data)
     sc->command = apple_spmi_baseband_command;
 }
 
-static const TypeInfo apple_spmi_baseband_type_info = {
-    .name          = TYPE_APPLE_SPMI_BASEBAND,
-    .parent        = TYPE_SPMI_SLAVE,
-    .instance_size = sizeof(AppleSPMIBasebandState),
-    .class_init    = apple_spmi_baseband_class_init,
-};
-
-static void apple_spmi_baseband_register_types(void) { type_register_static(&apple_spmi_baseband_type_info); }
-
-type_init(apple_spmi_baseband_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSPMIBasebandState, apple_spmi_baseband, APPLE_SPMI_BASEBAND, SPMI_SLAVE)

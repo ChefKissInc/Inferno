@@ -285,13 +285,4 @@ static void apple_wdt_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_WATCHDOG, dc->categories);
 }
 
-static const TypeInfo apple_wdt_info = {
-    .name          = TYPE_APPLE_WDT,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleWDTState),
-    .class_init    = apple_wdt_class_init,
-};
-
-static void apple_wdt_register_types(void) { type_register_static(&apple_wdt_info); }
-
-type_init(apple_wdt_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleWDTState, apple_wdt, APPLE_WDT, SYS_BUS_DEVICE)

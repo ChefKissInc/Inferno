@@ -60,12 +60,12 @@
 #define TYPE_APPLE_SEP_AESS "apple-sep.aess"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPAESSState, APPLE_SEP_AESS)
 
-AppleSEPAESSState* apple_sep_aess_create(AppleSEPState* sep);
+AppleSEPAESSState* apple_sep_aess_create(AppleSEP* sep);
 
 #define TYPE_APPLE_SEP_AESH "apple-sep.aesh"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPAESHState, APPLE_SEP_AESH)
 
-AppleSEPAESHState* apple_sep_aesh_create(AppleSEPState* sep);
+AppleSEPAESHState* apple_sep_aesh_create(AppleSEP* sep);
 
 #define TYPE_APPLE_SEP_AESC "apple-sep.aesc"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPAESCState, APPLE_SEP_AESC)
@@ -78,7 +78,7 @@ OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPBootMonitorState, APPLE_SEP_BOOT_MONITOR)
 
 void apple_sep_boot_monitor_jump(AppleSEPBootMonitorState* s);
 
-AppleSEPBootMonitorState* apple_sep_boot_monitor_create(AppleSEPState* sep);
+AppleSEPBootMonitorState* apple_sep_boot_monitor_create(AppleSEP* sep);
 
 /* debug-trace.c */
 #ifdef ENABLE_CPU_DUMP_STATE
@@ -92,7 +92,7 @@ OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPDebugTraceState, APPLE_SEP_DEBUG_TRACE)
 
 void                     apple_sep_debug_trace_enable(AppleSEPDebugTraceState* s);
 void                     apple_sep_debug_trace_set_region(AppleSEPDebugTraceState* s, hwaddr offset, hwaddr size);
-AppleSEPDebugTraceState* apple_sep_debug_trace_create(AppleSEPState* sep);
+AppleSEPDebugTraceState* apple_sep_debug_trace_create(AppleSEP* sep);
 #endif
 
 /* eisp.c */
@@ -105,7 +105,7 @@ AppleSEPEISPState* apple_sep_eisp_create(void);
 #define TYPE_APPLE_SEP_KEY "apple-sep.key"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPKeyState, APPLE_SEP_KEY)
 
-AppleSEPKeyState* apple_sep_key_create(AppleSEPState* sep);
+AppleSEPKeyState* apple_sep_key_create(AppleSEP* sep);
 
 /* misc.c */
 #define TYPE_APPLE_SEP_MISC "apple-sep.misc"
@@ -123,34 +123,34 @@ AppleSEPMonitorState* apple_sep_monitor_create(void);
 #define TYPE_APPLE_SEP_SSC "apple-sep.ssc"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPSSCState, APPLE_SEP_SSC)
 
-AppleSEPSSCState* apple_sep_ssc_create(AppleI2CState* i2c, uint8_t addr, AppleSEPState* sep);
+AppleSEPSSCState* apple_sep_ssc_create(AppleI2CState* i2c, uint8_t addr, AppleSEP* sep);
 
 /* pka.c */
 #define TYPE_APPLE_SEP_PKA "apple-sep.pka"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPPKAState, APPLE_SEP_PKA)
 
-AppleSEPPKAState* apple_sep_pka_create(AppleSEPState* sep);
+AppleSEPPKAState* apple_sep_pka_create(AppleSEP* sep);
 
 /* pmgr.c */
 #define TYPE_APPLE_SEP_PMGR "apple-sep.pmgr"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPPMGRState, APPLE_SEP_PMGR)
 
-AppleSEPPMGRState* apple_sep_pmgr_create(AppleSEPState* sep);
+AppleSEPPMGRState* apple_sep_pmgr_create(AppleSEP* sep);
 bool               apple_sep_pmgr_get_fuse_changer_bit(AppleSEPPMGRState* s, uint8_t bit);
 
 /* progress.c */
 #define TYPE_APPLE_SEP_PROGRESS "apple-sep.progress"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPProgressState, APPLE_SEP_PROGRESS)
 
-AppleSEPProgressState* apple_sep_progress_create(AppleSEPState* sep);
+AppleSEPProgressState* apple_sep_progress_create(AppleSEP* sep);
 
 /* trng.c */
 #define TYPE_APPLE_SEP_TRNG "apple-sep.trng"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPTRNGState, APPLE_SEP_TRNG)
 
-AppleSEPTRNGState* apple_sep_trng_create(AppleSEPState* sep);
+AppleSEPTRNGState* apple_sep_trng_create(AppleSEP* sep);
 
-struct AppleSEPState
+struct AppleSEP
 {
     /*< private >*/
     AppleA7IOP parent_obj;

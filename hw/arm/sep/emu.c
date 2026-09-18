@@ -86,7 +86,7 @@ struct AppleSEPClass
 
 static void apple_sep_iop_start(AppleA7IOP* s)
 {
-    AppleSEPState* sep = container_of(s, AppleSEPState, parent_obj);
+    AppleSEP* sep = container_of(s, AppleSEP, parent_obj);
 
     trace_apple_sep_iop_start(s->iop_mailbox->role);
 
@@ -95,7 +95,7 @@ static void apple_sep_iop_start(AppleA7IOP* s)
 
 static void apple_sep_iop_wakeup(AppleA7IOP* s)
 {
-    AppleSEPState* sep = container_of(s, AppleSEPState, parent_obj);
+    AppleSEP* sep = container_of(s, AppleSEP, parent_obj);
 
     trace_apple_sep_iop_wakeup(s->iop_mailbox->role);
 
@@ -148,7 +148,7 @@ typedef struct
     hwaddr len;
 } AppleSEPDMARange;
 
-static MemoryRegion* apple_sep_cpu_memory(AppleSEPState* s)
+static MemoryRegion* apple_sep_cpu_memory(AppleSEP* s)
 {
     if (s->modern) { return &APPLE_A13(s->cpu)->memory; }
 
@@ -157,13 +157,13 @@ static MemoryRegion* apple_sep_cpu_memory(AppleSEPState* s)
 
 typedef struct
 {
-    AppleSEPState* sep;
-    MemoryRegion   mr;
-    hwaddr         pa;
-    uint8_t*       data;
+    AppleSEP*    sep;
+    MemoryRegion mr;
+    hwaddr       pa;
+    uint8_t*     data;
 } AppleSEPShadowPage;
 
-static void apple_sep_dma_refresh(AppleSEPState* s);
+static void apple_sep_dma_refresh(AppleSEP* s);
 
 static uint64_t apple_sep_shadow_read(void* opaque, hwaddr addr, unsigned size)
 {
@@ -199,7 +199,7 @@ static void apple_sep_shadow_free(gpointer data)
     g_free(page);
 }
 
-static void apple_sep_shadow_add(AppleSEPState* s, hwaddr pa)
+static void apple_sep_shadow_add(AppleSEP* s, hwaddr pa)
 {
     AppleSEPShadowPage* page;
     g_autofree char*    name = NULL;
@@ -223,7 +223,7 @@ static void apple_sep_shadow_add(AppleSEPState* s, hwaddr pa)
     // info_report("sep dma: shadowing dart table page 0x%" HWADDR_PRIx, pa);
 }
 
-static void apple_sep_dma_shadow_tables(AppleSEPState* s)
+static void apple_sep_dma_shadow_tables(AppleSEP* s)
 {
     g_autoptr(GArray) pages    = g_array_new(false, false, sizeof(hwaddr));
     g_autoptr(GHashTable) live = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -246,7 +246,7 @@ static void apple_sep_dma_shadow_tables(AppleSEPState* s)
     }
 }
 
-static void apple_sep_dma_clear_windows(AppleSEPState* s)
+static void apple_sep_dma_clear_windows(AppleSEP* s)
 {
     for (guint i = 0; i < s->dma_windows->len; i++) {
         MemoryRegion* win = g_ptr_array_index(s->dma_windows, i);
@@ -258,8 +258,8 @@ static void apple_sep_dma_clear_windows(AppleSEPState* s)
     g_ptr_array_set_size(s->dma_windows, 0);
 }
 
-static void apple_sep_dma_add_window(AppleSEPState* s, MemoryRegion* parent, hwaddr iova, hwaddr len,
-                                     MemoryRegion* target, hwaddr offset)
+static void apple_sep_dma_add_window(AppleSEP* s, MemoryRegion* parent, hwaddr iova, hwaddr len, MemoryRegion* target,
+                                     hwaddr offset)
 {
     MemoryRegion*    win  = g_new0(MemoryRegion, 1);
     g_autofree char* name = g_strdup_printf("sep_dma_0x%" HWADDR_PRIx, iova);
@@ -279,7 +279,7 @@ static gint apple_sep_dma_range_cmp(gconstpointer a, gconstpointer b)
 
 static void apple_sep_dma_rebuild(void* opaque) { apple_sep_dma_refresh(opaque); }
 
-static void apple_sep_dma_build_windows(AppleSEPState* s)
+static void apple_sep_dma_build_windows(AppleSEP* s)
 {
     memory_region_transaction_begin();
     apple_sep_dma_clear_windows(s);
@@ -325,7 +325,7 @@ static void apple_sep_dma_build_windows(AppleSEPState* s)
     memory_region_transaction_commit();
 }
 
-static void apple_sep_dma_refresh(AppleSEPState* s)
+static void apple_sep_dma_refresh(AppleSEP* s)
 {
     s->dma_refreshing = true;
 
@@ -340,7 +340,7 @@ static void apple_sep_dma_refresh(AppleSEPState* s)
 
 static void apple_sep_dma_notify(IOMMUNotifier* n, IOMMUTLBEntry* entry)
 {
-    AppleSEPState*   s = container_of(n, AppleSEPState, dma_notifier);
+    AppleSEP*        s = container_of(n, AppleSEP, dma_notifier);
     AppleSEPDMARange range;
 
     if ((entry->perm & IOMMU_RW) == 0) {
@@ -357,7 +357,7 @@ static void apple_sep_dma_notify(IOMMUNotifier* n, IOMMUTLBEntry* entry)
     g_array_append_val(s->dma_pending, range);
 }
 
-static void apple_sep_dma_init(AppleSEPState* s)
+static void apple_sep_dma_init(AppleSEP* s)
 {
     if (!hwaccel_enabled()) { return; }
 
@@ -370,7 +370,7 @@ static void apple_sep_dma_init(AppleSEPState* s)
     memory_region_register_iommu_notifier(s->ool_mr, &s->dma_notifier, &error_fatal);
 }
 
-static void apple_sep_tz0_window(AppleSEPState* s, MemoryRegion* win, MemoryRegion* mirror, const char* name,
+static void apple_sep_tz0_window(AppleSEP* s, MemoryRegion* win, MemoryRegion* mirror, const char* name,
                                  MemoryRegion* dram, hwaddr base, hwaddr offset, uint64_t size)
 {
     if (s->tz0_wins_inited) {
@@ -395,7 +395,7 @@ static void apple_sep_tz0_window(AppleSEPState* s, MemoryRegion* win, MemoryRegi
     }
 }
 
-void apple_sep_setup_tz0(AppleSEPState* s, MemoryRegion* dram, hwaddr tz0_off, hwaddr tz0_size)
+void apple_sep_setup_tz0(AppleSEP* s, MemoryRegion* dram, hwaddr tz0_off, hwaddr tz0_size)
 {
     uint64_t msg = SEP_OPCODE17_INTEGRITY_TREE_SIZE;
     hwaddr   tz0_end;
@@ -424,15 +424,15 @@ void apple_sep_setup_tz0(AppleSEPState* s, MemoryRegion* dram, hwaddr tz0_off, h
     memory_region_transaction_commit();
 }
 
-AppleSEPState* apple_sep_from_node(AppleDTNode* node, MemoryRegion* ool_mr, vaddr base, uint32_t cpu_id, bool modern,
-                                   uint32_t chip_id)
+AppleSEP* apple_sep_from_node(AppleDTNode* node, MemoryRegion* ool_mr, vaddr base, uint32_t cpu_id, bool modern,
+                              uint32_t chip_id)
 {
-    DeviceState*   dev;
-    AppleA7IOP*    a7iop;
-    AppleSEPState* s;
-    AppleDTProp*   prop;
-    uint64_t*      reg;
-    uint32_t       i;
+    DeviceState* dev;
+    AppleA7IOP*  a7iop;
+    AppleSEP*    s;
+    AppleDTProp* prop;
+    uint64_t*    reg;
+    uint32_t     i;
 
     dev   = qdev_new(TYPE_APPLE_SEP);
     a7iop = APPLE_A7IOP(dev);
@@ -607,7 +607,7 @@ AppleSEPState* apple_sep_from_node(AppleDTNode* node, MemoryRegion* ool_mr, vadd
 
 static void apple_sep_cpu_reset_work(CPUState* cpu, run_on_cpu_data data)
 {
-    AppleSEPState* s = data.host_ptr;
+    AppleSEP* s = data.host_ptr;
     object_property_set_uint(OBJECT(s->cpu), "rvbar", s->base & ~0xFFF, NULL);
     cpu_reset(cpu);
     DPRINTF("apple_sep_cpu_reset_work: before cpu_set_pc: base=0x%" VADDR_PRIX "\n", s->base);
@@ -617,7 +617,7 @@ static void apple_sep_cpu_reset_work(CPUState* cpu, run_on_cpu_data data)
 
 static void apple_sep_realize(DeviceState* dev, Error** errp)
 {
-    AppleSEPState* s;
+    AppleSEP*      s;
     AppleSEPClass* sc;
 
     s  = APPLE_SEP(dev);
@@ -637,7 +637,7 @@ static void apple_sep_realize(DeviceState* dev, Error** errp)
                           qdev_get_gpio_in_named(DEVICE(s->mailbox), APPLE_A7IOP_SEP_GPIO_TIMER1, 0));
 }
 
-static void apple_sep_send_message(AppleSEPState* s, uint8_t ep, uint8_t tag, uint8_t op, uint8_t param, uint32_t data)
+static void apple_sep_send_message(AppleSEP* s, uint8_t ep, uint8_t tag, uint8_t op, uint8_t param, uint32_t data)
 {
     AppleA7IOP*        a7iop = &s->parent_obj;
     AppleA7IOPMessage* sent_msg;
@@ -656,7 +656,7 @@ static void apple_sep_send_message(AppleSEPState* s, uint8_t ep, uint8_t tag, ui
 
 static void apple_sep_reset_hold(Object* obj, ResetType type)
 {
-    AppleSEPState* s;
+    AppleSEP*      s;
     AppleSEPClass* sc;
 
     s  = APPLE_SEP(obj);
@@ -691,30 +691,19 @@ static void apple_sep_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 }
 
-static const TypeInfo apple_sep_info = {
-    .name           = TYPE_APPLE_SEP,
-    .parent         = TYPE_APPLE_A7IOP,
-    .instance_size  = sizeof(AppleSEPState),
-    .instance_align = __alignof__(AppleSEPState),
-    .class_size     = sizeof(AppleSEPClass),
-    .class_init     = apple_sep_class_init,
-};
+OBJECT_DEFINE_TYPE_CLASS_INIT(AppleSEP, apple_sep, APPLE_SEP, APPLE_A7IOP)
 
-static void apple_sep_register_types(void) { type_register_static(&apple_sep_info); }
-
-type_init(apple_sep_register_types);
-
-bool apple_sep_get_fuse_changer_bit(AppleSEPState* s, uint8_t bit)
+bool apple_sep_get_fuse_changer_bit(AppleSEP* s, uint8_t bit)
 { return apple_sep_pmgr_get_fuse_changer_bit(s->pmgr, bit); }
 
-void apple_sep_set_fw(AppleSEPState* s, hwaddr sep_fw_addr, gchar* fw_data, gsize sep_fw_size)
+void apple_sep_set_fw(AppleSEP* s, hwaddr sep_fw_addr, gchar* fw_data, gsize sep_fw_size)
 {
     s->sep_fw_addr = sep_fw_addr;
     s->fw_data     = fw_data;
     s->sep_fw_size = sep_fw_size;
 }
 
-void apple_sep_map_mmio(AppleSEPState* s, AppleSEPMMIOIndex mmio_index, hwaddr addr)
+void apple_sep_map_mmio(AppleSEP* s, AppleSEPMMIOIndex mmio_index, hwaddr addr)
 {
     SysBusDevice* sbd;
     int           i = 0;
@@ -766,4 +755,4 @@ void apple_sep_map_mmio(AppleSEPState* s, AppleSEPMMIOIndex mmio_index, hwaddr a
     sysbus_mmio_map(sbd, i, addr);
 }
 
-ARMCPU* apple_sep_get_cpu(AppleSEPState* s) { return s->cpu; }
+ARMCPU* apple_sep_get_cpu(AppleSEP* s) { return s->cpu; }

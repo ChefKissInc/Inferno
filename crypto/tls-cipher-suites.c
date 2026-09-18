@@ -91,14 +91,12 @@ static void qcrypto_tls_cipher_suites_class_init(ObjectClass* oc, const void* da
     ucc->complete = qcrypto_tls_cipher_suites_complete;
 }
 
-static const TypeInfo qcrypto_tls_cipher_suites_info = {.parent        = TYPE_QCRYPTO_TLS_CREDS,
-                                                        .name          = TYPE_QCRYPTO_TLS_CIPHER_SUITES,
-                                                        .instance_size = sizeof(QCryptoTLSCipherSuites),
-                                                        .class_size    = sizeof(QCryptoTLSCredsClass),
-                                                        .class_init    = qcrypto_tls_cipher_suites_class_init,
+static const TypeInfo qcrypto_tls_cipher_suites_info = {.parent = TYPE_QCRYPTO_TLS_CREDS,
+                                                        .name   = TYPE_QCRYPTO_TLS_CIPHER_SUITES,
+                                                        OBJECT_TYPE_INSTANCE(QCryptoTLSCipherSuites),
+                                                        .class_size = sizeof(QCryptoTLSCredsClass),
+                                                        .class_init = qcrypto_tls_cipher_suites_class_init,
                                                         .interfaces =
                                                             (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void qcrypto_tls_cipher_suites_register_types(void) { type_register_static(&qcrypto_tls_cipher_suites_info); }
-
-type_init(qcrypto_tls_cipher_suites_register_types);
+DEFINE_TYPE(qcrypto_tls_cipher_suites_info)

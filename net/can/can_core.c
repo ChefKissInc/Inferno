@@ -132,13 +132,11 @@ static void can_bus_class_init(ObjectClass* klass, const void* class_data G_GNUC
     uc_klass->can_be_deleted = can_bus_can_be_deleted;
 }
 
-static const TypeInfo can_bus_info = {.parent        = TYPE_OBJECT,
-                                      .name          = TYPE_CAN_BUS,
-                                      .instance_size = sizeof(CanBusState),
+static const TypeInfo can_bus_info = {.parent = TYPE_OBJECT,
+                                      .name   = TYPE_CAN_BUS,
+                                      OBJECT_TYPE_INSTANCE(CanBusState),
                                       .instance_init = can_bus_instance_init,
                                       .class_init    = can_bus_class_init,
                                       .interfaces    = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void can_bus_register_types(void) { type_register_static(&can_bus_info); }
-
-type_init(can_bus_register_types);
+DEFINE_TYPE(can_bus_info)

@@ -403,10 +403,10 @@ static void char_mux_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_mux_type_info = {
-    .name              = TYPE_CHARDEV_MUX,
-    .parent            = TYPE_CHARDEV,
-    .class_init        = char_mux_class_init,
-    .instance_size     = sizeof(MuxChardev),
+    .name       = TYPE_CHARDEV_MUX,
+    .parent     = TYPE_CHARDEV,
+    .class_init = char_mux_class_init,
+    OBJECT_TYPE_INSTANCE(MuxChardev),
     .instance_finalize = char_mux_finalize,
 };
 

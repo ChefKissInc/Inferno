@@ -215,17 +215,7 @@ static void apple_sep_misc_class_init(ObjectClass* klass, const void* class_data
     dc->realize      = apple_sep_misc_realize;
 }
 
-static const TypeInfo apple_sep_misc_type_info = {
-    .name           = TYPE_APPLE_SEP_MISC,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_misc_class_init,
-    .instance_size  = sizeof(AppleSEPMiscState),
-    .instance_align = __alignof__(AppleSEPMiscState),
-};
-
-static void apple_sep_misc_register_types(void) { type_register_static(&apple_sep_misc_type_info); }
-
-type_init(apple_sep_misc_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPMiscState, apple_sep_misc, APPLE_SEP_MISC, SYS_BUS_DEVICE)
 
 AppleSEPMiscState* apple_sep_misc_create(void)
 {

@@ -250,9 +250,9 @@ static void char_parallel_finalize(Object* obj)
 }
 
 static const TypeInfo char_parallel_type_info = {
-    .name              = TYPE_CHARDEV_PARALLEL,
-    .parent            = TYPE_CHARDEV,
-    .instance_size     = sizeof(ParallelChardev),
+    .name   = TYPE_CHARDEV_PARALLEL,
+    .parent = TYPE_CHARDEV,
+    OBJECT_TYPE_INSTANCE(ParallelChardev),
     .instance_finalize = char_parallel_finalize,
     .class_init        = char_parallel_class_init,
 };

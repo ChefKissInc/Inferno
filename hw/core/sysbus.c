@@ -293,18 +293,18 @@ static void dynamic_sysbus_device_class_init(ObjectClass* klass, const void* dat
 }
 
 static const TypeInfo sysbus_types[] = {{
-                                            .name          = TYPE_SYSTEM_BUS,
-                                            .parent        = TYPE_BUS,
-                                            .instance_size = sizeof(BusState),
-                                            .class_init    = system_bus_class_init,
+                                            .name   = TYPE_SYSTEM_BUS,
+                                            .parent = TYPE_BUS,
+                                            OBJECT_TYPE_INSTANCE(BusState),
+                                            .class_init = system_bus_class_init,
                                         },
                                         {
-                                            .name          = TYPE_SYS_BUS_DEVICE,
-                                            .parent        = TYPE_DEVICE,
-                                            .instance_size = sizeof(SysBusDevice),
-                                            .abstract      = true,
-                                            .class_size    = sizeof(SysBusDeviceClass),
-                                            .class_init    = sysbus_device_class_init,
+                                            .name   = TYPE_SYS_BUS_DEVICE,
+                                            .parent = TYPE_DEVICE,
+                                            OBJECT_TYPE_INSTANCE(SysBusDevice),
+                                            .abstract   = true,
+                                            .class_size = sizeof(SysBusDeviceClass),
+                                            .class_init = sysbus_device_class_init,
                                         },
                                         {
                                             .name       = TYPE_DYNAMIC_SYS_BUS_DEVICE,

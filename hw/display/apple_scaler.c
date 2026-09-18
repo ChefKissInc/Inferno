@@ -1285,16 +1285,7 @@ static void apple_scaler_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_DISPLAY, dc->categories);
 }
 
-static const TypeInfo apple_scaler_type_info = {
-    .name          = TYPE_APPLE_SCALER,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleScalerState),
-    .class_init    = apple_scaler_class_init,
-};
-
-static void apple_scaler_register_types(void) { type_register_static(&apple_scaler_type_info); }
-
-type_init(apple_scaler_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleScalerState, apple_scaler, APPLE_SCALER, SYS_BUS_DEVICE)
 
 SysBusDevice* apple_scaler_create(AppleDTNode* node, MemoryRegion* dma_mr)
 {

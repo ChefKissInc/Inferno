@@ -608,10 +608,10 @@ static void input_barrier_class_init(ObjectClass* oc, const void* data)
     object_class_property_add_str(oc, "height", input_barrier_get_height, input_barrier_set_height);
 }
 
-static const TypeInfo input_barrier_info = {.name              = TYPE_INPUT_BARRIER,
-                                            .parent            = TYPE_OBJECT,
-                                            .class_init        = input_barrier_class_init,
-                                            .instance_size     = sizeof(InputBarrier),
+static const TypeInfo input_barrier_info = {.name       = TYPE_INPUT_BARRIER,
+                                            .parent     = TYPE_OBJECT,
+                                            .class_init = input_barrier_class_init,
+                                            OBJECT_TYPE_INSTANCE(InputBarrier),
                                             .instance_init     = input_barrier_instance_init,
                                             .instance_finalize = input_barrier_instance_finalize,
                                             .interfaces        = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};

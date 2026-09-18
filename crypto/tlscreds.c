@@ -208,9 +208,9 @@ bool qcrypto_tls_creds_check_endpoint(QCryptoTLSCreds* creds, QCryptoTLSCredsEnd
 }
 
 static const TypeInfo qcrypto_tls_creds_info = {
-    .parent            = TYPE_OBJECT,
-    .name              = TYPE_QCRYPTO_TLS_CREDS,
-    .instance_size     = sizeof(QCryptoTLSCreds),
+    .parent = TYPE_OBJECT,
+    .name   = TYPE_QCRYPTO_TLS_CREDS,
+    OBJECT_TYPE_INSTANCE(QCryptoTLSCreds),
     .instance_init     = qcrypto_tls_creds_init,
     .instance_finalize = qcrypto_tls_creds_finalize,
     .class_init        = qcrypto_tls_creds_class_init,
@@ -218,6 +218,4 @@ static const TypeInfo qcrypto_tls_creds_info = {
     .abstract          = true,
 };
 
-static void qcrypto_tls_creds_register_types(void) { type_register_static(&qcrypto_tls_creds_info); }
-
-type_init(qcrypto_tls_creds_register_types);
+DEFINE_TYPE(qcrypto_tls_creds_info)

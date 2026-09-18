@@ -201,14 +201,12 @@ static void qcrypto_tls_creds_psk_class_init(ObjectClass* oc, const void* data)
                                   qcrypto_tls_creds_psk_prop_set_username);
 }
 
-static const TypeInfo qcrypto_tls_creds_psk_info = {.parent            = TYPE_QCRYPTO_TLS_CREDS,
-                                                    .name              = TYPE_QCRYPTO_TLS_CREDS_PSK,
-                                                    .instance_size     = sizeof(QCryptoTLSCredsPSK),
+static const TypeInfo qcrypto_tls_creds_psk_info = {.parent = TYPE_QCRYPTO_TLS_CREDS,
+                                                    .name   = TYPE_QCRYPTO_TLS_CREDS_PSK,
+                                                    OBJECT_TYPE_INSTANCE(QCryptoTLSCredsPSK),
                                                     .instance_finalize = qcrypto_tls_creds_psk_finalize,
                                                     .class_size        = sizeof(QCryptoTLSCredsPSKClass),
                                                     .class_init        = qcrypto_tls_creds_psk_class_init,
                                                     .interfaces = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void qcrypto_tls_creds_psk_register_types(void) { type_register_static(&qcrypto_tls_creds_psk_info); }
-
-type_init(qcrypto_tls_creds_psk_register_types);
+DEFINE_TYPE(qcrypto_tls_creds_psk_info)

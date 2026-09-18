@@ -344,12 +344,12 @@ static void host_memory_backend_class_init(ObjectClass* oc, const void* data)
                                    host_memory_backend_set_use_canonical_path);
 }
 
-static const TypeInfo host_memory_backend_info = {.name               = TYPE_MEMORY_BACKEND,
-                                                  .parent             = TYPE_OBJECT,
-                                                  .abstract           = true,
-                                                  .class_size         = sizeof(HostMemoryBackendClass),
-                                                  .class_init         = host_memory_backend_class_init,
-                                                  .instance_size      = sizeof(HostMemoryBackend),
+static const TypeInfo host_memory_backend_info = {.name       = TYPE_MEMORY_BACKEND,
+                                                  .parent     = TYPE_OBJECT,
+                                                  .abstract   = true,
+                                                  .class_size = sizeof(HostMemoryBackendClass),
+                                                  .class_init = host_memory_backend_class_init,
+                                                  OBJECT_TYPE_INSTANCE(HostMemoryBackend),
                                                   .instance_init      = host_memory_backend_init,
                                                   .instance_post_init = host_memory_backend_post_init,
                                                   .interfaces = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};

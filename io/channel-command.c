@@ -294,14 +294,12 @@ static void qio_channel_command_class_init(ObjectClass* klass, const void* class
 }
 
 static const TypeInfo qio_channel_command_info = {
-    .parent            = TYPE_QIO_CHANNEL,
-    .name              = TYPE_QIO_CHANNEL_COMMAND,
-    .instance_size     = sizeof(QIOChannelCommand),
+    .parent = TYPE_QIO_CHANNEL,
+    .name   = TYPE_QIO_CHANNEL_COMMAND,
+    OBJECT_TYPE_INSTANCE(QIOChannelCommand),
     .instance_init     = qio_channel_command_init,
     .instance_finalize = qio_channel_command_finalize,
     .class_init        = qio_channel_command_class_init,
 };
 
-static void qio_channel_command_register_types(void) { type_register_static(&qio_channel_command_info); }
-
-type_init(qio_channel_command_register_types);
+DEFINE_TYPE(qio_channel_command_info)

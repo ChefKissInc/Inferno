@@ -2147,25 +2147,20 @@ static void usb_dwc3_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_USB, dc->categories);
 }
 
-static const TypeInfo dwc3_usb_device_type_info = {
-    .name          = TYPE_DWC3_USB_DEVICE,
-    .parent        = TYPE_USB_DEVICE,
-    .instance_size = sizeof(DWC3DeviceState),
-    .class_init    = dwc3_usb_device_class_initfn,
+static const TypeInfo usb_dwc3_types[] = {
+    {
+        .name   = TYPE_DWC3_USB_DEVICE,
+        .parent = TYPE_USB_DEVICE,
+        OBJECT_TYPE_INSTANCE(DWC3DeviceState),
+        .class_init = dwc3_usb_device_class_initfn,
+    },
+    {
+        .name   = TYPE_DWC3_USB,
+        .parent = TYPE_SYS_BUS_DEVICE,
+        OBJECT_TYPE_INSTANCE(DWC3State),
+        .instance_init = usb_dwc3_init,
+        .class_init    = usb_dwc3_class_init,
+    },
 };
 
-static const TypeInfo usb_dwc3_info = {
-    .name          = TYPE_DWC3_USB,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(DWC3State),
-    .instance_init = usb_dwc3_init,
-    .class_init    = usb_dwc3_class_init,
-};
-
-static void usb_dwc3_register_types(void)
-{
-    type_register_static(&dwc3_usb_device_type_info);
-    type_register_static(&usb_dwc3_info);
-}
-
-type_init(usb_dwc3_register_types)
+DEFINE_TYPES(usb_dwc3_types)

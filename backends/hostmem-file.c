@@ -269,7 +269,7 @@ static const TypeInfo file_backend_info = {
     .parent            = TYPE_MEMORY_BACKEND,
     .class_init        = file_backend_class_init,
     .instance_finalize = file_backend_instance_finalize,
-    .instance_size     = sizeof(HostMemoryBackendFile),
+    OBJECT_TYPE_INSTANCE(HostMemoryBackendFile),
 };
 
 static void register_types(void) { type_register_static(&file_backend_info); }

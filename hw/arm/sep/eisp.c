@@ -153,17 +153,7 @@ static void apple_sep_eisp_class_init(ObjectClass* klass, const void* class_data
     dc->realize      = apple_sep_eisp_realize;
 }
 
-static const TypeInfo apple_sep_eisp_type_info = {
-    .name           = TYPE_APPLE_SEP_EISP,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_eisp_class_init,
-    .instance_size  = sizeof(AppleSEPEISPState),
-    .instance_align = __alignof__(AppleSEPEISPState),
-};
-
-static void apple_sep_eisp_register_types(void) { type_register_static(&apple_sep_eisp_type_info); }
-
-type_init(apple_sep_eisp_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPEISPState, apple_sep_eisp, APPLE_SEP_EISP, SYS_BUS_DEVICE)
 
 AppleSEPEISPState* apple_sep_eisp_create(void)
 {

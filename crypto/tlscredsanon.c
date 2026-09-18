@@ -116,14 +116,12 @@ static void qcrypto_tls_creds_anon_class_init(ObjectClass* oc, const void* data)
     ucc->complete = qcrypto_tls_creds_anon_complete;
 }
 
-static const TypeInfo qcrypto_tls_creds_anon_info = {.parent            = TYPE_QCRYPTO_TLS_CREDS,
-                                                     .name              = TYPE_QCRYPTO_TLS_CREDS_ANON,
-                                                     .instance_size     = sizeof(QCryptoTLSCredsAnon),
+static const TypeInfo qcrypto_tls_creds_anon_info = {.parent = TYPE_QCRYPTO_TLS_CREDS,
+                                                     .name   = TYPE_QCRYPTO_TLS_CREDS_ANON,
+                                                     OBJECT_TYPE_INSTANCE(QCryptoTLSCredsAnon),
                                                      .instance_finalize = qcrypto_tls_creds_anon_finalize,
                                                      .class_size        = sizeof(QCryptoTLSCredsAnonClass),
                                                      .class_init        = qcrypto_tls_creds_anon_class_init,
                                                      .interfaces = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void qcrypto_tls_creds_anon_register_types(void) { type_register_static(&qcrypto_tls_creds_anon_info); }
-
-type_init(qcrypto_tls_creds_anon_register_types);
+DEFINE_TYPE(qcrypto_tls_creds_anon_info)

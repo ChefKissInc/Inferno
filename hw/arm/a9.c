@@ -29,27 +29,27 @@
 #include "target/arm/cpregs.h"
 #include "arm-powerctl.h"
 
-#define A9_CPREG_DEF(p_name, p_op0, p_op1, p_crn, p_crm, p_op2, p_access, p_reset)                \
-    {                                                                                             \
-        .cp          = CP_REG_ARM64_SYSREG_CP,                                                    \
-        .name        = #p_name,                                                                   \
-        .opc0        = p_op0,                                                                     \
-        .crn         = p_crn,                                                                     \
-        .crm         = p_crm,                                                                     \
-        .opc1        = p_op1,                                                                     \
-        .opc2        = p_op2,                                                                     \
-        .access      = p_access,                                                                  \
-        .resetvalue  = p_reset,                                                                   \
-        .state       = ARM_CP_STATE_AA64,                                                         \
-        .type        = ARM_CP_OVERRIDE,                                                           \
-        .fieldoffset = offsetof(AppleA9State, A9_CPREG_VAR_NAME(p_name)) - offsetof(ARMCPU, env), \
+#define A9_CPREG_DEF(p_name, p_op0, p_op1, p_crn, p_crm, p_op2, p_access, p_reset)           \
+    {                                                                                        \
+        .cp          = CP_REG_ARM64_SYSREG_CP,                                               \
+        .name        = #p_name,                                                              \
+        .opc0        = p_op0,                                                                \
+        .crn         = p_crn,                                                                \
+        .crm         = p_crm,                                                                \
+        .opc1        = p_op1,                                                                \
+        .opc2        = p_op2,                                                                \
+        .access      = p_access,                                                             \
+        .resetvalue  = p_reset,                                                              \
+        .state       = ARM_CP_STATE_AA64,                                                    \
+        .type        = ARM_CP_OVERRIDE,                                                      \
+        .fieldoffset = offsetof(AppleA9, A9_CPREG_VAR_NAME(p_name)) - offsetof(ARMCPU, env), \
     }
 
-bool apple_a9_cpu_is_asleep(AppleA9State* acpu) { return CPU(acpu)->halted; }
+bool apple_a9_cpu_is_asleep(AppleA9* acpu) { return CPU(acpu)->halted; }
 
-bool apple_a9_cpu_is_off(AppleA9State* acpu) { return acpu->parent_obj.power_state == PSCI_OFF; }
+bool apple_a9_cpu_is_off(AppleA9* acpu) { return acpu->parent_obj.power_state == PSCI_OFF; }
 
-void apple_a9_cpu_set_on(AppleA9State* acpu)
+void apple_a9_cpu_set_on(AppleA9* acpu)
 {
     int ret = QEMU_ARM_POWERCTL_RET_SUCCESS;
 
@@ -77,7 +77,7 @@ static const ARMCPRegInfo a9_cp_reginfo_tcg[] = {
     A9_CPREG_DEF(MMU_ERR_STS, 3, 6, 15, 0, 0, PL1_RW, 0),
 };
 
-static void a9_add_cpregs(AppleA9State* acpu)
+static void a9_add_cpregs(AppleA9* acpu)
 {
     ARMCPU* cpu = &acpu->parent_obj;
     define_arm_cp_regs(cpu, a9_cp_reginfo_tcg);
@@ -85,7 +85,7 @@ static void a9_add_cpregs(AppleA9State* acpu)
 
 static void apple_a9_realize(DeviceState* dev, Error** errp)
 {
-    AppleA9State* acpu   = APPLE_A9(dev);
+    AppleA9*      acpu   = APPLE_A9(dev);
     AppleA9Class* tclass = APPLE_A9_GET_CLASS(dev);
     DeviceState*  fiq_or;
     Object*       obj = OBJECT(dev);
@@ -113,13 +113,13 @@ static void apple_a9_realize(DeviceState* dev, Error** errp)
 
 static void apple_a9_instance_init(Object* obj) { object_property_set_uint(obj, "cntfrq", 24000000, &error_fatal); }
 
-AppleA9State* apple_a9_create(const char* name, uint32_t cpu_id, uint32_t phys_id)
+AppleA9* apple_a9_create(const char* name, uint32_t cpu_id, uint32_t phys_id)
 {
-    DeviceState*  dev;
-    AppleA9State* acpu;
-    ARMCPU*       cpu;
-    Object*       obj;
-    uint64_t      mpidr;
+    DeviceState* dev;
+    AppleA9*     acpu;
+    ARMCPU*      cpu;
+    Object*      obj;
+    uint64_t     mpidr;
 
     obj  = object_new(TYPE_APPLE_A9);
     dev  = DEVICE(obj);
@@ -154,9 +154,9 @@ AppleA9State* apple_a9_create(const char* name, uint32_t cpu_id, uint32_t phys_i
     return acpu;
 }
 
-AppleA9State* apple_a9_from_node(AppleDTNode* node)
+AppleA9* apple_a9_from_node(AppleDTNode* node)
 {
-    AppleA9State* acpu;
+    AppleA9* acpu;
 
     acpu = apple_a9_create(apple_dt_get_prop_str(node, "name", &error_fatal),
                            apple_dt_get_prop_u32(node, "cpu-id", &error_fatal),
@@ -188,14 +188,12 @@ static void apple_a9_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo apple_a9_info = {
-    .name          = TYPE_APPLE_A9,
-    .parent        = ARM_CPU_TYPE_NAME("max"),
-    .instance_size = sizeof(AppleA9State),
+    .name   = TYPE_APPLE_A9,
+    .parent = ARM_CPU_TYPE_NAME("max"),
+    OBJECT_TYPE_INSTANCE(AppleA9),
     .instance_init = apple_a9_instance_init,
     .class_size    = sizeof(AppleA9Class),
     .class_init    = apple_a9_class_init,
 };
 
-static void apple_a9_register_types(void) { type_register_static(&apple_a9_info); }
-
-type_init(apple_a9_register_types);
+DEFINE_TYPE(apple_a9_info)

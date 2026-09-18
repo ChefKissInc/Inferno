@@ -32,6 +32,4 @@ static const TypeInfo intctrl_info = {
     .class_size = sizeof(InterruptStatsProviderClass),
 };
 
-static void intc_register_types(void) { type_register_static(&intctrl_info); }
-
-type_init(intc_register_types)
+DEFINE_TYPE(intctrl_info)

@@ -126,9 +126,9 @@ static void rng_random_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo rng_random_info = {
-    .name              = TYPE_RNG_RANDOM,
-    .parent            = TYPE_RNG_BACKEND,
-    .instance_size     = sizeof(RngRandom),
+    .name   = TYPE_RNG_RANDOM,
+    .parent = TYPE_RNG_BACKEND,
+    OBJECT_TYPE_INSTANCE(RngRandom),
     .class_init        = rng_random_class_init,
     .instance_init     = rng_random_init,
     .instance_finalize = rng_random_finalize,

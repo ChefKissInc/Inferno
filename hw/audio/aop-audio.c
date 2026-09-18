@@ -92,16 +92,7 @@ static void apple_aop_audio_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_SOUND, dc->categories);
 }
 
-static const TypeInfo apple_aop_audio_info = {
-    .name          = TYPE_APPLE_AOP_AUDIO,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleAOPAudioState),
-    .class_init    = apple_aop_audio_class_init,
-};
-
-static void apple_aop_audio_register_types(void) { type_register_static(&apple_aop_audio_info); }
-
-type_init(apple_aop_audio_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleAOPAudioState, apple_aop_audio, APPLE_AOP_AUDIO, SYS_BUS_DEVICE)
 
 // AOP Audio Devices
 // - edtC | Embedded Device Tree Config
@@ -271,7 +262,7 @@ static const AppleAOPEndpointDescription apple_aop_audio_ep_descr = {
     .handle_command = apple_aop_audio_handle_command,
 };
 
-SysBusDevice* apple_aop_audio_create(AppleAOPState* aop)
+SysBusDevice* apple_aop_audio_create(AppleAOP* aop)
 {
     DeviceState*        dev;
     SysBusDevice*       sbd;

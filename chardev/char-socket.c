@@ -1393,9 +1393,9 @@ static void char_socket_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_socket_type_info = {
-    .name              = TYPE_CHARDEV_SOCKET,
-    .parent            = TYPE_CHARDEV,
-    .instance_size     = sizeof(SocketChardev),
+    .name   = TYPE_CHARDEV_SOCKET,
+    .parent = TYPE_CHARDEV,
+    OBJECT_TYPE_INSTANCE(SocketChardev),
     .instance_finalize = char_socket_finalize,
     .class_init        = char_socket_class_init,
 };

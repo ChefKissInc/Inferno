@@ -116,7 +116,7 @@ static const TypeInfo memfd_backend_info = {
     .parent        = TYPE_MEMORY_BACKEND,
     .instance_init = memfd_backend_instance_init,
     .class_init    = memfd_backend_class_init,
-    .instance_size = sizeof(HostMemoryBackendMemfd),
+    OBJECT_TYPE_INSTANCE(HostMemoryBackendMemfd),
 };
 
 static void register_types(void)

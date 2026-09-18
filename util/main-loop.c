@@ -210,16 +210,9 @@ static void main_loop_class_init(ObjectClass* oc, const void* class_data)
     bc->can_be_deleted = main_loop_can_be_deleted;
 }
 
-static const TypeInfo main_loop_info = {
-    .name          = TYPE_MAIN_LOOP,
-    .parent        = TYPE_EVENT_LOOP_BASE,
-    .class_init    = main_loop_class_init,
-    .instance_size = sizeof(MainLoop),
-};
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(MainLoop, main_loop, MAIN_LOOP, EVENT_LOOP_BASE)
 
-static void main_loop_register_types(void) { type_register_static(&main_loop_info); }
-
-type_init(main_loop_register_types) static int max_priority;
+static int max_priority;
 
 #ifndef _WIN32
 static int glib_pollfds_idx;

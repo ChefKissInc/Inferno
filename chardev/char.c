@@ -269,9 +269,9 @@ static void char_finalize(Object* obj)
 }
 
 static const TypeInfo char_type_info = {
-    .name              = TYPE_CHARDEV,
-    .parent            = TYPE_OBJECT,
-    .instance_size     = sizeof(Chardev),
+    .name   = TYPE_CHARDEV,
+    .parent = TYPE_OBJECT,
+    OBJECT_TYPE_INSTANCE(Chardev),
     .instance_init     = char_init,
     .instance_finalize = char_finalize,
     .abstract          = true,

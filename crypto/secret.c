@@ -104,14 +104,12 @@ static void qcrypto_secret_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo qcrypto_secret_info = {
-    .parent            = TYPE_QCRYPTO_SECRET_COMMON,
-    .name              = TYPE_QCRYPTO_SECRET,
-    .instance_size     = sizeof(QCryptoSecret),
+    .parent = TYPE_QCRYPTO_SECRET_COMMON,
+    .name   = TYPE_QCRYPTO_SECRET,
+    OBJECT_TYPE_INSTANCE(QCryptoSecret),
     .instance_finalize = qcrypto_secret_finalize,
     .class_size        = sizeof(QCryptoSecretClass),
     .class_init        = qcrypto_secret_class_init,
 };
 
-static void qcrypto_secret_register_types(void) { type_register_static(&qcrypto_secret_info); }
-
-type_init(qcrypto_secret_register_types);
+DEFINE_TYPE(qcrypto_secret_info)

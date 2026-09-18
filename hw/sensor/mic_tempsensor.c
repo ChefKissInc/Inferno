@@ -109,16 +109,7 @@ static void apple_mic_temp_sensor_class_init(ObjectClass* klass, const void* dat
     c->event = apple_mic_temp_sensor_event;
 }
 
-static const TypeInfo apple_mic_temp_sensor_type_info = {
-    .name          = TYPE_APPLE_MIC_TEMP_SENSOR,
-    .parent        = TYPE_I2C_SLAVE,
-    .instance_size = sizeof(AppleMicTempSensorState),
-    .class_init    = apple_mic_temp_sensor_class_init,
-};
-
-static void apple_mic_temp_sensor_register_types(void) { type_register_static(&apple_mic_temp_sensor_type_info); }
-
-type_init(apple_mic_temp_sensor_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleMicTempSensorState, apple_mic_temp_sensor, APPLE_MIC_TEMP_SENSOR, I2C_SLAVE)
 
 I2CSlave* apple_mic_temp_sensor_create(uint8_t addr, I2CBus* bus, uint8_t product_id, uint8_t vendor_id,
                                        uint8_t revision, uint8_t fab_id, Error** errp)

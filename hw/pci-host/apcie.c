@@ -2042,28 +2042,28 @@ static void apple_pcie_class_init(ObjectClass* klass, const void* data)
 
 static const TypeInfo apple_pcie_types[] = {
     {
-        .name          = TYPE_APPLE_PCIE_ROOT_BUS,
-        .parent        = TYPE_PCIE_BUS,
-        .instance_size = sizeof(ApplePCIERootBus),
-        .class_init    = apple_pcie_root_bus_class_init,
+        .name   = TYPE_APPLE_PCIE_ROOT_BUS,
+        .parent = TYPE_PCIE_BUS,
+        OBJECT_TYPE_INSTANCE(ApplePCIERootBus),
+        .class_init = apple_pcie_root_bus_class_init,
     },
     {
-        .name          = TYPE_APPLE_PCIE_HOST,
-        .parent        = TYPE_PCIE_HOST_BRIDGE,
-        .instance_size = sizeof(ApplePCIEHost),
-        .class_init    = apple_pcie_host_class_init,
+        .name   = TYPE_APPLE_PCIE_HOST,
+        .parent = TYPE_PCIE_HOST_BRIDGE,
+        OBJECT_TYPE_INSTANCE(ApplePCIEHost),
+        .class_init = apple_pcie_host_class_init,
     },
     {
-        .name          = TYPE_APPLE_PCIE_PORT,
-        .parent        = TYPE_PCIE_ROOT_PORT,
-        .instance_size = sizeof(ApplePCIEPort),
-        .class_init    = apple_pcie_port_class_init,
+        .name   = TYPE_APPLE_PCIE_PORT,
+        .parent = TYPE_PCIE_ROOT_PORT,
+        OBJECT_TYPE_INSTANCE(ApplePCIEPort),
+        .class_init = apple_pcie_port_class_init,
     },
     {
-        .name          = TYPE_APPLE_PCIE,
-        .parent        = TYPE_SYS_BUS_DEVICE,
-        .instance_size = sizeof(ApplePCIEState),
-        .class_init    = apple_pcie_class_init,
+        .name   = TYPE_APPLE_PCIE,
+        .parent = TYPE_SYS_BUS_DEVICE,
+        OBJECT_TYPE_INSTANCE(ApplePCIEState),
+        .class_init = apple_pcie_class_init,
     },
 };
 

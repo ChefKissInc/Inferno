@@ -516,14 +516,4 @@ static void apple_spmi_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_BRIDGE, dc->categories);
 }
 
-static const TypeInfo apple_spmi_info = {
-    .name          = TYPE_APPLE_SPMI,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleSPMIState),
-    .instance_init = apple_spmi_init,
-    .class_init    = apple_spmi_class_init,
-};
-
-static void apple_spmi_register_types(void) { type_register_static(&apple_spmi_info); }
-
-type_init(apple_spmi_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(AppleSPMIState, apple_spmi, APPLE_SPMI, SYS_BUS_DEVICE)

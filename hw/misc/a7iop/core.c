@@ -159,13 +159,4 @@ static void apple_a7iop_class_init(ObjectClass* oc, const void* data)
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 }
 
-static const TypeInfo apple_a7iop_info = {
-    .name          = TYPE_APPLE_A7IOP,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleA7IOP),
-    .class_init    = apple_a7iop_class_init,
-};
-
-static void apple_a7iop_register_types(void) { type_register_static(&apple_a7iop_info); }
-
-type_init(apple_a7iop_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleA7IOP, apple_a7iop, APPLE_A7IOP, SYS_BUS_DEVICE)

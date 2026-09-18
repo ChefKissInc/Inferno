@@ -327,13 +327,6 @@ static void icp_pit_init(Object* obj)
        save themselves.  */
 }
 
-static const TypeInfo icp_pit_info = {
-    .name          = TYPE_INTEGRATOR_PIT,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(icp_pit_state),
-    .instance_init = icp_pit_init,
-};
-
 static const Property sp804_properties[] = {
     DEFINE_PROP_UINT32("freq0", SP804State, freq0, 1000000),
     DEFINE_PROP_UINT32("freq1", SP804State, freq1, 1000000),
@@ -347,18 +340,20 @@ static void sp804_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(k, sp804_properties);
 }
 
-static const TypeInfo sp804_info = {
-    .name          = TYPE_SP804,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(SP804State),
-    .instance_init = sp804_init,
-    .class_init    = sp804_class_init,
+static const TypeInfo arm_timer_types[] = {
+    {
+        .name   = TYPE_INTEGRATOR_PIT,
+        .parent = TYPE_SYS_BUS_DEVICE,
+        OBJECT_TYPE_INSTANCE(icp_pit_state),
+        .instance_init = icp_pit_init,
+    },
+    {
+        .name   = TYPE_SP804,
+        .parent = TYPE_SYS_BUS_DEVICE,
+        OBJECT_TYPE_INSTANCE(SP804State),
+        .instance_init = sp804_init,
+        .class_init    = sp804_class_init,
+    },
 };
 
-static void arm_timer_register_types(void)
-{
-    type_register_static(&icp_pit_info);
-    type_register_static(&sp804_info);
-}
-
-type_init(arm_timer_register_types)
+DEFINE_TYPES(arm_timer_types)

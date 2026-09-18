@@ -320,10 +320,10 @@ static void ssi_sd_class_init(ObjectClass* klass, const void* data)
 
 static const TypeInfo ssi_sd_types[] = {
     {
-        .name          = TYPE_SSI_SD,
-        .parent        = TYPE_SSI_PERIPHERAL,
-        .instance_size = sizeof(ssi_sd_state),
-        .class_init    = ssi_sd_class_init,
+        .name   = TYPE_SSI_SD,
+        .parent = TYPE_SSI_PERIPHERAL,
+        OBJECT_TYPE_INSTANCE(ssi_sd_state),
+        .class_init = ssi_sd_class_init,
     },
 };
 

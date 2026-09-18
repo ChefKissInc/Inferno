@@ -19,7 +19,7 @@ static const TypeInfo container_info = {
     .parent = TYPE_OBJECT,
 };
 
-static void container_register_types(void) { type_register_static(&container_info); }
+DEFINE_TYPE(container_info)
 
 Object* object_property_add_new_container(Object* obj, const char* name)
 {
@@ -30,5 +30,3 @@ Object* object_property_add_new_container(Object* obj, const char* name)
 
     return child;
 }
-
-type_init(container_register_types)

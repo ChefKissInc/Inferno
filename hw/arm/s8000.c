@@ -326,7 +326,7 @@ static void s8000_memory_setup(MachineState* machine)
 {
     AppleS8000MachineState* s8000 = APPLE_S8000(machine);
     AppleBootInfo*          info  = &s8000->boot_info;
-    AppleNvramState*        nvram;
+    AppleNvram*             nvram;
     bool                    auto_boot;
     char*                   cmdline;
     MachoHeader64*          header;
@@ -1242,8 +1242,8 @@ static void s8000_create_backlight(AppleS8000MachineState* s8000)
 
 static void s8000_cpu_reset(AppleS8000MachineState* s8000)
 {
-    CPUState*     cpu;
-    AppleA9State* acpu;
+    CPUState* cpu;
+    AppleA9*  acpu;
 
     CPU_FOREACH (cpu) {
         acpu = APPLE_A9(cpu);
@@ -1511,11 +1511,11 @@ static void s8000_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo s8000_info = {
-    .name          = TYPE_APPLE_S8000,
-    .parent        = TYPE_MACHINE,
-    .instance_size = sizeof(AppleS8000MachineState),
-    .class_size    = sizeof(AppleS8000MachineClass),
-    .class_init    = s8000_class_init,
+    .name   = TYPE_APPLE_S8000,
+    .parent = TYPE_MACHINE,
+    OBJECT_TYPE_INSTANCE(AppleS8000MachineState),
+    .class_size = sizeof(AppleS8000MachineClass),
+    .class_init = s8000_class_init,
 };
 
 static void s8000_types(void) { type_register_static(&s8000_info); }

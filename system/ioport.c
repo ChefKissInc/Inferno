@@ -321,12 +321,10 @@ static void memory_region_portio_list_finalize(Object* obj)
 }
 
 static const TypeInfo memory_region_portio_list_info = {
-    .parent            = TYPE_OBJECT,
-    .name              = TYPE_MEMORY_REGION_PORTIO_LIST,
-    .instance_size     = sizeof(MemoryRegionPortioList),
+    .parent = TYPE_OBJECT,
+    .name   = TYPE_MEMORY_REGION_PORTIO_LIST,
+    OBJECT_TYPE_INSTANCE(MemoryRegionPortioList),
     .instance_finalize = memory_region_portio_list_finalize,
 };
 
-static void ioport_register_types(void) { type_register_static(&memory_region_portio_list_info); }
-
-type_init(ioport_register_types)
+DEFINE_TYPE(memory_region_portio_list_info)

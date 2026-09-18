@@ -197,14 +197,12 @@ QAuthZListFile* qauthz_list_file_new(const char* id, const char* filename, bool 
                                                   "filename", filename, "refresh", refresh ? "yes" : "no", NULL));
 }
 
-static const TypeInfo qauthz_list_file_info = {.parent            = TYPE_QAUTHZ,
-                                               .name              = TYPE_QAUTHZ_LIST_FILE,
-                                               .instance_init     = qauthz_list_file_init,
-                                               .instance_size     = sizeof(QAuthZListFile),
+static const TypeInfo qauthz_list_file_info = {.parent        = TYPE_QAUTHZ,
+                                               .name          = TYPE_QAUTHZ_LIST_FILE,
+                                               .instance_init = qauthz_list_file_init,
+                                               OBJECT_TYPE_INSTANCE(QAuthZListFile),
                                                .instance_finalize = qauthz_list_file_finalize,
                                                .class_init        = qauthz_list_file_class_init,
                                                .interfaces        = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void qauthz_list_file_register_types(void) { type_register_static(&qauthz_list_file_info); }
-
-type_init(qauthz_list_file_register_types);
+DEFINE_TYPE(qauthz_list_file_info)

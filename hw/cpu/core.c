@@ -77,14 +77,12 @@ static void cpu_core_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo cpu_core_type_info = {
-    .name          = TYPE_CPU_CORE,
-    .parent        = TYPE_DEVICE,
-    .abstract      = true,
-    .class_init    = cpu_core_class_init,
-    .instance_size = sizeof(CPUCore),
+    .name       = TYPE_CPU_CORE,
+    .parent     = TYPE_DEVICE,
+    .abstract   = true,
+    .class_init = cpu_core_class_init,
+    OBJECT_TYPE_INSTANCE(CPUCore),
     .instance_init = cpu_core_instance_init,
 };
 
-static void cpu_core_register_types(void) { type_register_static(&cpu_core_type_info); }
-
-type_init(cpu_core_register_types)
+DEFINE_TYPE(cpu_core_type_info)

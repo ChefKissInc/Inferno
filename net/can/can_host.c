@@ -76,14 +76,12 @@ static void can_host_class_init(ObjectClass* klass, const void* class_data G_GNU
     uc_klass->complete = can_host_complete;
 }
 
-static const TypeInfo can_host_info = {.parent        = TYPE_OBJECT,
-                                       .name          = TYPE_CAN_HOST,
-                                       .instance_size = sizeof(CanHostState),
-                                       .class_size    = sizeof(CanHostClass),
-                                       .abstract      = true,
-                                       .class_init    = can_host_class_init,
-                                       .interfaces    = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
+static const TypeInfo can_host_info = {.parent = TYPE_OBJECT,
+                                       .name   = TYPE_CAN_HOST,
+                                       OBJECT_TYPE_INSTANCE(CanHostState),
+                                       .class_size = sizeof(CanHostClass),
+                                       .abstract   = true,
+                                       .class_init = can_host_class_init,
+                                       .interfaces = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void can_host_register_types(void) { type_register_static(&can_host_info); }
-
-type_init(can_host_register_types);
+DEFINE_TYPE(can_host_info)

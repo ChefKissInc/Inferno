@@ -606,14 +606,12 @@ static void qio_channel_finalize(Object* obj)
 }
 
 static const TypeInfo qio_channel_info = {
-    .parent            = TYPE_OBJECT,
-    .name              = TYPE_QIO_CHANNEL,
-    .instance_size     = sizeof(QIOChannel),
+    .parent = TYPE_OBJECT,
+    .name   = TYPE_QIO_CHANNEL,
+    OBJECT_TYPE_INSTANCE(QIOChannel),
     .instance_finalize = qio_channel_finalize,
     .abstract          = true,
     .class_size        = sizeof(QIOChannelClass),
 };
 
-static void qio_channel_register_types(void) { type_register_static(&qio_channel_info); }
-
-type_init(qio_channel_register_types);
+DEFINE_TYPE(qio_channel_info)

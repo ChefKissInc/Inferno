@@ -48,13 +48,4 @@ static void fan53740_class_init(ObjectClass* klass, const void* data)
     c->event = fan53740_event;
 }
 
-static const TypeInfo fan53740_type_info = {
-    .name          = TYPE_FAN53740,
-    .parent        = TYPE_I2C_SLAVE,
-    .instance_size = sizeof(FAN53740State),
-    .class_init    = fan53740_class_init,
-};
-
-static void fan53740_register_types(void) { type_register_static(&fan53740_type_info); }
-
-type_init(fan53740_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(FAN53740State, fan53740, FAN53740, I2C_SLAVE)

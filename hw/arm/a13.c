@@ -641,27 +641,22 @@ static void apple_a13_cluster_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, apple_a13_cluster_properties);
 }
 
-static const TypeInfo apple_a13_info = {
-    .name          = TYPE_APPLE_A13,
-    .parent        = ARM_CPU_TYPE_NAME("apple-gxf"),
-    .instance_size = sizeof(AppleA13State),
-    .instance_init = apple_a13_instance_init,
-    .class_size    = sizeof(AppleA13Class),
-    .class_init    = apple_a13_class_init,
+static const TypeInfo apple_a13_types[] = {
+    {
+        .name   = TYPE_APPLE_A13,
+        .parent = ARM_CPU_TYPE_NAME("apple-gxf"),
+        OBJECT_TYPE_INSTANCE(AppleA13State),
+        .instance_init = apple_a13_instance_init,
+        .class_size    = sizeof(AppleA13Class),
+        .class_init    = apple_a13_class_init,
+    },
+    {
+        .name   = TYPE_APPLE_A13_CLUSTER,
+        .parent = TYPE_CPU_CLUSTER,
+        OBJECT_TYPE_INSTANCE(AppleA13Cluster),
+        .instance_init = apple_a13_cluster_instance_init,
+        .class_init    = apple_a13_cluster_class_init,
+    },
 };
 
-static const TypeInfo apple_a13_cluster_info = {
-    .name          = TYPE_APPLE_A13_CLUSTER,
-    .parent        = TYPE_CPU_CLUSTER,
-    .instance_size = sizeof(AppleA13Cluster),
-    .instance_init = apple_a13_cluster_instance_init,
-    .class_init    = apple_a13_cluster_class_init,
-};
-
-static void apple_a13_register_types(void)
-{
-    type_register_static(&apple_a13_info);
-    type_register_static(&apple_a13_cluster_info);
-}
-
-type_init(apple_a13_register_types);
+DEFINE_TYPES(apple_a13_types)

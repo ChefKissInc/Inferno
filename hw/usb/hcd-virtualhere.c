@@ -1033,13 +1033,4 @@ static void usb_virtualhere_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, usb_virtualhere_props);
 }
 
-static const TypeInfo usb_virtualhere_type_info = {
-    .name          = TYPE_USB_VIRTUALHERE,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(USBVirtualHereState),
-    .class_init    = usb_virtualhere_class_init,
-};
-
-static void usb_virtualhere_register_types(void) { type_register_static(&usb_virtualhere_type_info); }
-
-type_init(usb_virtualhere_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(USBVirtualHereState, usb_virtualhere, USB_VIRTUALHERE, SYS_BUS_DEVICE)

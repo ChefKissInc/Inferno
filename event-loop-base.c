@@ -104,9 +104,9 @@ static void event_loop_base_class_init(ObjectClass* klass, const void* class_dat
                               NULL, &thread_pool_max_info);
 }
 
-static const TypeInfo event_loop_base_info = {.name          = TYPE_EVENT_LOOP_BASE,
-                                              .parent        = TYPE_OBJECT,
-                                              .instance_size = sizeof(EventLoopBase),
+static const TypeInfo event_loop_base_info = {.name   = TYPE_EVENT_LOOP_BASE,
+                                              .parent = TYPE_OBJECT,
+                                              OBJECT_TYPE_INSTANCE(EventLoopBase),
                                               .instance_init = event_loop_base_instance_init,
                                               .class_size    = sizeof(EventLoopBaseClass),
                                               .class_init    = event_loop_base_class_init,

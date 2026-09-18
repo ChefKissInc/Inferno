@@ -211,19 +211,17 @@ static void thread_context_instance_finalize(Object* obj)
     qemu_mutex_destroy(&tc->mutex);
 }
 
-static const TypeInfo thread_context_info = {.name              = TYPE_THREAD_CONTEXT,
-                                             .parent            = TYPE_OBJECT,
-                                             .class_init        = thread_context_class_init,
-                                             .instance_size     = sizeof(ThreadContext),
+static const TypeInfo thread_context_info = {.name       = TYPE_THREAD_CONTEXT,
+                                             .parent     = TYPE_OBJECT,
+                                             .class_init = thread_context_class_init,
+                                             OBJECT_TYPE_INSTANCE(ThreadContext),
                                              .instance_init     = thread_context_instance_init,
                                              .instance_finalize = thread_context_instance_finalize,
                                              .interfaces        = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};
 
-static void thread_context_register_types(void) { type_register_static(&thread_context_info); }
-type_init(thread_context_register_types) void thread_context_create_thread(ThreadContext* tc, QemuThread* thread,
-                                                                           const char* name,
-                                                                           void* (*start_routine)(void*), void* arg,
-                                                                           int mode)
+DEFINE_TYPE(thread_context_info)
+void thread_context_create_thread(ThreadContext* tc, QemuThread* thread, const char* name,
+                                  void* (*start_routine)(void*), void* arg, int mode)
 {
     ThreadContextCmdNew data = {
         .thread        = thread,

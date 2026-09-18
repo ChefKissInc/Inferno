@@ -82,13 +82,4 @@ static void unimp_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, unimp_properties);
 }
 
-static const TypeInfo unimp_info = {
-    .name          = TYPE_UNIMPLEMENTED_DEVICE,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(UnimplementedDeviceState),
-    .class_init    = unimp_class_init,
-};
-
-static void unimp_register_types(void) { type_register_static(&unimp_info); }
-
-type_init(unimp_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(UnimplementedDeviceState, unimp, UNIMPLEMENTED_DEVICE, SYS_BUS_DEVICE)

@@ -171,16 +171,6 @@ static void apple_sep_monitor_class_init(ObjectClass* klass, const void* class_d
     dc->realize      = apple_sep_monitor_realize;
 }
 
-static const TypeInfo apple_sep_monitor_type_info = {
-    .name           = TYPE_APPLE_SEP_MONITOR,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_monitor_class_init,
-    .instance_size  = sizeof(AppleSEPMonitorState),
-    .instance_align = __alignof__(AppleSEPMonitorState),
-};
-
-static void apple_sep_monitor_register_types(void) { type_register_static(&apple_sep_monitor_type_info); }
-
-type_init(apple_sep_monitor_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPMonitorState, apple_sep_monitor, APPLE_SEP_MONITOR, SYS_BUS_DEVICE)
 
 AppleSEPMonitorState* apple_sep_monitor_create(void) { return APPLE_SEP_MONITOR(qdev_new(TYPE_APPLE_SEP_MONITOR)); }

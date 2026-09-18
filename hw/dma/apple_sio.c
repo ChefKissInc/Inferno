@@ -89,7 +89,7 @@ struct AppleSIOClass
     ResettablePhases parent_reset;
 };
 
-struct AppleSIOState
+struct AppleSIO
 {
     /*< private >*/
     AppleRTKit parent_obj;
@@ -203,7 +203,7 @@ static void apple_sio_dma_destroy_buffer(AppleSIODMAEndpoint* ep, SIODMABuffer* 
 // -- internal references --
 // Firestorm$Inferno/18A5351d/sio.bndb@00009f14{armv8_timebase_get_current}
 // -- end internal references --
-static uint64_t apple_sio_get_cur_ts(const AppleSIOState* s)
+static uint64_t apple_sio_get_cur_ts(const AppleSIO* s)
 { return muldiv64(qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL), s->gtimer_freq, NANOSECONDS_PER_SECOND); }
 
 static void apple_sio_dma_del_buffers(AppleSIODMAEndpoint* ep)
@@ -217,7 +217,7 @@ static void apple_sio_dma_del_buffers(AppleSIODMAEndpoint* ep)
 // -- internal references --
 // Firestorm$Inferno/18A5351d/sio.bndb@000030e4{sio_endpoint::handle_message}+0x64
 // -- end internal references --
-static void apple_sio_dma_stop(AppleSIOState* s, AppleSIODMAEndpoint* ep)
+static void apple_sio_dma_stop(AppleSIO* s, AppleSIODMAEndpoint* ep)
 {
     SIODMABuffer* buf;
     SIODMABuffer* buf_next;
@@ -231,7 +231,7 @@ static void apple_sio_dma_stop(AppleSIOState* s, AppleSIODMAEndpoint* ep)
     apple_rtkit_send_user_msg(rtk, EP_CONTROL, m.raw);
 }
 
-static void apple_sio_dma_writeback(AppleSIOState* s, AppleSIODMAEndpoint* ep, SIODMABuffer* buf)
+static void apple_sio_dma_writeback(AppleSIO* s, AppleSIODMAEndpoint* ep, SIODMABuffer* buf)
 {
     AppleRTKit* rtk = &s->parent_obj;
     SIOMessage  m   = {0};
@@ -258,7 +258,7 @@ static void apple_sio_dma_writeback(AppleSIOState* s, AppleSIODMAEndpoint* ep, S
     apple_rtkit_send_user_msg(rtk, EP_CONTROL, m.raw);
 }
 
-static bool apple_sio_dma_map_buf(const AppleSIOState* s, AppleSIODMAEndpoint* ep, SIODMABuffer* buf)
+static bool apple_sio_dma_map_buf(const AppleSIO* s, AppleSIODMAEndpoint* ep, SIODMABuffer* buf)
 {
     if (buf->mapped) { return true; }
 
@@ -294,10 +294,10 @@ static bool apple_sio_dma_map_buf(const AppleSIOState* s, AppleSIODMAEndpoint* e
 
 uint64_t apple_sio_dma_read(AppleSIODMAEndpoint* ep, void* buffer, uint64_t len)
 {
-    AppleSIOState* s;
-    SIODMABuffer*  buf;
-    uint64_t       iovec_len;
-    uint64_t       actual_len = 0;
+    AppleSIO*     s;
+    SIODMABuffer* buf;
+    uint64_t      iovec_len;
+    uint64_t      actual_len = 0;
 
     assert_cmpuint(ep->direction, ==, DMA_DIRECTION_TO_DEVICE);
 
@@ -305,7 +305,7 @@ uint64_t apple_sio_dma_read(AppleSIODMAEndpoint* ep, void* buffer, uint64_t len)
 
     QEMU_LOCK_GUARD(&ep->mutex);
 
-    s = container_of(ep, AppleSIOState, eps[ep->id]);
+    s = container_of(ep, AppleSIO, eps[ep->id]);
 
     while (len > actual_len) {
         buf = QTAILQ_FIRST(&ep->buffers);
@@ -321,10 +321,10 @@ uint64_t apple_sio_dma_read(AppleSIODMAEndpoint* ep, void* buffer, uint64_t len)
 
 uint64_t apple_sio_dma_write(AppleSIODMAEndpoint* ep, void* buffer, uint64_t len)
 {
-    AppleSIOState* s;
-    SIODMABuffer*  buf;
-    uint64_t       iovec_len;
-    uint64_t       actual_len = 0;
+    AppleSIO*     s;
+    SIODMABuffer* buf;
+    uint64_t      iovec_len;
+    uint64_t      actual_len = 0;
 
     assert_cmpuint(ep->direction, ==, DMA_DIRECTION_FROM_DEVICE);
 
@@ -332,7 +332,7 @@ uint64_t apple_sio_dma_write(AppleSIODMAEndpoint* ep, void* buffer, uint64_t len
 
     QEMU_LOCK_GUARD(&ep->mutex);
 
-    s = container_of(ep, AppleSIOState, eps[ep->id]);
+    s = container_of(ep, AppleSIO, eps[ep->id]);
 
     while (len > actual_len) {
         buf = QTAILQ_FIRST(&ep->buffers);
@@ -348,10 +348,10 @@ uint64_t apple_sio_dma_write(AppleSIODMAEndpoint* ep, void* buffer, uint64_t len
 
 uint64_t apple_sio_dma_blit(AppleSIODMAEndpoint* ep, int fillc, uint64_t len)
 {
-    AppleSIOState* s;
-    SIODMABuffer*  buf;
-    uint64_t       iovec_len;
-    uint64_t       actual_len = 0;
+    AppleSIO*     s;
+    SIODMABuffer* buf;
+    uint64_t      iovec_len;
+    uint64_t      actual_len = 0;
 
     assert_cmpuint(ep->direction, ==, DMA_DIRECTION_FROM_DEVICE);
 
@@ -359,7 +359,7 @@ uint64_t apple_sio_dma_blit(AppleSIODMAEndpoint* ep, int fillc, uint64_t len)
 
     QEMU_LOCK_GUARD(&ep->mutex);
 
-    s = container_of(ep, AppleSIOState, eps[ep->id]);
+    s = container_of(ep, AppleSIO, eps[ep->id]);
 
     while (len > actual_len) {
         buf = QTAILQ_FIRST(&ep->buffers);
@@ -395,7 +395,7 @@ uint64_t apple_sio_dma_remaining(AppleSIODMAEndpoint* ep)
     return apple_sio_dma_remaining_locked(ep);
 }
 
-static void apple_sio_control_get_param(AppleSIOState* s, SIOMessage* reply, uint32_t param)
+static void apple_sio_control_get_param(AppleSIO* s, SIOMessage* reply, uint32_t param)
 {
     if (param == PARAM_PROTOCOL_VERSION) {
         reply->data = s->protocol_version;
@@ -406,7 +406,7 @@ static void apple_sio_control_get_param(AppleSIOState* s, SIOMessage* reply, uin
     }
 }
 
-static void apple_sio_control_set_param(AppleSIOState* s, SIOMessage* reply, uint32_t param, uint32_t value)
+static void apple_sio_control_set_param(AppleSIO* s, SIOMessage* reply, uint32_t param, uint32_t value)
 {
     switch (param) {
         case PARAM_SEGMENT_BASE : s->segment_base = value << 12; break;
@@ -416,7 +416,7 @@ static void apple_sio_control_set_param(AppleSIOState* s, SIOMessage* reply, uin
     reply->op = OP_ACK;
 }
 
-static void apple_sio_control(AppleSIOState* s, AppleSIODMAEndpoint* ep, SIOMessage* m)
+static void apple_sio_control(AppleSIO* s, AppleSIODMAEndpoint* ep, SIOMessage* m)
 {
     AppleRTKit* rtk   = &s->parent_obj;
     SIOMessage  reply = {0};
@@ -434,7 +434,7 @@ static void apple_sio_control(AppleSIOState* s, AppleSIODMAEndpoint* ep, SIOMess
     apple_rtkit_send_user_msg(rtk, EP_CONTROL, reply.raw);
 };
 
-static void apple_sio_dma(AppleSIOState* s, AppleSIODMAEndpoint* ep, SIOMessage m)
+static void apple_sio_dma(AppleSIO* s, AppleSIODMAEndpoint* ep, SIOMessage m)
 {
     AppleRTKit*   rtk   = &s->parent_obj;
     SIOMessage    reply = {0};
@@ -529,8 +529,8 @@ static void apple_sio_dma(AppleSIOState* s, AppleSIODMAEndpoint* ep, SIOMessage 
 
 static void apple_sio_handle_endpoint(void* opaque, uint8_t ep, uint64_t msg)
 {
-    AppleSIOState* sio = opaque;
-    SIOMessage     m   = {0};
+    AppleSIO*  sio = opaque;
+    SIOMessage m   = {0};
 
     m.raw = msg;
 
@@ -548,14 +548,14 @@ static void apple_sio_handle_endpoint(void* opaque, uint8_t ep, uint64_t msg)
     }
 }
 
-AppleSIODMAEndpoint* apple_sio_get_endpoint(AppleSIOState* s, int ep)
+AppleSIODMAEndpoint* apple_sio_get_endpoint(AppleSIO* s, int ep)
 {
     if (ep <= EP_PERF || ep >= SIO_NUM_EPS) { return NULL; }
 
     return &s->eps[ep];
 }
 
-AppleSIODMAEndpoint* apple_sio_get_endpoint_from_node(AppleSIOState* s, AppleDTNode* node, int idx)
+AppleSIODMAEndpoint* apple_sio_get_endpoint_from_node(AppleSIO* s, AppleDTNode* node, int idx)
 {
     AppleDTProp* prop;
     uint32_t*    data;
@@ -589,7 +589,7 @@ static const MemoryRegionOps ascv2_core_reg_ops = {
 
 static void apple_sio_realize(DeviceState* dev, Error** errp)
 {
-    AppleSIOState* s;
+    AppleSIO*      s;
     AppleSIOClass* sioc;
     Object*        obj;
 
@@ -614,7 +614,7 @@ static void apple_sio_realize(DeviceState* dev, Error** errp)
 
 static void apple_sio_reset_hold(Object* obj, ResetType type)
 {
-    AppleSIOState* s;
+    AppleSIO*      s;
     AppleSIOClass* sioc;
 
     s    = APPLE_SIO(obj);
@@ -648,28 +648,18 @@ static void apple_sio_class_init(ObjectClass* klass, const void* data)
     dc->user_creatable = false;
 }
 
-static const TypeInfo apple_sio_info = {
-    .name          = TYPE_APPLE_SIO,
-    .parent        = TYPE_APPLE_RTKIT,
-    .instance_size = sizeof(AppleSIOState),
-    .class_size    = sizeof(AppleSIOClass),
-    .class_init    = apple_sio_class_init,
-};
-
-static void apple_sio_register_types(void) { type_register_static(&apple_sio_info); }
-
-type_init(apple_sio_register_types);
+OBJECT_DEFINE_TYPE_CLASS_INIT(AppleSIO, apple_sio, APPLE_SIO, APPLE_RTKIT)
 
 SysBusDevice* apple_sio_from_node(AppleDTNode* node, AppleA7IOPVersion version, uint32_t protocol_version,
                                   uint64_t gtimer_freq)
 {
-    DeviceState*   dev;
-    AppleSIOState* s;
-    SysBusDevice*  sbd;
-    AppleRTKit*    rtk;
-    AppleDTNode*   child;
-    AppleDTProp*   prop;
-    uint64_t*      reg;
+    DeviceState*  dev;
+    AppleSIO*     s;
+    SysBusDevice* sbd;
+    AppleRTKit*   rtk;
+    AppleDTNode*  child;
+    AppleDTProp*  prop;
+    uint64_t*     reg;
 
     assert_false(gtimer_freq == 0);
 

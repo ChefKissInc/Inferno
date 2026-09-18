@@ -676,17 +676,15 @@ void qdev_machine_creation_done(void)
 }
 
 static const TypeInfo machine_info = {
-    .name              = TYPE_MACHINE,
-    .parent            = TYPE_OBJECT,
-    .abstract          = true,
-    .class_size        = sizeof(MachineClass),
-    .class_init        = machine_class_init,
-    .class_base_init   = machine_class_base_init,
-    .instance_size     = sizeof(MachineState),
+    .name            = TYPE_MACHINE,
+    .parent          = TYPE_OBJECT,
+    .abstract        = true,
+    .class_size      = sizeof(MachineClass),
+    .class_init      = machine_class_init,
+    .class_base_init = machine_class_base_init,
+    OBJECT_TYPE_INSTANCE(MachineState),
     .instance_init     = machine_initfn,
     .instance_finalize = machine_finalize,
 };
 
-static void machine_register_types(void) { type_register_static(&machine_info); }
-
-type_init(machine_register_types)
+DEFINE_TYPE(machine_info)

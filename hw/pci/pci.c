@@ -166,36 +166,12 @@ static void pci_bus_class_init(ObjectClass* klass, const void* data)
     pbc->bus_num = pcibus_num;
 }
 
-static const TypeInfo pci_bus_info = {
-    .name          = TYPE_PCI_BUS,
-    .parent        = TYPE_BUS,
-    .instance_size = sizeof(PCIBus),
-    .class_size    = sizeof(PCIBusClass),
-    .class_init    = pci_bus_class_init,
-};
-
-static const TypeInfo pcie_interface_info = {
-    .name   = INTERFACE_PCIE_DEVICE,
-    .parent = TYPE_INTERFACE,
-};
-
-static const TypeInfo conventional_pci_interface_info = {
-    .name   = INTERFACE_CONVENTIONAL_PCI_DEVICE,
-    .parent = TYPE_INTERFACE,
-};
-
 static void pcie_bus_class_init(ObjectClass* klass, const void* data)
 {
     BusClass* k = BUS_CLASS(klass);
 
     k->realize = pcie_bus_realize;
 }
-
-static const TypeInfo pcie_bus_info = {
-    .name       = TYPE_PCIE_BUS,
-    .parent     = TYPE_PCI_BUS,
-    .class_init = pcie_bus_class_init,
-};
 
 static void pci_update_mappings(PCIDevice* d);
 static void pci_irq_handler(void* opaque, int irq_num, int level);
@@ -2250,23 +2226,36 @@ void pci_set_enabled(PCIDevice* d, bool state)
     if (qdev_is_realized(&d->qdev)) { pci_device_reset(d); }
 }
 
-static const TypeInfo pci_device_type_info = {
-    .name            = TYPE_PCI_DEVICE,
-    .parent          = TYPE_DEVICE,
-    .instance_size   = sizeof(PCIDevice),
-    .abstract        = true,
-    .class_size      = sizeof(PCIDeviceClass),
-    .class_init      = pci_device_class_init,
-    .class_base_init = pci_device_class_base_init,
+static const TypeInfo pci_types[] = {
+    {
+        .name   = TYPE_PCI_BUS,
+        .parent = TYPE_BUS,
+        OBJECT_TYPE_INSTANCE(PCIBus),
+        .class_size = sizeof(PCIBusClass),
+        .class_init = pci_bus_class_init,
+    },
+    {
+        .name       = TYPE_PCIE_BUS,
+        .parent     = TYPE_PCI_BUS,
+        .class_init = pcie_bus_class_init,
+    },
+    {
+        .name   = INTERFACE_CONVENTIONAL_PCI_DEVICE,
+        .parent = TYPE_INTERFACE,
+    },
+    {
+        .name   = INTERFACE_PCIE_DEVICE,
+        .parent = TYPE_INTERFACE,
+    },
+    {
+        .name   = TYPE_PCI_DEVICE,
+        .parent = TYPE_DEVICE,
+        OBJECT_TYPE_INSTANCE(PCIDevice),
+        .abstract        = true,
+        .class_size      = sizeof(PCIDeviceClass),
+        .class_init      = pci_device_class_init,
+        .class_base_init = pci_device_class_base_init,
+    },
 };
 
-static void pci_register_types(void)
-{
-    type_register_static(&pci_bus_info);
-    type_register_static(&pcie_bus_info);
-    type_register_static(&conventional_pci_interface_info);
-    type_register_static(&pcie_interface_info);
-    type_register_static(&pci_device_type_info);
-}
-
-type_init(pci_register_types)
+DEFINE_TYPES(pci_types)

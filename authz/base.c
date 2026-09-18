@@ -58,13 +58,11 @@ bool qauthz_is_allowed_by_id(const char* authzid, const char* identity, Error** 
 }
 
 static const TypeInfo authz_info = {
-    .parent        = TYPE_OBJECT,
-    .name          = TYPE_QAUTHZ,
-    .instance_size = sizeof(QAuthZ),
-    .class_size    = sizeof(QAuthZClass),
-    .abstract      = true,
+    .parent = TYPE_OBJECT,
+    .name   = TYPE_QAUTHZ,
+    OBJECT_TYPE_INSTANCE(QAuthZ),
+    .class_size = sizeof(QAuthZClass),
+    .abstract   = true,
 };
 
-static void qauthz_register_types(void) { type_register_static(&authz_info); }
-
-type_init(qauthz_register_types)
+DEFINE_TYPE(authz_info)

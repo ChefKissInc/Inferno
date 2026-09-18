@@ -237,9 +237,9 @@ static void char_win_stdio_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_win_stdio_type_info = {
-    .name              = TYPE_CHARDEV_WIN_STDIO,
-    .parent            = TYPE_CHARDEV,
-    .instance_size     = sizeof(WinStdioChardev),
+    .name   = TYPE_CHARDEV_WIN_STDIO,
+    .parent = TYPE_CHARDEV,
+    OBJECT_TYPE_INSTANCE(WinStdioChardev),
     .instance_finalize = char_win_stdio_finalize,
     .class_init        = char_win_stdio_class_init,
     .abstract          = true,

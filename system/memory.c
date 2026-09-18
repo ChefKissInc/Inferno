@@ -2894,35 +2894,28 @@ bool memory_region_init_rom_device(MemoryRegion* mr, Object* owner, const Memory
     return false;
 }
 
-static const TypeInfo memory_region_info = {
-    .parent            = TYPE_OBJECT,
-    .name              = TYPE_MEMORY_REGION,
-    .class_size        = sizeof(MemoryRegionClass),
-    .instance_size     = sizeof(MemoryRegion),
-    .instance_init     = memory_region_initfn,
-    .instance_finalize = memory_region_finalize,
+static const TypeInfo memory_types[] = {
+    {
+        .parent     = TYPE_OBJECT,
+        .name       = TYPE_MEMORY_REGION,
+        .class_size = sizeof(MemoryRegionClass),
+        OBJECT_TYPE_INSTANCE(MemoryRegion),
+        .instance_init     = memory_region_initfn,
+        .instance_finalize = memory_region_finalize,
+    },
+    {
+        .parent     = TYPE_MEMORY_REGION,
+        .name       = TYPE_IOMMU_MEMORY_REGION,
+        .class_size = sizeof(IOMMUMemoryRegionClass),
+        OBJECT_TYPE_INSTANCE(IOMMUMemoryRegion),
+        .instance_init = iommu_memory_region_initfn,
+        .abstract      = true,
+    },
+    {
+        .parent     = TYPE_INTERFACE,
+        .name       = TYPE_RAM_DISCARD_MANAGER,
+        .class_size = sizeof(RamDiscardManagerClass),
+    },
 };
 
-static const TypeInfo iommu_memory_region_info = {
-    .parent        = TYPE_MEMORY_REGION,
-    .name          = TYPE_IOMMU_MEMORY_REGION,
-    .class_size    = sizeof(IOMMUMemoryRegionClass),
-    .instance_size = sizeof(IOMMUMemoryRegion),
-    .instance_init = iommu_memory_region_initfn,
-    .abstract      = true,
-};
-
-static const TypeInfo ram_discard_manager_info = {
-    .parent     = TYPE_INTERFACE,
-    .name       = TYPE_RAM_DISCARD_MANAGER,
-    .class_size = sizeof(RamDiscardManagerClass),
-};
-
-static void memory_register_types(void)
-{
-    type_register_static(&memory_region_info);
-    type_register_static(&iommu_memory_region_info);
-    type_register_static(&ram_discard_manager_info);
-}
-
-type_init(memory_register_types)
+DEFINE_TYPES(memory_types)

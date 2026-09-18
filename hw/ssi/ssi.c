@@ -57,13 +57,6 @@ static void ssi_bus_class_init(ObjectClass* klass, const void* data)
     k->check_address = ssi_bus_check_address;
 }
 
-static const TypeInfo ssi_bus_info = {
-    .name          = TYPE_SSI_BUS,
-    .parent        = TYPE_BUS,
-    .instance_size = sizeof(SSIBus),
-    .class_init    = ssi_bus_class_init,
-};
-
 static void ssi_cs_default(void* opaque, int n, int level)
 {
     SSIPeripheral* s  = SSI_PERIPHERAL(opaque);
@@ -115,13 +108,23 @@ static void ssi_peripheral_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, ssi_peripheral_properties);
 }
 
-static const TypeInfo ssi_peripheral_info = {
-    .name       = TYPE_SSI_PERIPHERAL,
-    .parent     = TYPE_DEVICE,
-    .class_init = ssi_peripheral_class_init,
-    .class_size = sizeof(SSIPeripheralClass),
-    .abstract   = true,
+static const TypeInfo ssi_peripheral_types[] = {
+    {
+        .name   = TYPE_SSI_BUS,
+        .parent = TYPE_BUS,
+        OBJECT_TYPE_INSTANCE(SSIBus),
+        .class_init = ssi_bus_class_init,
+    },
+    {
+        .name       = TYPE_SSI_PERIPHERAL,
+        .parent     = TYPE_DEVICE,
+        .class_init = ssi_peripheral_class_init,
+        .class_size = sizeof(SSIPeripheralClass),
+        .abstract   = true,
+    },
 };
+
+DEFINE_TYPES(ssi_peripheral_types)
 
 bool ssi_realize_and_unref(DeviceState* dev, SSIBus* bus, Error** errp)
 { return qdev_realize_and_unref(dev, &bus->parent_obj, errp); }
@@ -154,11 +157,3 @@ uint32_t ssi_transfer(SSIBus* bus, uint32_t val)
 
     return r;
 }
-
-static void ssi_peripheral_register_types(void)
-{
-    type_register_static(&ssi_bus_info);
-    type_register_static(&ssi_peripheral_info);
-}
-
-type_init(ssi_peripheral_register_types)

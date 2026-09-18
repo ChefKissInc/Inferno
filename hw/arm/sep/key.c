@@ -90,19 +90,19 @@ struct AppleSEPKeyState
 {
     SysBusDevice parent_obj;
 
-    AppleSEPState* sep;
-    MemoryRegion   base_mr;
-    MemoryRegion   fkey_mr;
-    MemoryRegion   fcfg_mr;
-    uint8_t        fcfg_offset_0x14_index;
-    uint16_t       fcfg_offset_0x14_values[5];
-    QEMUTimer*     manual_timer;
-    QemuMutex      manual_timer_lock;
-    uint32_t       manual_timer_hertz;
-    bool           manual_timer_enabled;
-    uint8_t        base_regs[KEY_BASE_REG_SIZE];
-    uint8_t        fkey_regs[KEY_FKEY_REG_SIZE_T8015];
-    uint8_t        fcfg_regs[KEY_FCFG_REG_SIZE_T8020];
+    AppleSEP*    sep;
+    MemoryRegion base_mr;
+    MemoryRegion fkey_mr;
+    MemoryRegion fcfg_mr;
+    uint8_t      fcfg_offset_0x14_index;
+    uint16_t     fcfg_offset_0x14_values[5];
+    QEMUTimer*   manual_timer;
+    QemuMutex    manual_timer_lock;
+    uint32_t     manual_timer_hertz;
+    bool         manual_timer_enabled;
+    uint8_t      base_regs[KEY_BASE_REG_SIZE];
+    uint8_t      fkey_regs[KEY_FKEY_REG_SIZE_T8015];
+    uint8_t      fcfg_regs[KEY_FCFG_REG_SIZE_T8020];
 };
 
 // handler key selectors: Lc128==0x0; DpkTx==0x1; Km==0x2; Ks==0x3
@@ -429,20 +429,9 @@ static void apple_sep_key_class_init(ObjectClass* klass, const void* class_data)
     dc->realize      = apple_sep_key_realize;
 }
 
-static const TypeInfo apple_sep_key_info = {
-    .name           = TYPE_APPLE_SEP_KEY,
-    .parent         = TYPE_SYS_BUS_DEVICE,
-    .class_init     = apple_sep_key_class_init,
-    .instance_size  = sizeof(AppleSEPKeyState),
-    .instance_align = __alignof__(AppleSEPKeyState),
-    .instance_init  = apple_sep_key_init,
-};
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(AppleSEPKeyState, apple_sep_key, APPLE_SEP_KEY, SYS_BUS_DEVICE)
 
-static void apple_sep_key_register_types(void) { type_register_static(&apple_sep_key_info); }
-
-type_init(apple_sep_key_register_types);
-
-AppleSEPKeyState* apple_sep_key_create(AppleSEPState* sep)
+AppleSEPKeyState* apple_sep_key_create(AppleSEP* sep)
 {
     AppleSEPKeyState* s = APPLE_SEP_KEY(qdev_new(TYPE_APPLE_SEP_KEY));
 

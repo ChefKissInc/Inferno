@@ -10,7 +10,7 @@
 #include "qom/object.h"
 
 #define TYPE_APPLE_NVRAM "apple-nvram"
-OBJECT_DECLARE_TYPE(AppleNvramState, AppleNvramClass, APPLE_NVRAM)
+OBJECT_DECLARE_TYPE(AppleNvram, AppleNvramClass, APPLE_NVRAM)
 
 #pragma pack(push, 1)
 typedef struct
@@ -54,14 +54,14 @@ typedef struct NvramBank
 void nvram_free(NvramBank* bank);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(NvramBank, nvram_free);
 
-typedef struct AppleNvramState
+typedef struct AppleNvram
 {
     NvmeNamespace parent_obj;
 
     NvramBank* bank;
     QTAILQ_HEAD(, env_var) env;
     uint32_t len;
-} AppleNvramState;
+} AppleNvram;
 
 struct AppleNvramClass
 {
@@ -76,15 +76,15 @@ struct AppleNvramClass
 
 NvramPartition* nvram_find_part(NvramBank* bank, const char* name);
 NvramBank*      nvram_parse(void* buf, size_t len);
-void            apple_nvram_load(AppleNvramState* s);
-void            apple_nvram_save(AppleNvramState* s);
-ssize_t         apple_nvram_serialize(AppleNvramState* s, void* buffer, size_t size);
+void            apple_nvram_load(AppleNvram* s);
+void            apple_nvram_save(AppleNvram* s);
+ssize_t         apple_nvram_serialize(AppleNvram* s, void* buffer, size_t size);
 
-env_var*    env_find(AppleNvramState* s, const char* name);
-const char* env_get(AppleNvramState* s, const char* name);
-size_t      env_get_uint(AppleNvramState* s, const char* name, size_t default_val);
-bool        env_get_bool(AppleNvramState* s, const char* name, bool default_val);
-int         env_unset(AppleNvramState* s, const char* name);
-int         env_set(AppleNvramState* s, const char* name, const char* val, uint32_t flags);
-int         env_set_uint(AppleNvramState* s, const char* name, size_t val, uint32_t flags);
-int         env_set_bool(AppleNvramState* s, const char* name, bool val, uint32_t flags);
+env_var*    env_find(AppleNvram* s, const char* name);
+const char* env_get(AppleNvram* s, const char* name);
+size_t      env_get_uint(AppleNvram* s, const char* name, size_t default_val);
+bool        env_get_bool(AppleNvram* s, const char* name, bool default_val);
+int         env_unset(AppleNvram* s, const char* name);
+int         env_set(AppleNvram* s, const char* name, const char* val, uint32_t flags);
+int         env_set_uint(AppleNvram* s, const char* name, size_t val, uint32_t flags);
+int         env_set_bool(AppleNvram* s, const char* name, bool val, uint32_t flags);

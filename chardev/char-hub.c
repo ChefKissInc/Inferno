@@ -264,10 +264,10 @@ static void char_hub_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_hub_type_info = {
-    .name              = TYPE_CHARDEV_HUB,
-    .parent            = TYPE_CHARDEV,
-    .class_init        = char_hub_class_init,
-    .instance_size     = sizeof(HubChardev),
+    .name       = TYPE_CHARDEV_HUB,
+    .parent     = TYPE_CHARDEV,
+    .class_init = char_hub_class_init,
+    OBJECT_TYPE_INSTANCE(HubChardev),
     .instance_finalize = char_hub_finalize,
 };
 

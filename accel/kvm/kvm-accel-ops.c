@@ -109,5 +109,4 @@ static const TypeInfo kvm_accel_ops_type = {
     .abstract   = true,
 };
 
-static void kvm_accel_ops_register_types(void) { type_register_static(&kvm_accel_ops_type); }
-type_init(kvm_accel_ops_register_types);
+DEFINE_TYPE(kvm_accel_ops_type)

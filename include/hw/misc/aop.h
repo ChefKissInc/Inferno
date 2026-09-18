@@ -25,7 +25,7 @@
 #include "hw/sysbus.h"
 
 #define TYPE_APPLE_AOP "apple-aop"
-OBJECT_DECLARE_TYPE(AppleAOPState, AppleAOPClass, APPLE_AOP)
+OBJECT_DECLARE_TYPE(AppleAOP, AppleAOPClass, APPLE_AOP)
 
 typedef struct AppleAOPEndpoint AppleAOPEndpoint;
 
@@ -58,7 +58,7 @@ typedef struct
 } AppleAOPEndpointDescription;
 
 SysBusDevice*     apple_aop_create(AppleDTNode* node, AppleA7IOPVersion version);
-AppleAOPEndpoint* apple_aop_ep_create(AppleAOPState* s, void* opaque, const AppleAOPEndpointDescription* descr);
+AppleAOPEndpoint* apple_aop_ep_create(AppleAOP* s, void* opaque, const AppleAOPEndpointDescription* descr);
 /// NOTE: Must be used while state is locked.
 MemTxResult apple_aop_ep_send_report_locked(AppleAOPEndpoint* s, uint16_t packet_type, const void* payload,
                                             uint32_t payload_len, uint32_t out_len);

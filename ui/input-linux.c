@@ -424,10 +424,10 @@ static void input_linux_class_init(ObjectClass* oc, const void* data)
                                    input_linux_get_grab_toggle, input_linux_set_grab_toggle);
 }
 
-static const TypeInfo input_linux_info = {.name              = TYPE_INPUT_LINUX,
-                                          .parent            = TYPE_OBJECT,
-                                          .class_init        = input_linux_class_init,
-                                          .instance_size     = sizeof(InputLinux),
+static const TypeInfo input_linux_info = {.name       = TYPE_INPUT_LINUX,
+                                          .parent     = TYPE_OBJECT,
+                                          .class_init = input_linux_class_init,
+                                          OBJECT_TYPE_INSTANCE(InputLinux),
                                           .instance_init     = input_linux_instance_init,
                                           .instance_finalize = input_linux_instance_finalize,
                                           .interfaces        = (const InterfaceInfo[]){{TYPE_USER_CREATABLE}, {}}};

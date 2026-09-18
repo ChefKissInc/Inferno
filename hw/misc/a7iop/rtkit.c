@@ -441,14 +441,4 @@ static void apple_rtkit_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 }
 
-static const TypeInfo apple_rtkit_info = {
-    .name          = TYPE_APPLE_RTKIT,
-    .parent        = TYPE_APPLE_A7IOP,
-    .instance_size = sizeof(AppleRTKit),
-    .class_size    = sizeof(AppleRTKitClass),
-    .class_init    = apple_rtkit_class_init,
-};
-
-static void apple_rtkit_register_types(void) { type_register_static(&apple_rtkit_info); }
-
-type_init(apple_rtkit_register_types);
+OBJECT_DEFINE_TYPE_CLASS_INIT(AppleRTKit, apple_rtkit, APPLE_RTKIT, APPLE_A7IOP)

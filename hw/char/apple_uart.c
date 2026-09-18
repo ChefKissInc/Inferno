@@ -568,9 +568,9 @@ static void apple_uart_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo apple_uart_info = {
-    .name          = TYPE_APPLE_UART,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleUartState),
+    .name   = TYPE_APPLE_UART,
+    .parent = TYPE_SYS_BUS_DEVICE,
+    OBJECT_TYPE_INSTANCE(AppleUartState),
     .instance_init = apple_uart_init,
     .class_init    = apple_uart_class_init,
 };

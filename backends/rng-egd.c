@@ -144,9 +144,9 @@ static void rng_egd_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo rng_egd_info = {
-    .name              = TYPE_RNG_EGD,
-    .parent            = TYPE_RNG_BACKEND,
-    .instance_size     = sizeof(RngEgd),
+    .name   = TYPE_RNG_EGD,
+    .parent = TYPE_RNG_BACKEND,
+    OBJECT_TYPE_INSTANCE(RngEgd),
     .class_init        = rng_egd_class_init,
     .instance_finalize = rng_egd_finalize,
 };

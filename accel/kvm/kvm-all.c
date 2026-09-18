@@ -3138,7 +3138,7 @@ static const TypeInfo kvm_accel_type = {
     .parent        = TYPE_ACCEL,
     .instance_init = kvm_accel_instance_init,
     .class_init    = kvm_accel_class_init,
-    .instance_size = sizeof(KVMState),
+    OBJECT_TYPE_INSTANCE(KVMState),
 };
 
 static void kvm_type_init(void) { type_register_static(&kvm_accel_type); }

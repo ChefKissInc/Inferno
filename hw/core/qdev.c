@@ -659,9 +659,9 @@ void phase_advance(MachineInitPhase phase)
     machine_phase = phase;
 }
 
-static const TypeInfo device_type_info = {.name               = TYPE_DEVICE,
-                                          .parent             = TYPE_OBJECT,
-                                          .instance_size      = sizeof(DeviceState),
+static const TypeInfo device_type_info = {.name   = TYPE_DEVICE,
+                                          .parent = TYPE_OBJECT,
+                                          OBJECT_TYPE_INSTANCE(DeviceState),
                                           .instance_init      = device_initfn,
                                           .instance_post_init = device_post_init,
                                           .instance_finalize  = device_finalize,
@@ -671,6 +671,4 @@ static const TypeInfo device_type_info = {.name               = TYPE_DEVICE,
                                           .class_size         = sizeof(DeviceClass),
                                           .interfaces = (const InterfaceInfo[]){{TYPE_RESETTABLE_INTERFACE}, {}}};
 
-static void qdev_register_types(void) { type_register_static(&device_type_info); }
-
-type_init(qdev_register_types)
+DEFINE_TYPE(device_type_info)

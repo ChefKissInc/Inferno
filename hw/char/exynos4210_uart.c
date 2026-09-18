@@ -614,9 +614,9 @@ static void exynos4210_uart_class_init(ObjectClass* klass, const void* data)
 }
 
 static const TypeInfo exynos4210_uart_info = {
-    .name          = TYPE_EXYNOS4210_UART,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(Exynos4210UartState),
+    .name   = TYPE_EXYNOS4210_UART,
+    .parent = TYPE_SYS_BUS_DEVICE,
+    OBJECT_TYPE_INSTANCE(Exynos4210UartState),
     .instance_init = exynos4210_uart_init,
     .class_init    = exynos4210_uart_class_init,
 };

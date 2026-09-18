@@ -85,7 +85,7 @@ struct AppleSEPSSCState
     uint8_t       req_cmd[0x100];
     uint8_t       resp_cmd[0x100];
 
-    AppleSEPState*        sep;
+    AppleSEP*             sep;
     struct ecc_scalar     ecc_key_main, ecc_keys[KBKDF_KEY_MAX_SLOTS];
     struct knuth_lfib_ctx rctx;
     uint8_t               random_hmac_key[SHA256_DIGEST_SIZE];
@@ -992,7 +992,7 @@ static void apple_sep_ssc_reset_enter(Object* obj, ResetType type)
     memcpy(ssc->cpsn, cpsn, sizeof(cpsn));
 }
 
-AppleSEPSSCState* apple_sep_ssc_create(AppleI2CState* i2c, uint8_t addr, AppleSEPState* sep)
+AppleSEPSSCState* apple_sep_ssc_create(AppleI2CState* i2c, uint8_t addr, AppleSEP* sep)
 {
     AppleSEPSSCState* ssc;
 
@@ -1024,14 +1024,4 @@ static void apple_sep_ssc_class_init(ObjectClass* klass, const void* data)
     device_class_set_props(dc, apple_sep_ssc_props);
 }
 
-static const TypeInfo apple_sep_ssc_type_info = {
-    .name           = TYPE_APPLE_SEP_SSC,
-    .parent         = TYPE_I2C_SLAVE,
-    .class_init     = apple_sep_ssc_class_init,
-    .instance_size  = sizeof(AppleSEPSSCState),
-    .instance_align = __alignof__(AppleSEPSSCState),
-};
-
-static void apple_sep_ssc_register_types(void) { type_register_static(&apple_sep_ssc_type_info); }
-
-type_init(apple_sep_ssc_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSEPSSCState, apple_sep_ssc, APPLE_SEP_SSC, I2C_SLAVE)

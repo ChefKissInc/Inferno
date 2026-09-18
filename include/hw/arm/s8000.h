@@ -46,7 +46,7 @@ typedef struct
     hwaddr       armio_size;
 
     unsigned long   dram_size;
-    AppleA9State*   cpus[A9_MAX_CPU];
+    AppleA9*        cpus[A9_MAX_CPU];
     CPUClusterState cluster;
     SysBusDevice*   aic;
     SysBusDevice*   sep;

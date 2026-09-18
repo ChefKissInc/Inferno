@@ -189,16 +189,7 @@ static void apple_mca_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_SOUND, dc->categories);
 }
 
-static const TypeInfo apple_mca_info = {
-    .name          = TYPE_APPLE_MCA,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleMCAState),
-    .class_init    = apple_mca_class_init,
-};
-
-static void apple_mca_register_types(void) { type_register_static(&apple_mca_info); }
-
-type_init(apple_mca_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleMCAState, apple_mca, APPLE_MCA, SYS_BUS_DEVICE)
 
 static uint32_t apple_mca_dma_into_ring(AppleMCAState* s, uint32_t want)
 {

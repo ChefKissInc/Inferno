@@ -333,13 +333,11 @@ void pci_bridge_map_irq(PCIBridge* br, const char* bus_name, pci_map_irq_fn map_
 static void pci_bridge_class_init(ObjectClass* klass, const void* data) { }
 
 static const TypeInfo pci_bridge_type_info = {
-    .name          = TYPE_PCI_BRIDGE,
-    .parent        = TYPE_PCI_DEVICE,
-    .instance_size = sizeof(PCIBridge),
-    .class_init    = pci_bridge_class_init,
-    .abstract      = true,
+    .name   = TYPE_PCI_BRIDGE,
+    .parent = TYPE_PCI_DEVICE,
+    OBJECT_TYPE_INSTANCE(PCIBridge),
+    .class_init = pci_bridge_class_init,
+    .abstract   = true,
 };
 
-static void pci_bridge_register_types(void) { type_register_static(&pci_bridge_type_info); }
-
-type_init(pci_bridge_register_types)
+DEFINE_TYPE(pci_bridge_type_info)

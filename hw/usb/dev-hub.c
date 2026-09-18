@@ -562,7 +562,7 @@ static const Property usb_hub_properties[] = {
     DEFINE_PROP_BOOL("port-power", USBHubState, port_power, false),
 };
 
-static void usb_hub_class_initfn(ObjectClass* klass, const void* data)
+static void usb_hub_class_init(ObjectClass* klass, const void* data)
 {
     DeviceClass*    dc = DEVICE_CLASS(klass);
     USBDeviceClass* uc = USB_DEVICE_CLASS(klass);
@@ -580,13 +580,4 @@ static void usb_hub_class_initfn(ObjectClass* klass, const void* data)
     device_class_set_props(dc, usb_hub_properties);
 }
 
-static const TypeInfo hub_info = {
-    .name          = TYPE_USB_HUB,
-    .parent        = TYPE_USB_DEVICE,
-    .instance_size = sizeof(USBHubState),
-    .class_init    = usb_hub_class_initfn,
-};
-
-static void usb_hub_register_types(void) { type_register_static(&hub_info); }
-
-type_init(usb_hub_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(USBHubState, usb_hub, USB_HUB, USB_DEVICE)

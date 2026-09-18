@@ -269,13 +269,4 @@ static void register_class_init(ObjectClass* oc, const void* data)
     dc->user_creatable = false;
 }
 
-static const TypeInfo register_info = {
-    .name          = TYPE_REGISTER,
-    .parent        = TYPE_DEVICE,
-    .class_init    = register_class_init,
-    .instance_size = sizeof(RegisterInfo),
-};
-
-static void register_register_types(void) { type_register_static(&register_info); }
-
-type_init(register_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(RegisterInfo, register, REGISTER, DEVICE)

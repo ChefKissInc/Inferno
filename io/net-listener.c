@@ -284,12 +284,10 @@ static void qio_net_listener_finalize(Object* obj)
 }
 
 static const TypeInfo qio_net_listener_info = {
-    .parent            = TYPE_OBJECT,
-    .name              = TYPE_QIO_NET_LISTENER,
-    .instance_size     = sizeof(QIONetListener),
+    .parent = TYPE_OBJECT,
+    .name   = TYPE_QIO_NET_LISTENER,
+    OBJECT_TYPE_INSTANCE(QIONetListener),
     .instance_finalize = qio_net_listener_finalize,
 };
 
-static void qio_net_listener_register_types(void) { type_register_static(&qio_net_listener_info); }
-
-type_init(qio_net_listener_register_types);
+DEFINE_TYPE(qio_net_listener_info)

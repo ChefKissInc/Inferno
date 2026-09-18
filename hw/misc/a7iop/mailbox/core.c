@@ -673,13 +673,4 @@ static void apple_a7iop_mailbox_class_init(ObjectClass* klass, const void* data)
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 }
 
-static const TypeInfo apple_a7iop_mailbox_info = {
-    .name          = TYPE_APPLE_A7IOP_MAILBOX,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(AppleA7IOPMailbox),
-    .class_init    = apple_a7iop_mailbox_class_init,
-};
-
-static void apple_a7iop_mailbox_register_types(void) { type_register_static(&apple_a7iop_mailbox_info); }
-
-type_init(apple_a7iop_mailbox_register_types);
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleA7IOPMailbox, apple_a7iop_mailbox, APPLE_A7IOP_MAILBOX, SYS_BUS_DEVICE)

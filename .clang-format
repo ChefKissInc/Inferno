@@ -199,3 +199,7 @@ IncludeCategories:
 IncludeIsMainRegex: "$"
 MacroBlockBegin: ".*_BEGIN$"
 MacroBlockEnd: ".*_END$"
+StatementMacros:
+  - DEFINE_TYPE
+  - DEFINE_TYPES
+  - type_init

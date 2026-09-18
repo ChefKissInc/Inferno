@@ -217,13 +217,4 @@ static void apple_spmi_pmu_class_init(ObjectClass* klass, const void* data)
     sc->command = apple_spmi_pmu_command;
 }
 
-static const TypeInfo apple_spmi_pmu_type_info = {
-    .name          = TYPE_APPLE_SPMI_PMU,
-    .parent        = TYPE_SPMI_SLAVE,
-    .instance_size = sizeof(AppleSPMIPMUState),
-    .class_init    = apple_spmi_pmu_class_init,
-};
-
-static void apple_spmi_pmu_register_types(void) { type_register_static(&apple_spmi_pmu_type_info); }
-
-type_init(apple_spmi_pmu_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_CLASS_INIT(AppleSPMIPMUState, apple_spmi_pmu, APPLE_SPMI_PMU, SPMI_SLAVE)

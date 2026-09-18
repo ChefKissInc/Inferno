@@ -67,7 +67,7 @@ static const TypeInfo shm_backend_info = {
     .parent        = TYPE_MEMORY_BACKEND,
     .instance_init = shm_backend_instance_init,
     .class_init    = shm_backend_class_init,
-    .instance_size = sizeof(HostMemoryBackendShm),
+    OBJECT_TYPE_INSTANCE(HostMemoryBackendShm),
 };
 
 static void register_types(void) { type_register_static(&shm_backend_info); }

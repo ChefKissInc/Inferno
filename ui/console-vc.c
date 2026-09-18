@@ -984,10 +984,10 @@ static void char_vc_class_init(ObjectClass* oc, const void* data)
 }
 
 static const TypeInfo char_vc_type_info = {
-    .name          = TYPE_CHARDEV_VC,
-    .parent        = TYPE_CHARDEV,
-    .instance_size = sizeof(VCChardev),
-    .class_init    = char_vc_class_init,
+    .name   = TYPE_CHARDEV_VC,
+    .parent = TYPE_CHARDEV,
+    OBJECT_TYPE_INSTANCE(VCChardev),
+    .class_init = char_vc_class_init,
 };
 
 void qemu_console_early_init(void)

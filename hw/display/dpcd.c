@@ -127,14 +127,4 @@ static void dpcd_class_init(ObjectClass* oc, const void* data)
     rc->phases.enter = dpcd_reset_enter;
 }
 
-static const TypeInfo dpcd_info = {
-    .name          = TYPE_DPCD,
-    .parent        = TYPE_AUX_SLAVE,
-    .instance_size = sizeof(DPCDState),
-    .class_init    = dpcd_class_init,
-    .instance_init = dpcd_init,
-};
-
-static void dpcd_register_types(void) { type_register_static(&dpcd_info); }
-
-type_init(dpcd_register_types)
+OBJECT_DEFINE_SIMPLE_TYPE_INSTANCE_INIT(DPCDState, dpcd, DPCD, AUX_SLAVE)

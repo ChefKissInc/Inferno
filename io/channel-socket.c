@@ -822,14 +822,12 @@ static void qio_channel_socket_class_init(ObjectClass* klass, const void* class_
 }
 
 static const TypeInfo qio_channel_socket_info = {
-    .parent            = TYPE_QIO_CHANNEL,
-    .name              = TYPE_QIO_CHANNEL_SOCKET,
-    .instance_size     = sizeof(QIOChannelSocket),
+    .parent = TYPE_QIO_CHANNEL,
+    .name   = TYPE_QIO_CHANNEL_SOCKET,
+    OBJECT_TYPE_INSTANCE(QIOChannelSocket),
     .instance_init     = qio_channel_socket_init,
     .instance_finalize = qio_channel_socket_finalize,
     .class_init        = qio_channel_socket_class_init,
 };
 
-static void qio_channel_socket_register_types(void) { type_register_static(&qio_channel_socket_info); }
-
-type_init(qio_channel_socket_register_types);
+DEFINE_TYPE(qio_channel_socket_info)
