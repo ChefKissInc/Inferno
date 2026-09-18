@@ -19,12 +19,6 @@
 #include "internal-common.h"
 #include "tb-internal.h"
 
-static void set_can_do_io(DisasContextBase* db, bool val)
-{
-    QEMU_BUILD_BUG_ON(sizeof_field(CPUState, neg.can_do_io) != 1);
-    tcg_gen_st8_i32(tcg_constant_i32(val), tcg_env, offsetof(CPUState, neg.can_do_io) - sizeof(CPUState));
-}
-
 bool translator_io_start(DisasContextBase* db)
 {
     /*
@@ -134,20 +128,6 @@ void translator_loop(CPUState* cpu, TranslationBlock* tb, int* max_insns, vaddr 
     /* Emit code to exit the TB, as indicated by db->is_jmp.  */
     ops->tb_stop(db, cpu);
     gen_tb_end(tb, cflags, db->num_insns);
-
-    /*
-     * Manage can_do_io for the translation block: set to false before
-     * the first insn and set to true before the last insn.
-     */
-    if (db->num_insns == 1) { tcg_debug_assert(first_insn_start == db->insn_start); }
-    else {
-        tcg_debug_assert(first_insn_start != db->insn_start);
-        tcg_ctx->emit_before_op = first_insn_start;
-        set_can_do_io(db, false);
-    }
-    tcg_ctx->emit_before_op = db->insn_start;
-    set_can_do_io(db, true);
-    tcg_ctx->emit_before_op = NULL;
 
     /* May be used by disas_log. */
     tb->size   = db->pc_next - db->pc_first;

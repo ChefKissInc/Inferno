@@ -172,8 +172,7 @@ static void* rr_cpu_thread_fn(void* arg)
     bql_lock();
     qemu_thread_get_self(cpu->thread);
 
-    cpu->thread_id     = qemu_get_thread_id();
-    cpu->neg.can_do_io = true;
+    cpu->thread_id = qemu_get_thread_id();
     cpu_thread_signal_created(cpu);
     qemu_guest_random_seed_thread_part2(cpu->random_seed);
 
@@ -279,8 +278,7 @@ void rr_start_vcpu_thread(CPUState* cpu)
         cpu->halt_cond = single_tcg_halt_cond;
 
         /* copy the stuff done at start of rr_cpu_thread_fn */
-        cpu->thread_id     = first_cpu->thread_id;
-        cpu->neg.can_do_io = 1;
-        cpu->created       = true;
+        cpu->thread_id = first_cpu->thread_id;
+        cpu->created   = true;
     }
 }

@@ -74,9 +74,8 @@ static void* mttcg_cpu_thread_fn(void* arg)
     bql_lock();
     qemu_thread_get_self(cpu->thread);
 
-    cpu->thread_id     = qemu_get_thread_id();
-    cpu->neg.can_do_io = true;
-    current_cpu        = cpu;
+    cpu->thread_id = qemu_get_thread_id();
+    current_cpu    = cpu;
     cpu_thread_signal_created(cpu);
     qemu_guest_random_seed_thread_part2(cpu->random_seed);
 

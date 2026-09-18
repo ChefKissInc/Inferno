@@ -345,13 +345,11 @@ typedef struct CPUTLB
  *                         from CPUArchState, via small negative offsets.
  * @tb_exit_request: Set to force TCG to stop executing linked TBs for this
  *                   CPU and return to its top level loop.
- * @can_do_io: True if memory-mapped IO is allowed.
  */
 typedef struct CPUNegativeOffsetState
 {
     CPUTLB tlb;
     bool   tb_exit_request;
-    bool   can_do_io;
 } CPUNegativeOffsetState;
 
 struct KVMState;

@@ -496,33 +496,6 @@ void tb_check_watchpoint(CPUState* cpu, uintptr_t retaddr)
  *
  * Called by softmmu_template.h, with iothread mutex not held.
  */
-void cpu_io_recompile(CPUState* cpu, uintptr_t retaddr)
-{
-    TranslationBlock* tb;
-
-    tb = tcg_tb_lookup(retaddr);
-    if (!tb) { cpu_abort(cpu, "cpu_io_recompile: could not find TB for pc=%p", (void*)retaddr); }
-    cpu_restore_state_from_tb(cpu, tb, retaddr);
-
-    /*
-     * Exit the loop and potentially generate a new TB executing the
-     * just the I/O insns. We also limit instrumentation to memory
-     * operations only (which execute after completion) so we don't
-     * double instrument the instruction. Also don't let an IRQ sneak
-     * in before we execute it.
-     */
-    cpu->cflags_next_tb = curr_cflags(cpu) | CF_MEMI_ONLY | CF_NOIRQ | 1;
-
-    if (qemu_loglevel_mask(CPU_LOG_EXEC)) {
-        vaddr pc = cpu->cc->get_pc(cpu);
-        if (qemu_log_in_addr_range(pc)) {
-            qemu_log("cpu_io_recompile: rewound execution of TB to %016" VADDR_PRIx "\n", pc);
-        }
-    }
-
-    cpu_loop_exit_noexc(cpu);
-}
-
 /*
  * Called by generic code at e.g. cpu reset after cpu creation,
  * therefore we must be prepared to allocate the jump cache.

@@ -237,15 +237,6 @@ const void* HELPER(lookup_tb_ptr)(CPUArchState* env)
     CPUState*         cpu = env_cpu(env);
     TranslationBlock* tb;
 
-    /*
-     * By definition we've just finished a TB, so I/O is OK.
-     * Avoid the possibility of calling cpu_io_recompile() if
-     * a page table walk triggered by tb_lookup() calling
-     * probe_access_internal() happens to touch an MMIO device.
-     * The next TB, if we chain to it, will clear the flag again.
-     */
-    cpu->neg.can_do_io = true;
-
     TCGTBCPUState s = cpu->cc->tcg_ops->get_tb_cpu_state(cpu);
     s.cflags        = curr_cflags(cpu);
 
@@ -287,8 +278,7 @@ static inline TranslationBlock* QEMU_DISABLE_CFI cpu_tb_exec(CPUState* cpu, Tran
     if (qemu_loglevel_mask(CPU_LOG_TB_CPU | CPU_LOG_EXEC)) { log_cpu_exec(log_pc(cpu, itb), cpu, itb); }
 
     qemu_thread_jit_execute();
-    ret                = tcg_qemu_tb_exec(cpu_env(cpu), tb_ptr);
-    cpu->neg.can_do_io = true;
+    ret = tcg_qemu_tb_exec(cpu_env(cpu), tb_ptr);
     /*
      * TODO: Delay swapping back to the read-write region of the TB
      * until we actually need to modify the TB.  The read-only copy,

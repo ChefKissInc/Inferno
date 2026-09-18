@@ -363,9 +363,9 @@ static void tlb_flush_by_mmuidx_async_work(CPUState* cpu, run_on_cpu_data data)
 
     qemu_spin_lock(&cpu->neg.tlb.c.lock);
 
-    all_dirty   = cpu->neg.tlb.c.dirty;
-    to_clean    = asked & all_dirty;
-    all_dirty  &= ~to_clean;
+    all_dirty  = cpu->neg.tlb.c.dirty;
+    to_clean   = asked & all_dirty;
+    all_dirty &= ~to_clean;
     qatomic_set(&cpu->neg.tlb.c.dirty, all_dirty);
 
     for (work = to_clean; work != 0; work &= work - 1) {
@@ -1260,7 +1260,6 @@ static MemoryRegionSection* io_prepare(hwaddr* out_offset, CPUState* cpu, CPUTLB
     section        = full->section;
     mr_offset      = full->xlat_offset + addr;
     cpu->mem_io_pc = retaddr;
-    if (!cpu->neg.can_do_io) { cpu_io_recompile(cpu, retaddr); }
 
     *out_offset = mr_offset;
     return section;

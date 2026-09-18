@@ -60,7 +60,6 @@ void cpu_loop_exit_noexc(CPUState* cpu)
 void cpu_loop_exit(CPUState* cpu)
 {
     /* Undo the setting in cpu_tb_exec.  */
-    cpu->neg.can_do_io = true;
     siglongjmp(cpu->jmp_env, 1);
 }
 

@@ -61,7 +61,6 @@ struct TranslationBlock
 #define CF_NO_GOTO_TB    0x00000200 /* Do not chain with goto_tb */
 #define CF_NO_GOTO_PTR   0x00000400 /* Do not chain with goto_ptr */
 #define CF_SINGLE_STEP   0x00000800 /* gdbstub single-step in effect */
-#define CF_MEMI_ONLY     0x00001000 /* Only instrument memory ops */
 #define CF_INVALID       0x00004000 /* TB is stale. Set with @jmp_lock held */
 #define CF_PARALLEL      0x00008000 /* Generate code for a parallel context */
 #define CF_NOIRQ         0x00010000 /* Generate an uninterruptible TB */
