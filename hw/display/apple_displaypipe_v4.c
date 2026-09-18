@@ -598,13 +598,14 @@ static void adp_v4_gfx_update(void* opaque)
     bool                     dirty;
     uint32_t                 y, ys;
 
-    snap = memory_region_snapshot_and_clear_dirty(adp->vram_mr, adp->vram_off + adp->fb_off,
-                                                  adp->height * adp->width * sizeof(uint32_t), DIRTY_MEMORY_VGA);
-    ys   = -1U;
+    snap =
+        memory_region_snapshot_and_clear_dirty(adp->vram_mr, adp->vram_off + adp->fb_off,
+                                               (hwaddr)adp->height * adp->width * sizeof(uint32_t), DIRTY_MEMORY_VGA);
+    ys = -1U;
     for (y = 0; y < adp->height; ++y) {
         dirty = memory_region_snapshot_get_dirty(adp->vram_mr, snap,
                                                  adp->vram_off + adp->fb_off + adp->width * sizeof(uint32_t) * y,
-                                                 adp->width * sizeof(uint32_t));
+                                                 (hwaddr)adp->width * sizeof(uint32_t));
         if (dirty && ys == -1U) { ys = y; }
         if (!dirty && ys != -1U) {
             dpy_gfx_update(adp->console, 0, ys, adp->width, y - ys);
@@ -929,7 +930,7 @@ void adp_v4_update_vram_mapping(AppleDisplayPipeV4State* adp, MemoryRegion* mr, 
     adp->vram_off  = base;
     adp->vram_size = size;
     // Put framebuffer at the end of VRAM (the start is used for GP stuff).
-    adp->fb_off = adp->vram_size - (adp->height * adp->width * sizeof(uint32_t));
+    adp->fb_off = adp->vram_size - ((hwaddr)adp->height * adp->width * sizeof(uint32_t));
 }
 
 uint64_t adp_v4_get_fb_off(AppleDisplayPipeV4State* adp) { return adp->fb_off; }
