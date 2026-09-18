@@ -524,10 +524,11 @@ static void t8030_memory_setup(AppleT8030MachineState* t8030)
         cmdline = g_strconcat("-restore rd=md0 nand-enable-reformat=1 ", machine->kernel_cmdline, NULL);
     }
 
-    if (hwaccel_enabled() && !apple_boot_contains_boot_arg(cmdline, "aprr_jit=", true)) {
-        char* old_cmdline = cmdline;
-        cmdline           = g_strconcat(old_cmdline, " aprr_jit=0", NULL);
-        g_free(old_cmdline);
+    if (hwaccel_enabled()) {
+        cmdline = g_strconcat("-vm_compressor_wk_sw ", cmdline, NULL);
+        if (!apple_boot_contains_boot_arg(cmdline, "aprr_jit=", true)) {
+            cmdline = g_strconcat("aprr_jit=0 ", cmdline, NULL);
+        }
     }
 
     info_report("Boot Args: [%s]", cmdline);
