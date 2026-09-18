@@ -616,6 +616,10 @@ static void vh_notify_device_removed(USBVirtualHereConn* conn)
     notice->msg->device_id = cpu_to_le16(VIRTUALHERE_SERVER_DEVICE_ID);
     notice->msg->state     = VIRTUALHERE_DEVICE_STATE_GONE;
 
+    VIRTUALHERE_DPRINTF("%s: sending gone for %04x:%04x (%s record)\n", __func__,
+                        le16_to_cpu(notice->msg->vendor_id), le16_to_cpu(notice->msg->product_id),
+                        desc != NULL ? "full" : "bare");
+
     conn->refcount++;
     qemu_coroutine_enter(qemu_coroutine_create(vh_notify_device_removed_co, notice));
 }
@@ -729,6 +733,8 @@ static void coroutine_fn vh_conn_dispatch(USBVirtualHereConn* conn, const uint8_
         case VIRTUALHERE_MSG_TIME_PONG  : break;
         case VIRTUALHERE_MSG_USE_DEVICE:
             /* Retries arrive while the first claim is still waiting on descriptors. */
+            VIRTUALHERE_DPRINTF("%s: use-device (in-use=%d pending=%d) -> %s\n", __func__, conn->using_device,
+                                conn->use_pending, (conn->using_device || conn->use_pending) ? "ignored" : "claiming");
             if (!conn->using_device && !conn->use_pending) {
                 conn->use_pending = true;
                 vh_conn_spawn(conn, vh_use_device_co);
@@ -749,6 +755,7 @@ static void coroutine_fn vh_conn_dispatch(USBVirtualHereConn* conn, const uint8_
         case VIRTUALHERE_MSG_STOP_USING_DEVICE: {
             uint8_t released[4] = {1, 0, 0, 0};
 
+            VIRTUALHERE_DPRINTF("%s: stop-using-device\n", __func__);
             conn->using_device = false;
             conn->use_pending  = false;
             vh_conn_abort_packets(conn);
@@ -871,6 +878,8 @@ static void vh_unplug_timeout(void* opaque)
 {
     USBVirtualHereState* s    = opaque;
     USBVirtualHereConn*  conn = s->active_conn;
+
+    VIRTUALHERE_DPRINTF("%s: device stayed away, reporting it gone\n", __func__);
 
     if (conn != NULL && !conn->closed) {
         conn->using_device = false;
