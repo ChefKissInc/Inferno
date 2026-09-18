@@ -471,7 +471,7 @@ static bool dwc3_bd_writeback(DWC3State* s, DWC3BufferDesc* desc, USBPacket* p, 
                             event.endpoint_event = DEPEVT_XFERINPROGRESS;
                             dwc3_ep_trb_event(s, desc->epid, trb, event);
                             break;
-                        default: qemu_build_not_reached(); break;
+                        default: assert_not_reached();
                     }
                 }
                 else {
