@@ -1211,7 +1211,10 @@ MemTxResult memory_region_dispatch_read(MemoryRegion* mr, hwaddr addr, uint64_t*
         return MEMTX_DECODE_ERROR;
     }
 
+    if (mr->lockless_io) { bql_lockless_section_begin(); }
     r = memory_region_dispatch_read1(mr, addr, pval, size, attrs);
+    if (mr->lockless_io) { bql_lockless_section_end(); }
+
     adjust_endianness(mr, pval, op);
     return r;
 }
@@ -1241,7 +1244,8 @@ static bool memory_region_dispatch_write_eventfds(MemoryRegion* mr, hwaddr addr,
 
 MemTxResult memory_region_dispatch_write(MemoryRegion* mr, hwaddr addr, uint64_t data, MemOp op, MemTxAttrs attrs)
 {
-    unsigned size = memop_size(op);
+    unsigned    size = memop_size(op);
+    MemTxResult r;
 
     if (mr->alias) { return memory_region_dispatch_write(mr->alias, mr->alias_offset + addr, data, op, attrs); }
     if (!memory_region_access_valid(mr, addr, size, true, attrs)) {
@@ -1257,15 +1261,18 @@ MemTxResult memory_region_dispatch_write(MemoryRegion* mr, hwaddr addr, uint64_t
      */
     if (!kvm_enabled() && memory_region_dispatch_write_eventfds(mr, addr, data, size, attrs)) { return MEMTX_OK; }
 
+    if (mr->lockless_io) { bql_lockless_section_begin(); }
     if (mr->ops->write) {
-        return access_with_adjusted_size(addr, &data, size, mr->ops->impl.min_access_size,
-                                         mr->ops->impl.max_access_size, memory_region_write_accessor, mr, attrs);
+        r = access_with_adjusted_size(addr, &data, size, mr->ops->impl.min_access_size, mr->ops->impl.max_access_size,
+                                      memory_region_write_accessor, mr, attrs);
     }
     else {
-        return access_with_adjusted_size(addr, &data, size, mr->ops->impl.min_access_size,
-                                         mr->ops->impl.max_access_size, memory_region_write_with_attrs_accessor, mr,
-                                         attrs);
+        r = access_with_adjusted_size(addr, &data, size, mr->ops->impl.min_access_size, mr->ops->impl.max_access_size,
+                                      memory_region_write_with_attrs_accessor, mr, attrs);
     }
+    if (mr->lockless_io) { bql_lockless_section_end(); }
+
+    return r;
 }
 
 static void memory_region_set_ops(MemoryRegion* mr, const MemoryRegionOps* ops, void* opaque)

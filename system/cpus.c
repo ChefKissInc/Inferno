@@ -385,6 +385,7 @@ bool qemu_cpu_is_self(CPUState* cpu) { return qemu_thread_is_self(cpu->thread); 
 bool qemu_in_vcpu_thread(void) { return current_cpu && qemu_cpu_is_self(current_cpu); }
 
 QEMU_DEFINE_STATIC_CO_TLS(bool, bql_locked)
+QEMU_DEFINE_STATIC_CO_TLS(unsigned, bql_lockless_depth)
 
 bool bql_locked(void) { return get_bql_locked(); }
 
@@ -399,6 +400,8 @@ void bql_lock_impl(const char* file, int line)
     QemuMutexLockFunc bql_lock_fn = qatomic_read(&bql_mutex_lock_func);
 
     assert(!bql_locked());
+    assert(get_bql_lockless_depth() == 0);
+
     bql_lock_fn(&bql, file, line);
     set_bql_locked(true);
 }
@@ -408,6 +411,14 @@ void bql_unlock(void)
     assert(bql_locked());
     set_bql_locked(false);
     qemu_mutex_unlock(&bql);
+}
+
+void bql_lockless_section_begin(void) { set_bql_lockless_depth(get_bql_lockless_depth() + 1); }
+
+void bql_lockless_section_end(void)
+{
+    assert(get_bql_lockless_depth() > 0);
+    set_bql_lockless_depth(get_bql_lockless_depth() - 1);
 }
 
 void qemu_cond_wait_bql(QemuCond* cond) { qemu_cond_wait(cond, &bql); }
