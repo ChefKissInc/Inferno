@@ -2631,7 +2631,7 @@ void tcg_dump_ops(TCGContext* s, FILE* f, bool have_prefs)
                         case TCG_BAR_LDAQ: b_op = "acq"; break;
                         case TCG_BAR_STRL: b_op = "rel"; break;
                         case TCG_BAR_SC  : b_op = "seq"; break;
-                        default          : qemu_build_not_reached();
+                        default          : assert_not_reached();
                     }
 
                     switch (membar & TCG_MO_ALL) {
