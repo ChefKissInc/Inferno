@@ -31,7 +31,7 @@
 
 void* qemu_try_memalign(size_t alignment, size_t size)
 {
-    void* ptr;
+    void* ptr = NULL;
 
     if (alignment < sizeof(void*)) { alignment = sizeof(void*); }
     else {
@@ -50,7 +50,6 @@ void* qemu_try_memalign(size_t alignment, size_t size)
     ret = posix_memalign(&ptr, alignment, size);
     if (ret != 0) {
         errno = ret;
-        ptr   = NULL;
     }
 #elif defined(CONFIG_ALIGNED_MALLOC)
     ptr = _aligned_malloc(size, alignment);
