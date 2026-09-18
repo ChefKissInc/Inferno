@@ -1682,7 +1682,7 @@ static int hvf_handle_vmexit(CPUState* cpu, hv_vcpu_exit_t* exit)
 
 int hvf_arch_vcpu_exec(CPUState* cpu)
 {
-    int         ret;
+    int         ret = 0;
     hv_return_t r;
 
     if (cpu->halted) {
@@ -1692,16 +1692,19 @@ int hvf_arch_vcpu_exec(CPUState* cpu)
         timer_del(cpu->accel->wfi_timer);
     }
 
-    flush_cpu_state(cpu);
+    bql_unlock();
+    cpu_exec_start(cpu);
 
+    /* Inner vCPU loop: executes guest code, runs without the BQL. */
     do {
-        if (!(cpu->singlestep_enabled & SSTEP_NOIRQ) && hvf_inject_interrupts(cpu)) { return EXCP_INTERRUPT; }
+        flush_cpu_state(cpu);
 
-        bql_unlock();
-        cpu_exec_start(cpu);
+        if (!(cpu->singlestep_enabled & SSTEP_NOIRQ) && hvf_inject_interrupts(cpu)) {
+            ret = EXCP_INTERRUPT;
+            break;
+        }
+
         r = hv_vcpu_run(cpu->accel->fd);
-        cpu_exec_end(cpu);
-        bql_lock();
         switch (r) {
             case HV_SUCCESS: ret = hvf_handle_vmexit(cpu, cpu->accel->exit); break;
             case HV_ILLEGAL_GUEST_STATE:
@@ -1711,6 +1714,9 @@ int hvf_arch_vcpu_exec(CPUState* cpu)
         }
     }
     while (ret == 0);
+
+    cpu_exec_end(cpu);
+    bql_lock();
 
     return ret;
 }
