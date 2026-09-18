@@ -133,7 +133,7 @@ static void apple_spi_update_xfer_tx(AppleSPIState* spi)
 
     uint32_t word_size = apple_spi_word_size(spi);
     uint32_t dma_len   = REG(spi, REG_TXCNT) * word_size;
-    uint32_t fifo_len  = fifo32_num_free(&spi->tx_fifo) * word_size;
+    uint64_t fifo_len  = (uint64_t)fifo32_num_free(&spi->tx_fifo) * word_size;
 
     dma_len = MIN(dma_len, dma_remaining);
     if (dma_len == 0) {
@@ -151,15 +151,15 @@ static void apple_spi_update_xfer_tx(AppleSPIState* spi)
 
     switch (word_size) {
         case sizeof(uint8_t):
-            for (uint32_t i = 0; i < dma_len; ++i) { fifo32_push(&spi->tx_fifo, buffer[i]); }
+            for (uint64_t i = 0; i < dma_len; ++i) { fifo32_push(&spi->tx_fifo, buffer[i]); }
             break;
         case sizeof(uint16_t):
-            for (uint32_t i = 0; i < dma_len; i += sizeof(uint16_t)) {
+            for (uint64_t i = 0; i < dma_len; i += sizeof(uint16_t)) {
                 fifo32_push(&spi->tx_fifo, lduw_le_p(&buffer[i]));
             }
             break;
         case sizeof(uint32_t):
-            for (uint32_t i = 0; i < dma_len; i += sizeof(uint32_t)) {
+            for (uint64_t i = 0; i < dma_len; i += sizeof(uint32_t)) {
                 fifo32_push(&spi->tx_fifo, ldl_le_p(&buffer[i]));
             }
             break;
@@ -177,7 +177,7 @@ static void apple_spi_flush_rx(AppleSPIState* spi)
     if (dma_remaining == 0) { return; }
 
     uint32_t word_size = apple_spi_word_size(spi);
-    uint64_t dma_len   = fifo32_num_used(&spi->rx_fifo) * word_size;
+    uint64_t dma_len   = (uint64_t)fifo32_num_used(&spi->rx_fifo) * word_size;
     dma_len            = MIN(dma_len, dma_remaining);
     if (dma_len == 0) { return; }
 
@@ -185,15 +185,15 @@ static void apple_spi_flush_rx(AppleSPIState* spi)
 
     switch (word_size) {
         case sizeof(uint8_t):
-            for (uint32_t i = 0; i < dma_len; ++i) { buffer[i] = fifo32_pop(&spi->rx_fifo); }
+            for (uint64_t i = 0; i < dma_len; ++i) { buffer[i] = fifo32_pop(&spi->rx_fifo); }
             break;
         case sizeof(uint16_t):
-            for (uint32_t i = 0; i < dma_len; i += sizeof(uint16_t)) {
+            for (uint64_t i = 0; i < dma_len; i += sizeof(uint16_t)) {
                 stw_le_p(buffer + i, fifo32_pop(&spi->rx_fifo));
             }
             break;
         case sizeof(uint32_t):
-            for (uint32_t i = 0; i < dma_len; i += sizeof(uint32_t)) {
+            for (uint64_t i = 0; i < dma_len; i += sizeof(uint32_t)) {
                 stl_le_p(buffer + i, fifo32_pop(&spi->rx_fifo));
             }
             break;
