@@ -118,9 +118,9 @@ REG32(DART_SID_VALID, 0xFC)
     REG_FIELD(DART_SID_CONFIG, TRANSLATION_ENABLE, 7, 1)
     REG_FIELD(DART_SID_CONFIG, FULL_BYPASS, 8, 1)
     REG_FIELD(DART_SID_CONFIG, DISABLE_DROP_PROTECT_EXCEPTION, 9, 1)
-    REG_FIELD(DART_SID_CONFIG, DISABLE_APF_REJECT_EXCEPTION, 10, 1)
+    REG_FIELD(DART_SID_CONFIG, DISABLE_APF_REJECT_EXCEPTION, 11, 1)
     REG_FIELD(DART_SID_CONFIG, APF_BYPASS, 12, 1)
-    REG_FIELD(DART_SID_CONFIG, BYPASS_ADDR_39_32, 16, 4)
+    REG_FIELD(DART_SID_CONFIG, BYPASS_ADDR_39_32, 16, 8)
 #define A_DART_TLB_CONFIG(sid) (0x180 + ((sid) << 2))
 #define R_DART_TLB_CONFIG(sid) (A_DART_TLB_CONFIG(sid) >> 2)
 #define A_DART_TTBR(sid, idx) \
@@ -663,11 +663,18 @@ static IOMMUTLBEntry apple_dart_mapper_translate(IOMMUMemoryRegion* mr, hwaddr a
 
     sid_config = qatomic_read(&mapper->regs.sid_config[sid]);
 
-    // Disabled translation means bypass, not error (?)
-    if (REG_FIELD_EX32(sid_config, DART_SID_CONFIG, TRANSLATION_ENABLE) == 0
-        || REG_FIELD_EX32(sid_config, DART_SID_CONFIG, FULL_BYPASS) != 0)
-    {
-        // TODO
+    if (REG_FIELD_EX32(sid_config, DART_SID_CONFIG, FULL_BYPASS) != 0) {
+        entry.translated_addr = deposit64(addr & ~(hwaddr)dart->page_bits, 32, 8,
+                                          REG_FIELD_EX32(sid_config, DART_SID_CONFIG, BYPASS_ADDR_39_32));
+        entry.perm            = IOMMU_RW;
+        goto end;
+    }
+
+    if (REG_FIELD_EX32(sid_config, DART_SID_CONFIG, TRANSLATION_ENABLE) == 0) {
+        apple_dart_mapper_set_error(
+            mapper, addr,
+            REG_FIELD_DP32(REG_FIELD_DP32(0, DART_ERROR_STATUS, FLAG, 1), DART_ERROR_STATUS, TTBR_INVLD, 1),
+            iommu->sid);
         goto end;
     }
 
