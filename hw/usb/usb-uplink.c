@@ -363,15 +363,34 @@ USBDevice* usb_uplink_active_except(USBUplinkDevice* x, USBPort* except)
 
 USBDevice* usb_uplink_active(USBUplinkDevice* x) { return usb_uplink_active_except(x, NULL); }
 
+const USBUplinkDescriptors* usb_uplink_descriptors_cached(USBUplinkDevice* x) { return x->desc; }
+
 const USBUplinkDescriptors* coroutine_fn usb_uplink_descriptors(USBUplinkDevice* x)
 {
     USBDevice* dev = usb_uplink_active(x);
 
     if (dev == NULL) { return NULL; }
+    if (x->desc != NULL) { return x->desc; }
 
-    if (x->desc == NULL) {
-        WITH_QEMU_LOCK_GUARD(&x->ctrl_lock) { x->desc = usb_uplink_read_descriptors(dev); }
+    /* Reading takes dozens of round trips, so keep the device alive across them. */
+    object_ref(OBJECT(dev));
+
+    WITH_QEMU_LOCK_GUARD(&x->ctrl_lock)
+    {
+        USBUplinkDescriptors* desc;
+
+        if (x->desc != NULL || usb_uplink_active(x) != dev) { break; }
+
+        desc = usb_uplink_read_descriptors(dev);
+
+        /* It may have been unplugged mid-read; those descriptors describe nothing. */
+        if (usb_uplink_active(x) == dev) { x->desc = desc; }
+        else {
+            usb_uplink_descriptors_free(desc);
+        }
     }
+
+    object_unref(OBJECT(dev));
 
     return x->desc;
 }

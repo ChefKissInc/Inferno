@@ -83,6 +83,9 @@ USBDevice* usb_uplink_active(USBUplinkDevice* x);
 const USBUplinkDescriptors* coroutine_fn usb_uplink_descriptors(USBUplinkDevice* x);
 void                                     usb_uplink_invalidate(USBUplinkDevice* x);
 
+/* The cache alone, for callers that cannot block on a wire read. */
+const USBUplinkDescriptors* usb_uplink_descriptors_cached(USBUplinkDevice* x);
+
 /* Drops the cache and resets the device; use when a claim ends. */
 void usb_uplink_release(USBUplinkDevice* x);
 
