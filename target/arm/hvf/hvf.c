@@ -242,7 +242,8 @@ void hvf_arm_init_debug(void)
 #define TMR_CTL_IMASK   (1 << 1)
 #define TMR_CTL_ISTATUS (1 << 2)
 
-static void hvf_wfi(CPUState* cpu);
+static int  hvf_wfi(CPUState* cpu);
+static void hvf_wfi_timer_cb(void* opaque);
 
 static uint32_t chosen_ipa_bit_size;
 
@@ -794,6 +795,11 @@ void hvf_arch_vcpu_destroy(CPUState* cpu)
 {
     hv_return_t ret;
 
+    if (cpu->accel->wfi_timer != NULL) {
+        timer_free(cpu->accel->wfi_timer);
+        cpu->accel->wfi_timer = NULL;
+    }
+
     ret = hv_vcpu_destroy(cpu->accel->fd);
     assert_hvf_ok(ret);
 }
@@ -824,6 +830,8 @@ int hvf_arch_init_vcpu(CPUState* cpu)
     hv_return_t  ret;
     int          i;
     bool         success;
+
+    cpu->accel->wfi_timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, hvf_wfi_timer_cb, cpu);
 
     env->aarch64 = true;
     asm volatile("mrs %0, cntfrq_el0" : "=r"(arm_cpu->gt_cntfrq_hz));
@@ -1383,18 +1391,6 @@ static uint64_t hvf_vtimer_val(void)
     return hvf_vtimer_val_raw();
 }
 
-static void hvf_wait_for_ipi(CPUState* cpu, struct timespec* ts)
-{
-    /*
-     * Use pselect to sleep so that other threads can IPI us while we're
-     * sleeping.
-     */
-    qatomic_set_mb(&cpu->thread_kicked, false);
-    bql_unlock();
-    pselect(0, 0, 0, 0, ts, &cpu->accel->unblock_ipi_mask);
-    bql_lock();
-}
-
 static int64_t hvf_vtimer_deadline_ns(CPUState* cpu)
 {
     ARMCPU*     arm_cpu = ARM_CPU(cpu);
@@ -1436,36 +1432,32 @@ static int64_t hvf_ptimer_deadline_ns(CPUState* cpu)
     return expire <= now ? 0 : expire - now;
 }
 
-static void hvf_wfi(CPUState* cpu)
+static void hvf_wfi_timer_cb(void* opaque)
 {
-    struct timespec ts;
-    int64_t         nanos;
-    int64_t         deadline;
+    CPUState* cpu = opaque;
 
-    if (cpu_test_interrupt(cpu, CPU_INTERRUPT_HARD | CPU_INTERRUPT_FIQ)) {
-        /* Interrupt pending, no need to wait */
-        return;
-    }
+    cpu->halted = 0;
+    qemu_cpu_kick(cpu);
+}
+
+static int hvf_wfi(CPUState* cpu)
+{
+    int64_t nanos;
+    int64_t deadline;
+
+    if (cpu_has_work(cpu)) { return 0; }
 
     nanos    = hvf_vtimer_deadline_ns(cpu);
     deadline = hvf_ptimer_deadline_ns(cpu);
     if (deadline < nanos) { nanos = deadline; }
 
-    if (nanos == INT64_MAX) {
-        /* No timer armed, just wait for an IPI. */
-        hvf_wait_for_ipi(cpu, NULL);
-        return;
-    }
+    /* Already due: stay in the guest. */
+    if (nanos == 0) { return 0; }
 
-    /*
-     * Don't sleep for less than the time a context switch would take,
-     * so that we can satisfy fast timer requests on the same CPU.
-     * Measurements on M1 show the sweet spot to be ~2ms.
-     */
-    if (nanos < (2 * SCALE_MS)) { return; }
+    if (nanos != INT64_MAX) { timer_mod_ns(cpu->accel->wfi_timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + nanos); }
 
-    ts = (struct timespec){nanos / NANOSECONDS_PER_SECOND, nanos % NANOSECONDS_PER_SECOND};
-    hvf_wait_for_ipi(cpu, &ts);
+    cpu->halted = 1;
+    return EXCP_HLT;
 }
 
 /* Must be called by the owning thread */
@@ -1616,7 +1608,7 @@ static int hvf_handle_exception(CPUState* cpu, hv_vcpu_exit_exception_t* excp)
         }
         case EC_WFX_TRAP:
             advance_pc = true;
-            if (!(syndrome & WFX_IS_WFE)) { hvf_wfi(cpu); }
+            if (!(syndrome & WFX_IS_WFE)) { ret = hvf_wfi(cpu); }
             break;
         case EC_AA64_HVC:
             cpu_synchronize_state(cpu);
@@ -1693,7 +1685,12 @@ int hvf_arch_vcpu_exec(CPUState* cpu)
     int         ret;
     hv_return_t r;
 
-    if (cpu->halted) { return EXCP_HLT; }
+    if (cpu->halted) {
+        if (!cpu_has_work(cpu)) { return EXCP_HLT; }
+
+        cpu->halted = 0;
+        timer_del(cpu->accel->wfi_timer);
+    }
 
     flush_cpu_state(cpu);
 
