@@ -22,7 +22,7 @@
 #include "hw/arm/dt.h"
 #include "hw/usb/apple_otg.h"
 #include "hw/usb/hcd-dwc2.h"
-#include "hw/usb/hcd-tcp.h"
+#include "hw/usb/hcd-inferno.h"
 #include "qapi/error.h"
 #include "qemu/error-report.h"
 #include "qemu/log.h"
@@ -197,7 +197,7 @@ DeviceState* apple_otg_from_node(AppleDTNode* node)
     memory_region_init_io(&s->widget, OBJECT(dev), &widget_reg_ops, s, TYPE_APPLE_OTG ".widget", sizeof(s->widget_reg));
     sysbus_init_mmio(sbd, &s->widget);
 
-    s->host = SYS_BUS_DEVICE(qdev_new(TYPE_USB_TCP_HOST));
+    s->host = SYS_BUS_DEVICE(qdev_new(TYPE_USB_INFERNO_HOST));
     object_property_add_alias(OBJECT(s), "addr", OBJECT(s->host), "addr");
     return dev;
 }

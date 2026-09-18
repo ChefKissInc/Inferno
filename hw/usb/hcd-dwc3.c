@@ -1924,7 +1924,7 @@ static void dwc3_usb_device_realize(USBDevice* dev, Error** errp)
 {
     // if you use _SUPER here, you'll run into this "Invalid ep0 maxpacket: 9"
     // not sure if I can or even should use a workaround like the one found in
-    // host-libusb having _HIGH here while having _SUPER in dev-tcp-remote
+    // host-libusb having _HIGH here while having _SUPER in dev-inferno-remote
     // causes "Warning: speed mismatch ...", followed by an abort in the
     // companion
     dev->speed        = USB_SPEED_HIGH;

@@ -1,5 +1,5 @@
 /*
- * TCP Remote USB.
+ * Inferno USB Uplink.
  *
  * Copyright (c) 2023-2026 Visual Ehrmanntraut (VisualEhrmanntraut).
  *
@@ -21,42 +21,42 @@
 
 #include "qemu/osdep.h"
 #include "hw/usb.h"
-#include "hw/usb/tcp-usb.h"
+#include "hw/usb/inferno-proto.h"
 #include "io/channel.h"
 
-typedef struct USBTCPInflightPacket
+typedef struct USBInfernoInflightPacket
 {
     USBPacket* p;
-    QTAILQ_ENTRY(USBTCPInflightPacket) queue;
+    QTAILQ_ENTRY(USBInfernoInflightPacket) queue;
     uint8_t addr;
-} USBTCPInflightPacket;
+} USBInfernoInflightPacket;
 
-typedef struct USBTCPCompletedPacket
+typedef struct USBInfernoCompletedPacket
 {
     USBPacket* p;
-    QTAILQ_ENTRY(USBTCPCompletedPacket) queue;
+    QTAILQ_ENTRY(USBInfernoCompletedPacket) queue;
     uint8_t addr;
-} USBTCPCompletedPacket;
+} USBInfernoCompletedPacket;
 
-typedef struct USBTCPRemoteMsg
+typedef struct USBInfernoRemoteMsg
 {
-    QTAILQ_ENTRY(USBTCPRemoteMsg) queue;
+    QTAILQ_ENTRY(USBInfernoRemoteMsg) queue;
     size_t  len;
     uint8_t data[];
-} USBTCPRemoteMsg;
+} USBInfernoRemoteMsg;
 
-struct USBTCPRemoteState
+struct USBInfernoRemoteState
 {
     USBDevice parent_obj;
 
     QemuMutex queue_mutex;
-    QTAILQ_HEAD(, USBTCPInflightPacket) queue;
+    QTAILQ_HEAD(, USBInfernoInflightPacket) queue;
 
     QemuMutex completed_queue_mutex;
-    QTAILQ_HEAD(, USBTCPCompletedPacket) completed_queue;
+    QTAILQ_HEAD(, USBInfernoCompletedPacket) completed_queue;
 
     QemuMutex send_mutex;
-    QTAILQ_HEAD(, USBTCPRemoteMsg) send_queue;
+    QTAILQ_HEAD(, USBInfernoRemoteMsg) send_queue;
 
     QEMUBH* completed_bh;
     QEMUBH* addr_bh;
@@ -72,5 +72,5 @@ struct USBTCPRemoteState
     bool        sending;
 };
 
-#define TYPE_USB_TCP_REMOTE "usb-tcp-remote"
-OBJECT_DECLARE_SIMPLE_TYPE(USBTCPRemoteState, USB_TCP_REMOTE)
+#define TYPE_USB_INFERNO_REMOTE "usb-inferno-remote"
+OBJECT_DECLARE_SIMPLE_TYPE(USBInfernoRemoteState, USB_INFERNO_REMOTE)

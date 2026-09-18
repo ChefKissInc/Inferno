@@ -21,7 +21,7 @@
 #include "qemu/osdep.h"
 #include "hw/qdev-properties.h"
 #include "hw/usb/apple_typec.h"
-#include "hw/usb/hcd-tcp.h"
+#include "hw/usb/hcd-inferno.h"
 #include "qapi/error.h"
 #include "qemu/module.h"
 #include "qom/object.h"
@@ -137,7 +137,7 @@ static void apple_typec_init(Object* obj)
     memory_region_add_subregion(&s->container, 0x100000, sysbus_mmio_get_region(SYS_BUS_DEVICE(&s->dwc2), 0));
     sysbus_init_mmio(sbd, &s->container);
 
-    s->host = SYS_BUS_DEVICE(qdev_new(TYPE_USB_TCP_HOST));
+    s->host = SYS_BUS_DEVICE(qdev_new(TYPE_USB_INFERNO_HOST));
     object_property_add_alias(OBJECT(s), "addr", OBJECT(s->host), "addr");
 }
 

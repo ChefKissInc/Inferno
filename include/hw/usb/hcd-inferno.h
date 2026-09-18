@@ -1,5 +1,5 @@
 /*
- * TCP Remote USB Host.
+ * Inferno USB Uplink Host.
  *
  * Copyright (c) 2023-2026 Visual Ehrmanntraut (VisualEhrmanntraut).
  *
@@ -23,25 +23,25 @@
 #include "hw/sysbus.h"
 #include "hw/usb.h"
 #include "qemu/timer.h"
-#include "hw/usb/tcp-usb.h"
+#include "hw/usb/inferno-proto.h"
 #include "io/channel.h"
 #include "qapi/qapi-types-sockets.h"
 #include "qemu/coroutine.h"
 #include "qom/object.h"
 
-#define TYPE_USB_TCP_HOST "usb-tcp-host"
-OBJECT_DECLARE_SIMPLE_TYPE(USBTCPHostState, USB_TCP_HOST)
+#define TYPE_USB_INFERNO_HOST "usb-inferno-host"
+OBJECT_DECLARE_SIMPLE_TYPE(USBInfernoHostState, USB_INFERNO_HOST)
 
-typedef struct USBTCPPacket
+typedef struct USBInfernoPacket
 {
     USBPacket        p;
     void*            buffer;
     USBDevice*       dev;
-    USBTCPHostState* s;
+    USBInfernoHostState* s;
     uint8_t          addr;
-} USBTCPPacket;
+} USBInfernoPacket;
 
-struct USBTCPHostState
+struct USBInfernoHostState
 {
     SysBusDevice parent_obj;
 

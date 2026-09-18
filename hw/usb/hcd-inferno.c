@@ -1,5 +1,5 @@
 /*
- * TCP Remote USB Host.
+ * Inferno USB Uplink Host.
  *
  * Copyright (c) 2023-2026 Visual Ehrmanntraut (VisualEhrmanntraut).
  *
@@ -20,7 +20,7 @@
 #include "qemu/osdep.h"
 #include "hw/qdev-properties.h"
 #include "hw/usb.h"
-#include "hw/usb/hcd-tcp.h"
+#include "hw/usb/hcd-inferno.h"
 #include "io/channel-util.h"
 #include "io/channel.h"
 #include "qapi/error.h"
@@ -30,14 +30,14 @@
 #include "qemu/sockets.h"
 #include "qom/object.h"
 #include "system/iothread.h"
-#include "tcp-usb.h"
+#include "hw/usb/inferno-proto.h"
 
-// #define DEBUG_HCD_TCP
+// #define DEBUG_HCD_INFERNO
 
-#ifdef DEBUG_HCD_TCP
+#ifdef DEBUG_HCD_INFERNO
     #define DPRINTF(fmt, ...)                                \
         do {                                                 \
-            fprintf(stderr, "hcd-tcp: " fmt, ##__VA_ARGS__); \
+            fprintf(stderr, "hcd-inferno: " fmt, ##__VA_ARGS__); \
         }                                                    \
         while (0)
 #else
@@ -46,14 +46,14 @@
         while (0)
 #endif
 
-#define USB_TCP_HOST_RETRY_MS 1000
+#define USB_INFERNO_HOST_RETRY_MS 1000
 
-static void usb_tcp_host_arm_retry(USBTCPHostState* s);
+static void usb_inferno_host_arm_retry(USBInfernoHostState* s);
 
-static bool usb_tcp_host_bus_populated(USBTCPHostState* s);
-static void usb_tcp_host_reset_bus(USBTCPHostState* s);
+static bool usb_inferno_host_bus_populated(USBInfernoHostState* s);
+static void usb_inferno_host_reset_bus(USBInfernoHostState* s);
 
-static void usb_tcp_host_closed(USBTCPHostState* s)
+static void usb_inferno_host_closed(USBInfernoHostState* s)
 {
     QIOChannel* ioc = s->ioc;
 
@@ -70,10 +70,10 @@ static void usb_tcp_host_closed(USBTCPHostState* s)
         object_unref(OBJECT(ioc));
     }
 
-    if (!s->stopped && usb_tcp_host_bus_populated(s)) { usb_tcp_host_arm_retry(s); }
+    if (!s->stopped && usb_inferno_host_bus_populated(s)) { usb_inferno_host_arm_retry(s); }
 }
 
-static ssize_t coroutine_fn tcp_usb_read(QIOChannel* ioc, void* buf, size_t len)
+static ssize_t coroutine_fn inferno_read(QIOChannel* ioc, void* buf, size_t len)
 {
     struct iovec iov = {.iov_base = buf, .iov_len = len};
     ssize_t      ret = -1;
@@ -88,7 +88,7 @@ static ssize_t coroutine_fn tcp_usb_read(QIOChannel* ioc, void* buf, size_t len)
     return (ret <= 0) ? ret : iov.iov_len;
 }
 
-static bool coroutine_fn tcp_usb_write(QIOChannel* ioc, void* buf, ssize_t len)
+static bool coroutine_fn inferno_write(QIOChannel* ioc, void* buf, ssize_t len)
 {
     struct iovec iov = {.iov_base = buf, .iov_len = len};
     bool         ret = false;
@@ -103,7 +103,7 @@ static bool coroutine_fn tcp_usb_write(QIOChannel* ioc, void* buf, ssize_t len)
     return ret;
 }
 
-static USBDevice* usb_tcp_host_find_device(USBTCPHostState* s, uint8_t addr)
+static USBDevice* usb_inferno_host_find_device(USBInfernoHostState* s, uint8_t addr)
 {
     for (int i = 0; i < G_N_ELEMENTS(s->ports) - 1; i++) {
         USBDevice* dev = s->ports[i].dev;
@@ -118,17 +118,17 @@ static USBDevice* usb_tcp_host_find_device(USBTCPHostState* s, uint8_t addr)
     return NULL;
 }
 
-static void coroutine_fn usb_tcp_host_respond_error(USBTCPHostState* s, tcp_usb_request_header* req, uint32_t status)
+static void coroutine_fn usb_inferno_host_respond_error(USBInfernoHostState* s, inferno_request_header* req, uint32_t status)
 {
-    tcp_usb_header_t        hdr  = {0};
-    tcp_usb_response_header resp = {0};
+    inferno_header_t        hdr  = {0};
+    inferno_response_header resp = {0};
     g_autoptr(QIOChannel) ioc    = NULL;
 
     ioc = s->ioc;
     if (ioc == NULL) { return; }
     object_ref(OBJECT(ioc));
 
-    hdr.type    = TCP_USB_RESPONSE;
+    hdr.type    = INFERNO_RESPONSE;
     resp.addr   = req->addr;
     resp.pid    = req->pid;
     resp.ep     = req->ep;
@@ -139,20 +139,20 @@ static void coroutine_fn usb_tcp_host_respond_error(USBTCPHostState* s, tcp_usb_
     WITH_QEMU_LOCK_GUARD(&s->write_mutex)
     {
         if (!s->closed) {
-            if (!tcp_usb_write(ioc, &hdr, sizeof(hdr)) || !tcp_usb_write(ioc, &resp, sizeof(resp))) {
-                usb_tcp_host_closed(s);
+            if (!inferno_write(ioc, &hdr, sizeof(hdr)) || !inferno_write(ioc, &resp, sizeof(resp))) {
+                usb_inferno_host_closed(s);
             }
         }
     }
 }
 
-static void coroutine_fn usb_tcp_host_respond_packet_co(void* opaque)
+static void coroutine_fn usb_inferno_host_respond_packet_co(void* opaque)
 {
-    USBTCPPacket*           pkt    = opaque;
-    USBTCPHostState*        s      = pkt->s;
+    USBInfernoPacket*           pkt    = opaque;
+    USBInfernoHostState*        s      = pkt->s;
     USBPacket*              p      = &pkt->p;
-    tcp_usb_header_t        hdr    = {0};
-    tcp_usb_response_header resp   = {0};
+    inferno_header_t        hdr    = {0};
+    inferno_response_header resp   = {0};
     g_autofree void*        buffer = NULL;
     g_autoptr(QIOChannel) ioc      = NULL;
 
@@ -162,7 +162,7 @@ static void coroutine_fn usb_tcp_host_respond_packet_co(void* opaque)
     WITH_QEMU_LOCK_GUARD(&s->write_mutex)
     {
         if (!s->closed && ioc != NULL) {
-            hdr.type    = TCP_USB_RESPONSE;
+            hdr.type    = INFERNO_RESPONSE;
             resp.addr   = pkt->addr;
             resp.pid    = p->pid;
             resp.ep     = p->ep->nr;
@@ -177,19 +177,19 @@ static void coroutine_fn usb_tcp_host_respond_packet_co(void* opaque)
                 iov_to_buf(p->iov.iov, p->iov.niov, 0, buffer, resp.length);
             }
 
-            if (!tcp_usb_write(ioc, &hdr, sizeof(hdr))) {
-                usb_tcp_host_closed(s);
+            if (!inferno_write(ioc, &hdr, sizeof(hdr))) {
+                usb_inferno_host_closed(s);
                 break;
             }
 
-            if (!tcp_usb_write(ioc, &resp, sizeof(resp))) {
-                usb_tcp_host_closed(s);
+            if (!inferno_write(ioc, &resp, sizeof(resp))) {
+                usb_inferno_host_closed(s);
                 break;
             }
 
             if (buffer) {
-                if (!tcp_usb_write(ioc, buffer, resp.length)) {
-                    usb_tcp_host_closed(s);
+                if (!inferno_write(ioc, buffer, resp.length)) {
+                    usb_inferno_host_closed(s);
                     break;
                 }
             }
@@ -203,18 +203,18 @@ static void coroutine_fn usb_tcp_host_respond_packet_co(void* opaque)
     }
 }
 
-static void usb_tcp_host_respond_packet(USBTCPHostState* s, USBTCPPacket* pkt)
+static void usb_inferno_host_respond_packet(USBInfernoHostState* s, USBInfernoPacket* pkt)
 {
     Coroutine* co = NULL;
-    co            = qemu_coroutine_create(usb_tcp_host_respond_packet_co, pkt);
+    co            = qemu_coroutine_create(usb_inferno_host_respond_packet_co, pkt);
     qemu_coroutine_enter(co);
 }
 
-static void coroutine_fn usb_tcp_host_msg_loop_co(void* opaque)
+static void coroutine_fn usb_inferno_host_msg_loop_co(void* opaque)
 {
-    USBTCPHostState* s;
+    USBInfernoHostState* s;
     g_autoptr(QIOChannel) ioc = NULL;
-    tcp_usb_header_t hdr;
+    inferno_header_t hdr;
 
     s   = opaque;
     ioc = s->ioc;
@@ -222,39 +222,39 @@ static void coroutine_fn usb_tcp_host_msg_loop_co(void* opaque)
     object_ref(OBJECT(ioc));
 
     for (;;) {
-        if (unlikely((tcp_usb_read(ioc, &hdr, sizeof(hdr)) != sizeof(hdr)))) {
-            usb_tcp_host_closed(s);
+        if (unlikely((inferno_read(ioc, &hdr, sizeof(hdr)) != sizeof(hdr)))) {
+            usb_inferno_host_closed(s);
             return;
         }
 
         switch (hdr.type) {
-            case TCP_USB_REQUEST: {
-                tcp_usb_request_header   pkt_hdr;
+            case INFERNO_REQUEST: {
+                inferno_request_header   pkt_hdr;
                 g_autofree void*         buffer = NULL;
-                g_autofree USBTCPPacket* pkt    = g_new0(USBTCPPacket, 1);
+                g_autofree USBInfernoPacket* pkt    = g_new0(USBInfernoPacket, 1);
                 USBEndpoint*             ep     = NULL;
                 USBDevice*               dev    = NULL;
 
-                if (unlikely(tcp_usb_read(ioc, &pkt_hdr, sizeof(pkt_hdr)) != sizeof(pkt_hdr))) {
-                    usb_tcp_host_closed(s);
+                if (unlikely(inferno_read(ioc, &pkt_hdr, sizeof(pkt_hdr)) != sizeof(pkt_hdr))) {
+                    usb_inferno_host_closed(s);
                     return;
                 }
 
-                DPRINTF("%s: TCP_USB_REQUEST addr: %d pid: 0x%x ep: %d id: 0x%" PRIx64 "\n", __func__, pkt_hdr.addr,
+                DPRINTF("%s: INFERNO_REQUEST addr: %d pid: 0x%x ep: %d id: 0x%" PRIx64 "\n", __func__, pkt_hdr.addr,
                         pkt_hdr.pid, pkt_hdr.ep, pkt_hdr.id);
 
-                dev = usb_tcp_host_find_device(s, pkt_hdr.addr);
+                dev = usb_inferno_host_find_device(s, pkt_hdr.addr);
                 ep  = (dev == NULL) ? NULL : usb_ep_get(dev, pkt_hdr.pid, pkt_hdr.ep);
                 if (ep == NULL) {
                     if (pkt_hdr.length > 0 && pkt_hdr.pid != USB_TOKEN_IN) {
                         g_autofree void* discard = g_malloc0(pkt_hdr.length);
-                        if (unlikely(tcp_usb_read(ioc, discard, pkt_hdr.length) != pkt_hdr.length)) {
-                            usb_tcp_host_closed(s);
+                        if (unlikely(inferno_read(ioc, discard, pkt_hdr.length) != pkt_hdr.length)) {
+                            usb_inferno_host_closed(s);
                             return;
                         }
                     }
-                    DPRINTF("%s: TCP_USB_REQUEST no device at addr %d ep %d\n", __func__, pkt_hdr.addr, pkt_hdr.ep);
-                    usb_tcp_host_respond_error(s, &pkt_hdr, USB_RET_NODEV);
+                    DPRINTF("%s: INFERNO_REQUEST no device at addr %d ep %d\n", __func__, pkt_hdr.addr, pkt_hdr.ep);
+                    usb_inferno_host_respond_error(s, &pkt_hdr, USB_RET_NODEV);
                     break;
                 }
 
@@ -266,8 +266,8 @@ static void coroutine_fn usb_tcp_host_msg_loop_co(void* opaque)
                     buffer = g_malloc0(pkt_hdr.length);
 
                     if (pkt_hdr.pid != USB_TOKEN_IN) {
-                        if (unlikely(tcp_usb_read(ioc, buffer, pkt_hdr.length) != pkt_hdr.length)) {
-                            usb_tcp_host_closed(s);
+                        if (unlikely(inferno_read(ioc, buffer, pkt_hdr.length) != pkt_hdr.length)) {
+                            usb_inferno_host_closed(s);
                             usb_packet_cleanup(&pkt->p);
                             return;
                         }
@@ -284,48 +284,48 @@ static void coroutine_fn usb_tcp_host_msg_loop_co(void* opaque)
                 assert_true(bql_locked());
 
                 usb_handle_packet(pkt->dev, &pkt->p);
-                usb_tcp_host_respond_packet(s, pkt);
+                usb_inferno_host_respond_packet(s, pkt);
                 g_steal_pointer(&pkt);
                 break;
             }
-            case TCP_USB_RESPONSE:
-                fprintf(stderr, "%s: unexpected TCP_USB_RESPONSE\n", __func__);
-                usb_tcp_host_closed(s);
+            case INFERNO_RESPONSE:
+                fprintf(stderr, "%s: unexpected INFERNO_RESPONSE\n", __func__);
+                usb_inferno_host_closed(s);
                 return;
-            case TCP_USB_CANCEL: {
-                tcp_usb_cancel_header pkt_hdr = {0};
-                USBTCPPacket*         pkt     = NULL;
+            case INFERNO_CANCEL: {
+                inferno_cancel_header pkt_hdr = {0};
+                USBInfernoPacket*         pkt     = NULL;
                 USBPacket*            p       = NULL;
 
-                if (unlikely(tcp_usb_read(ioc, &pkt_hdr, sizeof(pkt_hdr)) != sizeof(pkt_hdr))) {
-                    usb_tcp_host_closed(s);
+                if (unlikely(inferno_read(ioc, &pkt_hdr, sizeof(pkt_hdr)) != sizeof(pkt_hdr))) {
+                    usb_inferno_host_closed(s);
                     return;
                 }
 
-                DPRINTF("%s: TCP_USB_CANCEL pid: 0x%x ep: %d\n", __func__, pkt_hdr.pid, pkt_hdr.ep);
+                DPRINTF("%s: INFERNO_CANCEL pid: 0x%x ep: %d\n", __func__, pkt_hdr.pid, pkt_hdr.ep);
 
                 assert_true(bql_locked());
-                USBDevice* dev = usb_tcp_host_find_device(s, pkt_hdr.addr);
+                USBDevice* dev = usb_inferno_host_find_device(s, pkt_hdr.addr);
                 p = (dev == NULL) ? NULL : usb_ep_find_packet_by_id(dev, pkt_hdr.pid, pkt_hdr.ep, pkt_hdr.id);
                 if (p) {
-                    pkt = container_of(p, USBTCPPacket, p);
+                    pkt = container_of(p, USBInfernoPacket, p);
                     usb_cancel_packet(&pkt->p);
-                    DPRINTF("%s: TCP_USB_CANCEL: packet"
+                    DPRINTF("%s: INFERNO_CANCEL: packet"
                             " pid: 0x%x ep: %d id: 0x%" PRIx64 " len: 0x%x\n",
                             __func__, pkt_hdr.pid, pkt_hdr.ep, pkt_hdr.id, p->actual_length);
-                    usb_tcp_host_respond_packet(s, pkt);
+                    usb_inferno_host_respond_packet(s, pkt);
                 }
                 else {
-                    warn_report("%s: TCP_USB_CANCEL: packet"
+                    warn_report("%s: INFERNO_CANCEL: packet"
                                 " pid: 0x%x ep: %d id: 0x%" PRIx64 " not found",
                                 __func__, pkt_hdr.pid, pkt_hdr.ep, pkt_hdr.id);
                 }
                 break;
             }
-            case TCP_USB_RESET:
-                DPRINTF("%s: TCP_USB_RESET\n", __func__);
+            case INFERNO_RESET:
+                DPRINTF("%s: INFERNO_RESET\n", __func__);
                 assert_true(bql_locked());
-                usb_tcp_host_reset_bus(s);
+                usb_inferno_host_reset_bus(s);
                 break;
             default: assert_not_reached(); break;
         }
@@ -334,7 +334,7 @@ static void coroutine_fn usb_tcp_host_msg_loop_co(void* opaque)
     return;
 }
 
-static bool usb_tcp_host_bus_populated(USBTCPHostState* s)
+static bool usb_inferno_host_bus_populated(USBInfernoHostState* s)
 {
     for (int i = 0; i < G_N_ELEMENTS(s->ports) - 1; i++) {
         USBDevice* dev = s->ports[i].dev;
@@ -344,7 +344,7 @@ static bool usb_tcp_host_bus_populated(USBTCPHostState* s)
     return false;
 }
 
-static void usb_tcp_host_reset_bus(USBTCPHostState* s)
+static void usb_inferno_host_reset_bus(USBInfernoHostState* s)
 {
     for (int i = 0; i < G_N_ELEMENTS(s->ports) - 1; i++) {
         USBDevice* dev = s->ports[i].dev;
@@ -355,9 +355,9 @@ static void usb_tcp_host_reset_bus(USBTCPHostState* s)
     }
 }
 
-static void usb_tcp_host_reset_bus_bh(void* opaque) { usb_tcp_host_reset_bus(opaque); }
+static void usb_inferno_host_reset_bus_bh(void* opaque) { usb_inferno_host_reset_bus(opaque); }
 
-static bool usb_tcp_host_try_connect(USBTCPHostState* s)
+static bool usb_inferno_host_try_connect(USBInfernoHostState* s)
 {
     int         sock;
     Coroutine*  co;
@@ -387,34 +387,34 @@ static bool usb_tcp_host_try_connect(USBTCPHostState* s)
 
     qemu_bh_schedule(s->reset_bh);
 
-    co = qemu_coroutine_create(usb_tcp_host_msg_loop_co, s);
+    co = qemu_coroutine_create(usb_inferno_host_msg_loop_co, s);
     qemu_coroutine_enter(co);
     return true;
 }
 
-static void usb_tcp_host_retry_cb(void* opaque)
+static void usb_inferno_host_retry_cb(void* opaque)
 {
-    USBTCPHostState* s = opaque;
+    USBInfernoHostState* s = opaque;
 
     if (!s->closed || s->stopped) { return; }
-    if (!usb_tcp_host_bus_populated(s)) { return; }
+    if (!usb_inferno_host_bus_populated(s)) { return; }
 
-    if (usb_tcp_host_try_connect(s)) {
+    if (usb_inferno_host_try_connect(s)) {
         DPRINTF("%s: connected\n", __func__);
         return;
     }
-    timer_mod(s->retry_timer, qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + USB_TCP_HOST_RETRY_MS);
+    timer_mod(s->retry_timer, qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + USB_INFERNO_HOST_RETRY_MS);
 }
 
-static void usb_tcp_host_arm_retry(USBTCPHostState* s)
+static void usb_inferno_host_arm_retry(USBInfernoHostState* s)
 {
     if (s->retry_timer == NULL || s->stopped) { return; }
-    timer_mod(s->retry_timer, qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + USB_TCP_HOST_RETRY_MS);
+    timer_mod(s->retry_timer, qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + USB_INFERNO_HOST_RETRY_MS);
 }
 
-static void usb_tcp_host_attach(USBPort* port)
+static void usb_inferno_host_attach(USBPort* port)
 {
-    USBTCPHostState* s = port->opaque;
+    USBInfernoHostState* s = port->opaque;
 
     if (port->index >= G_N_ELEMENTS(s->ports) - 1) {
         error_report("%s: attached to unused port\n", __func__);
@@ -429,12 +429,12 @@ static void usb_tcp_host_attach(USBPort* port)
         return;
     }
 
-    if (!usb_tcp_host_try_connect(s)) { usb_tcp_host_arm_retry(s); }
+    if (!usb_inferno_host_try_connect(s)) { usb_inferno_host_arm_retry(s); }
 }
 
-static void usb_tcp_host_detach(USBPort* port)
+static void usb_inferno_host_detach(USBPort* port)
 {
-    USBTCPHostState* s;
+    USBInfernoHostState* s;
 
     s = port->opaque;
 
@@ -446,62 +446,62 @@ static void usb_tcp_host_detach(USBPort* port)
         }
     }
 
-    usb_tcp_host_closed(s);
+    usb_inferno_host_closed(s);
 }
 
-static void usb_tcp_host_async_packet_complete(USBPort* port, USBPacket* p)
+static void usb_inferno_host_async_packet_complete(USBPort* port, USBPacket* p)
 {
-    USBTCPHostState* s;
+    USBInfernoHostState* s;
 
     s = port->opaque;
 
-    usb_tcp_host_respond_packet(s, container_of(p, USBTCPPacket, p));
+    usb_inferno_host_respond_packet(s, container_of(p, USBInfernoPacket, p));
 }
 
-static USBBusOps usb_tcp_bus_ops = {};
+static USBBusOps usb_inferno_bus_ops = {};
 
-static USBPortOps usb_tcp_host_port_ops = {
-    .attach       = usb_tcp_host_attach,
-    .detach       = usb_tcp_host_detach,
+static USBPortOps usb_inferno_host_port_ops = {
+    .attach       = usb_inferno_host_attach,
+    .detach       = usb_inferno_host_detach,
     .child_detach = NULL,
     .wakeup       = NULL,
-    .complete     = usb_tcp_host_async_packet_complete,
+    .complete     = usb_inferno_host_async_packet_complete,
 };
 
-static void usb_tcp_host_realize(DeviceState* dev, Error** errp)
+static void usb_inferno_host_realize(DeviceState* dev, Error** errp)
 {
-    USBTCPHostState* s;
+    USBInfernoHostState* s;
     int              i;
 
-    s = USB_TCP_HOST(dev);
+    s = USB_INFERNO_HOST(dev);
 
     if (s->connect_addr == NULL) {
-        s->connect_addr = g_strdup(USB_TCP_REMOTE_ADDR_DEFAULT);
-        warn_report("No address specified, using default (`%s`).", USB_TCP_REMOTE_ADDR_DEFAULT);
+        s->connect_addr = g_strdup(USB_INFERNO_REMOTE_ADDR_DEFAULT);
+        warn_report("No address specified, using default (`%s`).", USB_INFERNO_REMOTE_ADDR_DEFAULT);
     }
 
     s->sockaddr = socket_parse(s->connect_addr, errp);
     if (s->sockaddr == NULL) { return; }
 
-    usb_bus_new(&s->bus, sizeof(s->bus), &usb_tcp_bus_ops, dev);
+    usb_bus_new(&s->bus, sizeof(s->bus), &usb_inferno_bus_ops, dev);
     for (i = 0; i < G_N_ELEMENTS(s->ports); i++) {
-        usb_register_port(&s->bus, &s->ports[i], s, i, &usb_tcp_host_port_ops,
+        usb_register_port(&s->bus, &s->ports[i], s, i, &usb_inferno_host_port_ops,
                           USB_SPEED_MASK_LOW | USB_SPEED_MASK_FULL | USB_SPEED_MASK_HIGH | USB_SPEED_MASK_SUPER);
     }
 
     s->closed      = true;
-    s->retry_timer = timer_new_ms(QEMU_CLOCK_REALTIME, usb_tcp_host_retry_cb, s);
-    s->reset_bh    = qemu_bh_new(usb_tcp_host_reset_bus_bh, s);
+    s->retry_timer = timer_new_ms(QEMU_CLOCK_REALTIME, usb_inferno_host_retry_cb, s);
+    s->reset_bh    = qemu_bh_new(usb_inferno_host_reset_bus_bh, s);
     qemu_co_mutex_init(&s->write_mutex);
 }
 
-static void usb_tcp_host_unrealize(DeviceState* dev)
+static void usb_inferno_host_unrealize(DeviceState* dev)
 {
-    USBTCPHostState* s = USB_TCP_HOST(dev);
+    USBInfernoHostState* s = USB_INFERNO_HOST(dev);
 
     s->stopped = true;
 
-    usb_tcp_host_closed(s);
+    usb_inferno_host_closed(s);
 
     if (s->retry_timer != NULL) {
         timer_free(s->retry_timer);
@@ -517,35 +517,35 @@ static void usb_tcp_host_unrealize(DeviceState* dev)
     s->sockaddr = NULL;
 }
 
-static void usb_tcp_host_init(Object* obj)
+static void usb_inferno_host_init(Object* obj)
 {
-    USBTCPHostState* s = USB_TCP_HOST(obj);
+    USBInfernoHostState* s = USB_INFERNO_HOST(obj);
     s->closed          = true;
 }
 
-static const Property usb_tcp_host_props[] = {
-    DEFINE_PROP_STRING("addr", USBTCPHostState, connect_addr),
+static const Property usb_inferno_host_props[] = {
+    DEFINE_PROP_STRING("addr", USBInfernoHostState, connect_addr),
 };
 
-static void usb_tcp_host_class_init(ObjectClass* klass, const void* data)
+static void usb_inferno_host_class_init(ObjectClass* klass, const void* data)
 {
     DeviceClass* dc = DEVICE_CLASS(klass);
 
-    dc->realize   = usb_tcp_host_realize;
-    dc->unrealize = usb_tcp_host_unrealize;
+    dc->realize   = usb_inferno_host_realize;
+    dc->unrealize = usb_inferno_host_unrealize;
     dc->desc      = "QEMU USB Passthrough Host Controller";
     set_bit(DEVICE_CATEGORY_USB, dc->categories);
-    device_class_set_props(dc, usb_tcp_host_props);
+    device_class_set_props(dc, usb_inferno_host_props);
 }
 
-static const TypeInfo usb_tcp_host_type_info = {
-    .name          = TYPE_USB_TCP_HOST,
+static const TypeInfo usb_inferno_host_type_info = {
+    .name          = TYPE_USB_INFERNO_HOST,
     .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(USBTCPHostState),
-    .class_init    = usb_tcp_host_class_init,
-    .instance_init = usb_tcp_host_init,
+    .instance_size = sizeof(USBInfernoHostState),
+    .class_init    = usb_inferno_host_class_init,
+    .instance_init = usb_inferno_host_init,
 };
 
-static void usb_tcp_host_register_types(void) { type_register_static(&usb_tcp_host_type_info); }
+static void usb_inferno_host_register_types(void) { type_register_static(&usb_inferno_host_type_info); }
 
-type_init(usb_tcp_host_register_types)
+type_init(usb_inferno_host_register_types)
