@@ -269,9 +269,10 @@ static int os_host_main_loop_wait(int64_t timeout)
 
     ret = qemu_poll_ns((GPollFD*)gpollfds->data, gpollfds->len, timeout);
 
-    bql_lock();
-
+    /* Dispatched without the BQL; callbacks take it themselves. */
     glib_pollfds_poll();
+
+    bql_lock();
 
     g_main_context_release(context);
 
