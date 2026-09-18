@@ -65,6 +65,7 @@
 #include "hw/ssi/ssi.h"
 #include "hw/sysbus.h"
 #include "hw/usb/apple_typec.h"
+#include "hw/usb/usb-uplink.h"
 #include "hw/watchdog/apple_wdt.h"
 #include "qapi/visitor.h"
 #include "qemu/error-report.h"
@@ -1376,15 +1377,17 @@ static void t8030_create_usb(AppleT8030MachineState* t8030)
     AppleDARTState*    dart;
     IOMMUMemoryRegion* iommu = NULL;
     uint32_t*          ints;
+    DeviceState*       host;
 
     dart = APPLE_DART(object_property_get_link(OBJECT(t8030), "dart-usb", &error_fatal));
 
     atc = qdev_new(TYPE_APPLE_TYPEC);
     object_property_add_child(OBJECT(t8030), "atc", OBJECT(atc));
 
-    if (t8030->usb_conn_addr != NULL) {
-        object_property_set_str(OBJECT(atc), "addr", t8030->usb_conn_addr, &error_fatal);
-    }
+    host = usb_uplink_new(t8030->usb_uplink_type, t8030->usb_uplink_addr, &error_fatal);
+    object_property_add_child(OBJECT(t8030), "usb-host", OBJECT(host));
+    object_property_set_link(OBJECT(atc), "host", OBJECT(host), &error_fatal);
+    object_unref(OBJECT(host));
 
     prop = apple_dt_get_prop(dart_mapper, "reg");
     assert_nonnull(prop);
@@ -2718,7 +2721,8 @@ PROP_STR_GETTER_SETTER(ticket_filename);
 PROP_STR_GETTER_SETTER(sep_rom_filename);
 PROP_STR_GETTER_SETTER(sep_fw_filename);
 PROP_STR_GETTER_SETTER(securerom_filename);
-PROP_STR_GETTER_SETTER(usb_conn_addr);
+PROP_STR_GETTER_SETTER(usb_uplink_addr);
+PROP_GETTER_SETTER(int, usb_uplink_type);
 PROP_STR_GETTER_SETTER(model_number);
 PROP_STR_GETTER_SETTER(region_info);
 PROP_STR_GETTER_SETTER(config_number);
@@ -2764,8 +2768,12 @@ static void t8030_class_init(ObjectClass* klass, const void* data)
     object_class_property_set_description(klass, "kaslr-off", "Disable KASLR");
     object_class_property_add_bool(klass, "force-dfu", t8030_get_force_dfu, t8030_set_force_dfu);
     object_class_property_set_description(klass, "force-dfu", "Force DFU");
-    object_class_property_add_str(klass, "usb-conn-addr", t8030_get_usb_conn_addr, t8030_set_usb_conn_addr);
-    object_class_property_set_description(klass, "usb-conn-addr", "USB Connection Address");
+    object_class_property_add_str(klass, "usb-uplink-addr", t8030_get_usb_uplink_addr, t8030_set_usb_uplink_addr);
+    object_class_property_set_description(klass, "usb-uplink-addr", "USB Uplink Address");
+    oprop = object_class_property_add_enum(klass, "usb-uplink-type", "USBUplinkType", &USBUplinkType_lookup,
+                                           t8030_get_usb_uplink_type, t8030_set_usb_uplink_type);
+    object_property_set_default_str(oprop, qapi_enum_lookup(&USBUplinkType_lookup, USB_UPLINK_TYPE_VIRTUALHERE));
+    object_class_property_set_description(klass, "usb-uplink-type", "USB Uplink Type");
     oprop = object_class_property_add_str(klass, "model", t8030_get_model_number, t8030_set_model_number);
     object_property_set_default_str(oprop, "CKI12");
     object_class_property_set_description(klass, "model", "Model Number");

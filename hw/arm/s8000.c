@@ -43,6 +43,7 @@
 #include "hw/ssi/apple_spi.h"
 #include "hw/ssi/ssi.h"
 #include "hw/usb/apple_otg.h"
+#include "hw/usb/usb-uplink.h"
 #include "hw/watchdog/apple_wdt.h"
 #include "qapi/visitor.h"
 #include "qemu/error-report.h"
@@ -986,6 +987,7 @@ static void s8000_create_usb(AppleS8000MachineState* s8000)
     AppleDTNode *phy, *complex, *device;
     AppleDTProp* prop;
     DeviceState* otg;
+    DeviceState* host;
 
     phy = apple_dt_get_node(child, "otgphyctrl");
     assert_nonnull(phy);
@@ -999,9 +1001,10 @@ static void s8000_create_usb(AppleS8000MachineState* s8000)
     otg = apple_otg_from_node(complex);
     object_property_add_child(OBJECT(s8000), "otg", OBJECT(otg));
 
-    if (s8000->usb_conn_addr != NULL) {
-        object_property_set_str(OBJECT(otg), "addr", s8000->usb_conn_addr, &error_fatal);
-    }
+    host = usb_uplink_new(s8000->usb_uplink_type, s8000->usb_uplink_addr, &error_fatal);
+    object_property_add_child(OBJECT(s8000), "usb-host", OBJECT(host));
+    object_property_set_link(OBJECT(otg), "host", OBJECT(host), &error_fatal);
+    object_unref(OBJECT(host));
 
     prop = apple_dt_get_prop(phy, "reg");
     assert_nonnull(prop);
@@ -1462,7 +1465,8 @@ PROP_STR_GETTER_SETTER(ticket_filename);
 PROP_STR_GETTER_SETTER(sep_rom_filename);
 PROP_STR_GETTER_SETTER(sep_fw_filename);
 PROP_STR_GETTER_SETTER(securerom_filename);
-PROP_STR_GETTER_SETTER(usb_conn_addr);
+PROP_STR_GETTER_SETTER(usb_uplink_addr);
+PROP_GETTER_SETTER(int, usb_uplink_type);
 
 static void s8000_class_init(ObjectClass* klass, const void* data)
 {
@@ -1498,8 +1502,12 @@ static void s8000_class_init(ObjectClass* klass, const void* data)
     object_class_property_set_description(klass, "ecid", "Device ECID");
     object_class_property_add_bool(klass, "force-dfu", s8000_get_force_dfu, s8000_set_force_dfu);
     object_class_property_set_description(klass, "force-dfu", "Force DFU");
-    object_class_property_add_str(klass, "usb-conn-addr", s8000_get_usb_conn_addr, s8000_set_usb_conn_addr);
-    object_class_property_set_description(klass, "usb-conn-addr", "USB Connection Address");
+    object_class_property_add_str(klass, "usb-uplink-addr", s8000_get_usb_uplink_addr, s8000_set_usb_uplink_addr);
+    object_class_property_set_description(klass, "usb-uplink-addr", "USB Uplink Address");
+    oprop = object_class_property_add_enum(klass, "usb-uplink-type", "USBUplinkType", &USBUplinkType_lookup,
+                                           s8000_get_usb_uplink_type, s8000_set_usb_uplink_type);
+    object_property_set_default_str(oprop, qapi_enum_lookup(&USBUplinkType_lookup, USB_UPLINK_TYPE_VIRTUALHERE));
+    object_class_property_set_description(klass, "usb-uplink-type", "USB Uplink Type");
 }
 
 static const TypeInfo s8000_info = {

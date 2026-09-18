@@ -21,7 +21,6 @@
 #include "qemu/osdep.h"
 #include "hw/qdev-properties.h"
 #include "hw/usb/apple_typec.h"
-#include "hw/usb/hcd-inferno.h"
 #include "qapi/error.h"
 #include "qemu/module.h"
 #include "qom/object.h"
@@ -52,6 +51,10 @@ static void apple_typec_realize(DeviceState* dev, Error** errp)
     sysbus_pass_irq(SYS_BUS_DEVICE(s), SYS_BUS_DEVICE(&s->dwc3));
     sysbus_init_irq(SYS_BUS_DEVICE(s), &s->dwc2.irq);
 
+    if (s->host == NULL) {
+        error_setg(errp, "`host' link is not set");
+        return;
+    }
     sysbus_realize(s->host, errp);
 
     bus = QLIST_FIRST(&DEVICE(s->host)->child_bus);
@@ -129,6 +132,9 @@ static void apple_typec_init(Object* obj)
     *(uint32_t*)(s->config_reg + 0x20) |= 0x40000000;    // pipe ready
     *(uint32_t*)(s->phy_reg + 0x64)    |= (1 << 16);     // OTG cable connected
 
+    object_property_add_link(obj, "host", TYPE_SYS_BUS_DEVICE, (Object**)&s->host,
+                             qdev_prop_allow_set_link_before_realize, OBJ_PROP_LINK_STRONG);
+
     object_initialize_child(OBJECT(dev), "dwc2", &s->dwc2, TYPE_DWC2_USB);
     object_initialize_child(OBJECT(dev), "dwc3", &s->dwc3, TYPE_DWC3_USB);
     object_property_set_uint(OBJECT(&s->dwc3), "intrs", 4, &error_fatal);
@@ -136,9 +142,6 @@ static void apple_typec_init(Object* obj)
     memory_region_add_subregion(&s->container, 0x10000, sysbus_mmio_get_region(SYS_BUS_DEVICE(&s->dwc3), 0));
     memory_region_add_subregion(&s->container, 0x100000, sysbus_mmio_get_region(SYS_BUS_DEVICE(&s->dwc2), 0));
     sysbus_init_mmio(sbd, &s->container);
-
-    s->host = SYS_BUS_DEVICE(qdev_new(TYPE_USB_INFERNO_HOST));
-    object_property_add_alias(OBJECT(s), "addr", OBJECT(s->host), "addr");
 }
 
 static void apple_typec_class_init(ObjectClass* klass, const void* data)

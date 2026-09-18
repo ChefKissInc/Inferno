@@ -1504,6 +1504,12 @@ if not get_option('libdaxctl').auto() or have_system
   libdaxctl = dependency('libdaxctl', required: get_option('libdaxctl'),
                          version: '>=57', method: 'pkg-config')
 endif
+avahi = not_found
+avahi_glib = not_found
+if host_os == 'linux' and have_system
+  avahi = dependency('avahi-client', required: false, method: 'pkg-config')
+  avahi_glib = dependency('avahi-glib', required: false, method: 'pkg-config')
+endif
 tasn1 = dependency('libtasn1',
                    required: true,
                    method: 'pkg-config')
@@ -1717,6 +1723,7 @@ endif
 config_host_data.set('CONFIG_GTK', gtk.found())
 config_host_data.set('CONFIG_VTE', vte.found())
 config_host_data.set('CONFIG_GTK_CLIPBOARD', have_gtk_clipboard)
+config_host_data.set('CONFIG_AVAHI', avahi.found() and avahi_glib.found())
 config_host_data.set('CONFIG_LIBCAP_NG', libcap_ng.found())
 config_host_data.set('CONFIG_LIBDAXCTL', libdaxctl.found())
 config_host_data.set('CONFIG_LIBNFS', libnfs.found())

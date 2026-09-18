@@ -58,6 +58,7 @@ endif
 if have_system or have_tools
   qapi_all_modules += [
     'ui',
+    'usb',
   ]
 endif
 

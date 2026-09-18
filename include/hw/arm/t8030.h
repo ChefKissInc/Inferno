@@ -26,6 +26,7 @@
 #include "hw/arm/boot.h"
 #include "hw/boards.h"
 #include "hw/sysbus.h"
+#include "qapi/qapi-types-usb.h"
 #include "system/kvm.h"
 
 #define TYPE_APPLE_T8030 MACHINE_TYPE_NAME("t8030")
@@ -72,7 +73,8 @@ typedef struct
     bool            force_dfu;
     uint32_t        board_id;
     uint32_t        chip_revision;
-    char*           usb_conn_addr;
+    char*           usb_uplink_addr;
+    USBUplinkType   usb_uplink_type;
     char*           model_number;
     char*           region_info;
     char*           config_number;

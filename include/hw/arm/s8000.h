@@ -27,6 +27,7 @@
 #include "hw/boards.h"
 #include "hw/cpu/cluster.h"
 #include "hw/sysbus.h"
+#include "qapi/qapi-types-usb.h"
 #include "system/kvm.h"
 
 #define TYPE_APPLE_S8000 MACHINE_TYPE_NAME("s8000")
@@ -72,5 +73,6 @@ typedef struct
     bool            kaslr_off;
     bool            force_dfu;
     uint32_t        board_id;
-    char*           usb_conn_addr;
+    char*           usb_uplink_addr;
+    USBUplinkType   usb_uplink_type;
 } AppleS8000MachineState;

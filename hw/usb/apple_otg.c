@@ -20,9 +20,9 @@
 
 #include "qemu/osdep.h"
 #include "hw/arm/dt.h"
+#include "hw/qdev-properties.h"
 #include "hw/usb/apple_otg.h"
 #include "hw/usb/hcd-dwc2.h"
-#include "hw/usb/hcd-inferno.h"
 #include "qapi/error.h"
 #include "qemu/error-report.h"
 #include "qemu/log.h"
@@ -75,6 +75,10 @@ static void apple_otg_realize(DeviceState* dev, Error** errp)
     sysbus_realize(SYS_BUS_DEVICE(&s->dwc2), errp);
     sysbus_pass_irq(SYS_BUS_DEVICE(s), SYS_BUS_DEVICE(&s->dwc2));
 
+    if (s->host == NULL) {
+        error_setg(errp, "`host' link is not set");
+        return;
+    }
     sysbus_realize(s->host, errp);
 
     bus = QLIST_FIRST(&DEVICE(s->host)->child_bus);
@@ -178,6 +182,9 @@ DeviceState* apple_otg_from_node(AppleDTNode* node)
     sbd = SYS_BUS_DEVICE(dev);
     s   = APPLE_OTG(dev);
 
+    object_property_add_link(OBJECT(dev), "host", TYPE_SYS_BUS_DEVICE, (Object**)&s->host,
+                             qdev_prop_allow_set_link_before_realize, OBJ_PROP_LINK_STRONG);
+
     memory_region_init_io(&s->phy, OBJECT(dev), &phy_reg_ops, s, TYPE_APPLE_OTG ".phy", sizeof(s->phy_reg));
     sysbus_init_mmio(sbd, &s->phy);
     *(uint32_t*)(s->phy_reg + REG_AUSB_USB20PHY_OTGSIG) |= (1 << 8);    // cable connected
@@ -197,8 +204,6 @@ DeviceState* apple_otg_from_node(AppleDTNode* node)
     memory_region_init_io(&s->widget, OBJECT(dev), &widget_reg_ops, s, TYPE_APPLE_OTG ".widget", sizeof(s->widget_reg));
     sysbus_init_mmio(sbd, &s->widget);
 
-    s->host = SYS_BUS_DEVICE(qdev_new(TYPE_USB_INFERNO_HOST));
-    object_property_add_alias(OBJECT(s), "addr", OBJECT(s->host), "addr");
     return dev;
 }
 

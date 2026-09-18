@@ -1,0 +1,25 @@
+# -*- Mode: Python -*-
+# vim: filetype=python
+#
+
+##
+# ***
+# USB
+# ***
+##
+
+##
+# @USBUplinkType:
+#
+# The backend an emulated USB device is uplinked to.
+#
+# @inferno: the Inferno USB Uplink host controller, which connects out to
+#     a remote.
+#
+# @virtualhere: a VirtualHere-protocol server, which exports the device
+#     to clients that connect in.
+#
+# Since: 10.0
+##
+{ 'enum': 'USBUplinkType',
+  'data': [ 'inferno', 'virtualhere' ] }

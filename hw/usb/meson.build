@@ -12,7 +12,18 @@ system_ss.add(when: 'CONFIG_USB', if_true: files(
 
 system_ss.add(when: 'CONFIG_APPLE_OTG', if_true: files('apple_otg.c'))
 system_ss.add(when: 'CONFIG_APPLE_TYPEC', if_true: files('apple_typec.c'))
-system_ss.add(when: 'CONFIG_USB_UPLINK', if_true: files('dev-inferno-remote.c', 'hcd-inferno.c'))
+lz4_dep = dependency('liblz4', required : true)
+mdns_deps = []
+if host_os == 'windows'
+  dnsapi = cc.find_library('dnsapi', required: false)
+  if dnsapi.found()
+    mdns_deps += dnsapi
+  endif
+elif avahi.found() and avahi_glib.found()
+  mdns_deps += [avahi, avahi_glib]
+endif
+system_ss.add(when: 'CONFIG_USB_UPLINK', if_true: [lz4_dep, mdns_deps,
+  files('dev-inferno-remote.c', 'hcd-inferno.c', 'usb-uplink.c', 'hcd-virtualhere.c', 'mdns.c')])
 
 # usb host adapters
 system_ss.add(when: 'CONFIG_USB_EHCI', if_true: files('hcd-ehci.c'))
