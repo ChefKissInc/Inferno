@@ -84,6 +84,7 @@ enum
 };
 
 #define VIRTUALHERE_BIND_OK              1
+#define VIRTUALHERE_BIND_ERROR           (-1)
 #define VIRTUALHERE_SETUP_LEN            8
 #define VIRTUALHERE_GUID_LEN             16
 #define VIRTUALHERE_HUB_PROTOCOL_VERSION 8

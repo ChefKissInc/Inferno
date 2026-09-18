@@ -40,6 +40,7 @@ struct USBVirtualHereConn
     QEMUTimer*           heartbeat_timer;
     bool                 closed;
     bool                 using_device;
+    bool                 use_pending;
     QLIST_HEAD(, USBVirtualHerePacket) packets;
     char                 client_name[64];
     char                 client_host[64];

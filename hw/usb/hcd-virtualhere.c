@@ -278,7 +278,7 @@ static VHDeviceInfo* vh_build_short_info(USBVirtualHereState* s, USBVirtualHereC
 
     out->device_id = cpu_to_le16(device_id);
 
-    if (conn != NULL && conn->using_device) {
+    if (conn != NULL && (conn->using_device || conn->use_pending)) {
         out->state = VIRTUALHERE_DEVICE_STATE_IN_USE;
         memcpy(out->holder_guid, s->server_guid, sizeof(out->holder_guid));
         pstrcpy(out->holder_user, sizeof(out->holder_user), conn->client_name);
@@ -448,6 +448,17 @@ static bool coroutine_fn vh_conn_announce_device(USBVirtualHereConn* conn)
 /* Answering instantly loses a race in the client and the claim is dropped. */
 #define VIRTUALHERE_USE_DEVICE_REPLY_DELAY_NS (50 * 1000 * 1000)
 
+/* A claim the client never hears back about hangs its hub entry forever. */
+static bool coroutine_fn vh_conn_fail_claim(USBVirtualHereConn* conn)
+{
+    g_autofree VHDeviceDesc* fail = vh_msg_new(sizeof(*fail), VIRTUALHERE_MSG_DEVICE_DESC);
+
+    fail->header.device_id = cpu_to_le16(VIRTUALHERE_SERVER_DEVICE_ID);
+    fail->bind_result      = cpu_to_le32(VIRTUALHERE_BIND_ERROR);
+
+    return vh_conn_send_lz4(conn, (const uint8_t*)fail, sizeof(*fail));
+}
+
 static bool coroutine_fn vh_handle_use_device(USBVirtualHereConn* conn)
 {
     USBVirtualHereState*        s         = conn->s;
@@ -455,8 +466,8 @@ static bool coroutine_fn vh_handle_use_device(USBVirtualHereConn* conn)
     g_autofree VHDeviceDesc*    long_info = NULL;
 
     if (desc == NULL) {
-        VIRTUALHERE_DPRINTF("%s: no readable descriptors, falling back to short-info only\n", __func__);
-        return vh_conn_announce_device(conn);
+        VIRTUALHERE_DPRINTF("%s: no readable descriptors, failing the claim\n", __func__);
+        return vh_conn_fail_claim(conn);
     }
 
     conn->using_device = true;
@@ -638,6 +649,7 @@ static void coroutine_fn vh_use_device_co(void* opaque)
     }
 
     if (!conn->closed) { vh_handle_use_device(conn); }
+    conn->use_pending = false;
     vh_conn_unref(conn);
 }
 
@@ -711,7 +723,13 @@ static void coroutine_fn vh_conn_dispatch(USBVirtualHereConn* conn, const uint8_
         case VIRTUALHERE_MSG_READY      : vh_conn_announce_device(conn); break;
         case VIRTUALHERE_MSG_HEARTBEAT  : vh_conn_send_msg(conn, VIRTUALHERE_MSG_HEARTBEAT_ACK, msg, NULL, 0); break;
         case VIRTUALHERE_MSG_TIME_PONG  : break;
-        case VIRTUALHERE_MSG_USE_DEVICE : vh_conn_spawn(conn, vh_use_device_co); break;
+        case VIRTUALHERE_MSG_USE_DEVICE:
+            /* Retries arrive while the first claim is still waiting on descriptors. */
+            if (!conn->using_device && !conn->use_pending) {
+                conn->use_pending = true;
+                vh_conn_spawn(conn, vh_use_device_co);
+            }
+            break;
         case VIRTUALHERE_MSG_GADGET_LIST: {
             uint32_t count = 0;
 
@@ -728,6 +746,7 @@ static void coroutine_fn vh_conn_dispatch(USBVirtualHereConn* conn, const uint8_
             uint8_t released[4] = {1, 0, 0, 0};
 
             conn->using_device = false;
+            conn->use_pending  = false;
             vh_conn_abort_packets(conn);
             usb_uplink_release(&conn->s->usb);
             vh_conn_send_msg(conn, VIRTUALHERE_MSG_UNBIND_ACK, msg, released, sizeof(released));
@@ -785,8 +804,9 @@ static void vh_conn_close(USBVirtualHereConn* conn)
     vh_conn_abort_packets(conn);
 
     /* The claim dies with the connection, so the device must come back clean. */
-    if (conn->using_device) {
+    if (conn->using_device || conn->use_pending) {
         conn->using_device = false;
+        conn->use_pending  = false;
         usb_uplink_release(&s->usb);
     }
 
@@ -850,6 +870,7 @@ static void vh_unplug_timeout(void* opaque)
 
     if (conn != NULL && !conn->closed) {
         conn->using_device = false;
+        conn->use_pending  = false;
         vh_notify_device_removed(conn);
     }
 
