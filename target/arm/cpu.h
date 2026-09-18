@@ -957,6 +957,7 @@ struct ArchCPU
     /* GPIO outputs for generic timer */
     qemu_irq gt_timer_outputs[NUM_GTIMERS];
     int      gt_irqstate[NUM_GTIMERS];
+    int      pmu_irqstate;
     /* GPIO output for the PMU interrupt */
     qemu_irq pmu_interrupt;
 

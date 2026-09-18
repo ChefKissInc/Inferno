@@ -340,8 +340,14 @@ static bool pmu_counter_enabled(CPUARMState* env, uint8_t counter)
 
 static void pmu_update_irq(CPUARMState* env)
 {
-    ARMCPU* cpu = env_archcpu(env);
-    qemu_set_irq(cpu->pmu_interrupt, (env->cp15.c9_pmcr & PMCRE) && (env->cp15.c9_pminten & env->cp15.c9_pmovsr));
+    ARMCPU* cpu      = env_archcpu(env);
+    int     irqstate = (env->cp15.c9_pmcr & PMCRE) && (env->cp15.c9_pminten & env->cp15.c9_pmovsr);
+
+    /* Delivering the IRQ needs the BQL, but only when the line changes. */
+    if (qatomic_xchg(&cpu->pmu_irqstate, irqstate) == irqstate) { return; }
+
+    BQL_LOCK_GUARD();
+    qemu_set_irq(cpu->pmu_interrupt, irqstate);
 }
 
 static bool pmccntr_clockdiv_enabled(CPUARMState* env)
