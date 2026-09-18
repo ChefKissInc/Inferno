@@ -21,7 +21,7 @@
 #include "qemu/bswap.h"
 #include "qemu/error-report.h"
 
-CKPatcherRange* ck_patcher_range_from_ptr(const char* name, void* ptr, vaddr size)
+CKPatcherRange* ck_patcher_range_from_ptr(const char* name, uint8_t* ptr, vaddr size)
 {
     CKPatcherRange* range = g_new0(CKPatcherRange, 1);
     range->addr           = 0x0;
@@ -132,7 +132,7 @@ bool ck_patcher_find_replace(CKPatcherRange* range, const char* name, const uint
     return ck_patcher_find_callback_ctx(range, name, pattern, mask, len, align, &ctx, ck_patcher_find_replace_callback);
 }
 
-void* ck_patcher_find_next_insn(void* buffer, uint32_t num, uint32_t insn, uint32_t mask, uint32_t skip)
+uint8_t* ck_patcher_find_next_insn(uint8_t* buffer, uint32_t num, uint32_t insn, uint32_t mask, uint32_t skip)
 {
     assert_cmphex(insn & mask, ==, insn);
 
@@ -147,12 +147,12 @@ void* ck_patcher_find_next_insn(void* buffer, uint32_t num, uint32_t insn, uint3
     return NULL;
 }
 
-void* ck_patcher_find_prev_insn(void* buffer, uint32_t num, uint32_t insn, uint32_t mask, uint32_t skip)
+uint8_t* ck_patcher_find_prev_insn(uint8_t* buffer, uint32_t num, uint32_t insn, uint32_t mask, uint32_t skip)
 {
     assert_cmphex(insn & mask, ==, insn);
 
     for (uint32_t i = 0; i < num; ++i) {
-        void* cur = buffer - (i * sizeof(uint32_t));
+        uint8_t* cur = buffer - (i * sizeof(uint32_t));
         if ((ldl_le_p(cur) & mask) == insn) {
             if (skip == 0) { return cur; }
             --skip;

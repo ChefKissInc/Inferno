@@ -156,10 +156,10 @@ static CKPatcherRange* ck_kp_get_kernel_section(MachoHeader64* hdr, const char* 
 
 static bool ck_kp_root_auth_callback(void* ctx, uint8_t* buffer)
 {
-    void* func_start = ck_patcher_find_prev_insn(buffer, 30, PACIBSP, 0xFFFFFFFF, 0);
+    uint8_t* func_start = ck_patcher_find_prev_insn(buffer, 30, PACIBSP, 0xFFFFFFFF, 0);
     if (func_start == NULL) {
         warn_report("%s: failed to find pacibsp, trying to find old logic", __func__);
-        void* ret = ck_patcher_find_next_insn(buffer, 4, RET, 0xFFFFFFFF, 0);
+        uint8_t* ret = ck_patcher_find_next_insn(buffer, 4, RET, 0xFFFFFFFF, 0);
         if (ret == NULL) {
             error_report("%s: neither variants matched", __func__);
             return false;
@@ -175,7 +175,7 @@ static bool ck_kp_root_auth_callback(void* ctx, uint8_t* buffer)
 
 static bool ck_kp_root_hash_callback(void* ctx, uint8_t* buffer)
 {
-    void* func_start = ck_patcher_find_prev_insn(buffer, 0x40, PACIBSP, 0xFFFFFFFF, 0);
+    uint8_t* func_start = ck_patcher_find_prev_insn(buffer, 0x40, PACIBSP, 0xFFFFFFFF, 0);
     if (func_start == NULL) {
         error_report("%s: failed to find pacibsp", __func__);
         return false;
@@ -245,10 +245,10 @@ static bool ck_kp_tc_callback(void* ctx, uint8_t* buffer)
         return false;
     }
 
-    void*    ldrb         = ck_patcher_find_next_insn(buffer, 256, 0x39402C00, 0xFFFFFC00, 0);
+    uint8_t* ldrb         = ck_patcher_find_next_insn(buffer, 256, 0x39402C00, 0xFFFFFC00, 0);
     uint32_t cdhash_param = extract32(ldl_le_p(ldrb), 5, 5);
-    void*    frame;
-    void*    start = buffer;
+    uint8_t* frame;
+    uint8_t* start = buffer;
     bool     pac;
 
     frame = ck_patcher_find_prev_insn(buffer, 10, 0x910003FD, 0xFF8003FF, 0);
@@ -269,7 +269,7 @@ static bool ck_kp_tc_callback(void* ctx, uint8_t* buffer)
     switch (cdhash_param) {
         case 0: {
             // adrp x8, ?
-            void* adrp = ck_patcher_find_prev_insn(start, 10, 0x90000008, 0x9F00001F, 0);
+            uint8_t* adrp = ck_patcher_find_prev_insn(start, 10, 0x90000008, 0x9F00001F, 0);
             if (adrp != NULL) { start = adrp; }
             stl_le_p(start, 0x52802020);    // mov w0, 0x101
             stl_le_p(start + 4, (pac ? RETAB : RET));
@@ -290,7 +290,7 @@ static bool ck_kp_tc_callback(void* ctx, uint8_t* buffer)
 
 static bool ck_kp_tc_ios16_callback(void* ctx, uint8_t* buffer)
 {
-    void* start = ck_patcher_find_prev_insn(buffer, 100, PACIBSP, 0xFFFFFFFF, 0);
+    uint8_t* start = ck_patcher_find_prev_insn(buffer, 100, PACIBSP, 0xFFFFFFFF, 0);
 
     if (start == NULL) { return false; }
 
@@ -322,8 +322,8 @@ static void ck_kp_tc_patch(CKPatcherRange* range)
 
 static bool ck_kp_amfi_sha1_callback(void* ctx, uint8_t* buffer)
 {
-    void* cmp = ck_patcher_find_next_insn(buffer, 0x10, 0x7100081F, 0xFFFFFFFF,
-                                          0);    // cmp w0, 2
+    uint8_t* cmp = ck_patcher_find_next_insn(buffer, 0x10, 0x7100081F, 0xFFFFFFFF,
+                                             0);    // cmp w0, 2
 
     if (cmp == NULL) {
         error_report("%s: failed to find cmp", __func__);
@@ -336,7 +336,7 @@ static bool ck_kp_amfi_sha1_callback(void* ctx, uint8_t* buffer)
 
 static bool ck_kp_amfi_tc_callback(void* ctx, uint8_t* buffer)
 {
-    void* start = ck_patcher_find_prev_insn(buffer, 0x20, PACIBSP, 0xFFFFFFFF, 0);
+    uint8_t* start = ck_patcher_find_prev_insn(buffer, 0x20, PACIBSP, 0xFFFFFFFF, 0);
     if (start == NULL) {
         error_report("%s: failed to find start of function", __func__);
         return false;
@@ -376,7 +376,7 @@ static void ck_kp_amfi_patches(CKPatcherRange* range)
 static bool ck_kp_mac_mount_callback(void* ctx, uint8_t* buffer)
 {
     // Search for tbnz w?, 5, ?
-    void* inst = ck_patcher_find_prev_insn(buffer, 0x40, 0x37280000, 0xFFFE0000, 0);
+    uint8_t* inst = ck_patcher_find_prev_insn(buffer, 0x40, 0x37280000, 0xFFFE0000, 0);
     if (inst == NULL) {
         inst = ck_patcher_find_next_insn(buffer, 0x40, 0x37280000, 0xFFFE0000, 0);
         if (inst == NULL) {
@@ -484,7 +484,7 @@ static void ck_kp_kprintf_patch(CKPatcherRange* range)
 // New: Used in iOS 17+ to set the cpu_capabilities bit.
 static bool ck_kp_amx_common(uint8_t* buffer, bool newer)
 {
-    void* amx_ver_str = ck_patcher_find_prev_insn(buffer, newer ? 6 : 10, 0xB8000000, 0xFEC00000, newer ? 0 : 1);
+    uint8_t* amx_ver_str = ck_patcher_find_prev_insn(buffer, newer ? 6 : 10, 0xB8000000, 0xFEC00000, newer ? 0 : 1);
     if (amx_ver_str == NULL) {
         error_report("%s: Failed to find store to gAMXVersion.", __func__);
         return false;
@@ -599,7 +599,7 @@ static void ck_kp_sep_mgr_patches(CKPatcherRange* range)
 
 static bool ck_kp_img4_callback(void* ctx, uint8_t* buffer)
 {
-    void* start = ck_patcher_find_prev_insn(buffer, 200, PACIBSP, 0xFFFFFFFF, 0);
+    uint8_t* start = ck_patcher_find_prev_insn(buffer, 200, PACIBSP, 0xFFFFFFFF, 0);
 
     if (start == NULL) { return false; }
 
@@ -764,7 +764,7 @@ static void ck_kp_virt_boot_sctlr_patch(CKPatcherRange* range)
 static bool ck_kp_pac_jop_toggle_callback(void* ctx, uint8_t* buffer)
 {
     // msr sctlr_el1, x?
-    void* msr = ck_patcher_find_next_insn(buffer, 24, 0xD5181000, 0xFFFFFFE0, 0);
+    uint8_t* msr = ck_patcher_find_next_insn(buffer, 24, 0xD5181000, 0xFFFFFFE0, 0);
     if (msr == NULL) {
         error_report("%s: failed to find the SCTLR_EL1 write", __func__);
         return false;
@@ -792,11 +792,11 @@ static void ck_kp_virt_jop_toggle_patch(CKPatcherRange* range)
 static bool ck_kp_disable_ppl_locked_down(void* ctx, uint8_t* buffer)
 {
     // mov w?, #1
-    void* mov = ck_patcher_find_next_insn(buffer + 8 + sizeof(uint32_t), 2, 0x52800020, 0xFFFFFFE0, 0);
+    uint8_t* mov = ck_patcher_find_next_insn(buffer + 8 + sizeof(uint32_t), 2, 0x52800020, 0xFFFFFFE0, 0);
     if (mov == NULL) { return false; }
 
     // str w?, pmap_ppl_locked_down
-    void* str = ck_patcher_find_next_insn(mov + sizeof(uint32_t), 2, 0xB9000000, 0xFF000000, 0);
+    uint8_t* str = ck_patcher_find_next_insn(mov + sizeof(uint32_t), 2, 0xB9000000, 0xFF000000, 0);
     if (str == NULL) { return false; }
 
     // bl #?

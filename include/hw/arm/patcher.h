@@ -30,16 +30,16 @@ typedef struct
     vaddr addr;
     vaddr length;
     /// Guaranteed to be an accessible host pointer.
-    void*       ptr;
+    uint8_t*    ptr;
     const char* name;
 } CKPatcherRange;
 
-CKPatcherRange* ck_patcher_range_from_ptr(const char* name, void* ptr, vaddr size);
+CKPatcherRange* ck_patcher_range_from_ptr(const char* name, uint8_t* ptr, vaddr size);
 
 /// Precondition: `insn` must be masked.
-void* ck_patcher_find_next_insn(void* buffer, uint32_t num, uint32_t insn, uint32_t mask, uint32_t skip);
+uint8_t* ck_patcher_find_next_insn(uint8_t* buffer, uint32_t num, uint32_t insn, uint32_t mask, uint32_t skip);
 /// See `ck_patcher_find_next_insn`.
-void* ck_patcher_find_prev_insn(void* buffer, uint32_t num, uint32_t insn, uint32_t mask, uint32_t skip);
+uint8_t* ck_patcher_find_prev_insn(uint8_t* buffer, uint32_t num, uint32_t insn, uint32_t mask, uint32_t skip);
 
 /// Callback function prototype. `ctx` may be null.
 typedef bool (*CKPatcherCallback)(void* ctx, uint8_t* buffer);
