@@ -27,7 +27,7 @@ bool qemu_in_vcpu_thread(void);
 void qemu_init_cpu_loop(void);
 void resume_all_vcpus(void);
 void pause_all_vcpus(void);
-void cpu_stop_current(void);
+void qemu_cpu_stop_self(void);
 
 /* Unblock cpu */
 void qemu_cpu_kick_self(void);

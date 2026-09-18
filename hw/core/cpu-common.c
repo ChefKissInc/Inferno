@@ -61,6 +61,10 @@ CPUState* cpu_create(const char* typename)
 
 void cpu_reset_interrupt(CPUState* cpu, int mask) { qatomic_and(&cpu->interrupt_request, ~mask); }
 
+/*
+ * Ask @cpu to leave guest execution and return to its outer loop. Safe to
+ * call from any thread; exit_request is read without the BQL.
+ */
 void cpu_exit(CPUState* cpu)
 {
     /* Ensure cpu_exec will see the reason why the exit request was set.  */

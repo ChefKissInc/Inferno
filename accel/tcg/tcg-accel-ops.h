@@ -1,7 +1,7 @@
 /*
  * QEMU TCG vCPU common functionality
  *
- * Functionality common to all TCG vcpu variants: mttcg, rr and icount.
+ * Functionality common to all TCG vcpu variants: mttcg and rr.
  *
  * Copyright 2020 SUSE LLC
  *

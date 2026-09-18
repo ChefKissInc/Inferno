@@ -328,7 +328,8 @@ void qemu_init_cpu_loop(void)
 
 void run_on_cpu(CPUState* cpu, run_on_cpu_func func, run_on_cpu_data data) { do_run_on_cpu(cpu, func, data, &bql); }
 
-static void qemu_cpu_stop(CPUState* cpu, bool exit)
+/* Acknowledge a stop request made by another thread via cpu_pause(). */
+static void qemu_cpu_ack_stop_request(CPUState* cpu, bool exit)
 {
     assert(qemu_cpu_is_self(cpu));
     cpu->stop    = false;
@@ -340,7 +341,7 @@ static void qemu_cpu_stop(CPUState* cpu, bool exit)
 void qemu_process_cpu_events_common(CPUState* cpu)
 {
     qatomic_set_mb(&cpu->thread_kicked, false);
-    if (cpu->stop) { qemu_cpu_stop(cpu, false); }
+    if (cpu->stop) { qemu_cpu_ack_stop_request(cpu, false); }
     process_queued_cpu_work(cpu);
 }
 
@@ -374,6 +375,7 @@ void qemu_cpu_kick(CPUState* cpu)
     }
 }
 
+/* Kick the vCPU running in this thread out of guest execution. */
 void qemu_cpu_kick_self(void)
 {
     assert(current_cpu);
@@ -441,7 +443,7 @@ void cpu_thread_signal_destroyed(CPUState* cpu)
 
 void cpu_pause(CPUState* cpu)
 {
-    if (qemu_cpu_is_self(cpu)) { qemu_cpu_stop(cpu, true); }
+    if (qemu_cpu_is_self(cpu)) { qemu_cpu_ack_stop_request(cpu, true); }
     else {
         cpu->stop = true;
         cpu_exit(cpu);
@@ -539,7 +541,8 @@ void qemu_init_vcpu(CPUState* cpu)
     while (!cpu->created) { qemu_cond_wait(&qemu_cpu_cond, &bql); }
 }
 
-void cpu_stop_current(void)
+/* Ask the vCPU running in this thread to stop at its next opportunity. */
+void qemu_cpu_stop_self(void)
 {
     if (current_cpu) {
         current_cpu->stop = true;
@@ -556,7 +559,7 @@ int vm_stop(RunState state)
          * FIXME: should not return to device code in case
          * vm_stop() has been requested.
          */
-        cpu_stop_current();
+        qemu_cpu_stop_self();
         return 0;
     }
 

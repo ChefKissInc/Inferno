@@ -543,7 +543,7 @@ void qemu_system_reset_request(ShutdownCause reason)
     else {
         reset_requested = reason;
     }
-    cpu_stop_current();
+    qemu_cpu_stop_self();
     qemu_notify_event();
 }
 
@@ -559,7 +559,7 @@ void qemu_system_suspend_request(void)
 {
     if (runstate_check(RUN_STATE_SUSPENDED)) { return; }
     suspend_requested = 1;
-    cpu_stop_current();
+    qemu_cpu_stop_self();
     qemu_notify_event();
 }
 

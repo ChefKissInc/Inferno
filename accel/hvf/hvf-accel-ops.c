@@ -175,6 +175,7 @@ static void* hvf_cpu_thread_fn(void* arg)
     cpu_thread_signal_created(cpu);
     qemu_guest_random_seed_thread_part2(cpu->random_seed);
 
+    /* Outer vCPU loop: handles CPU events, runs under the BQL. */
     do {
         qemu_process_cpu_events(cpu);
         if (cpu_can_run(cpu)) {
