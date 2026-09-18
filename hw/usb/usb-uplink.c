@@ -65,11 +65,11 @@ int32_t usb_uplink_status_to_errno(int32_t status)
 {
     switch (status) {
         case USB_RET_SUCCESS: return 0;
-        case USB_RET_NODEV  : return ENODEV;
-        case USB_RET_NAK    : return EAGAIN;
-        case USB_RET_STALL  : return EPIPE;
-        case USB_RET_BABBLE : return EOVERFLOW;
-        default             : return EIO;
+        case USB_RET_NODEV  : return -ENODEV;
+        case USB_RET_NAK    : return -EAGAIN;
+        case USB_RET_STALL  : return -EPIPE;
+        case USB_RET_BABBLE : return -EOVERFLOW;
+        default             : return -EIO;
     }
 }
 
