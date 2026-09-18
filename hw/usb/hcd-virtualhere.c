@@ -20,8 +20,7 @@
 #include "qemu/osdep.h"
 #include "hw/qdev-properties.h"
 #include "hw/usb.h"
-#include "hcd-virtualhere.h"
-#include "io/channel-util.h"
+#include "hw/usb/hcd-virtualhere.h"
 #include "io/channel.h"
 #include "io/net-listener.h"
 #include "qapi/error.h"
@@ -33,7 +32,6 @@
 #include "qemu/module.h"
 #include "qemu/sockets.h"
 #include "qom/object.h"
-#include "system/iothread.h"
 #include "system/system.h"
 #include "qemu/uuid.h"
 
@@ -405,8 +403,7 @@ static void vh_conn_abort_packets(USBVirtualHereConn* conn)
     USBVirtualHerePacket *pkt, *next;
 
     /* Cancel everything first: answering one packet can free another's entry. */
-    QLIST_FOREACH_SAFE(pkt, &conn->packets, link, next)
-    {
+    QLIST_FOREACH_SAFE (pkt, &conn->packets, link, next) {
         if (!usb_packet_is_inflight(&pkt->base.p)) { continue; }
 
         usb_cancel_packet(&pkt->base.p);
@@ -610,15 +607,14 @@ static void vh_notify_device_removed(USBVirtualHereConn* conn)
     VHRemovalNotice*            notice = g_new0(VHRemovalNotice, 1);
 
     notice->conn = conn;
-    notice->msg  = desc != NULL ? vh_build_short_info(s, conn, desc, VIRTUALHERE_SERVER_DEVICE_ID)
-                                : vh_msg_new(sizeof(VHDeviceInfo), VIRTUALHERE_MSG_DEVICE_INFO);
+    notice->msg  = desc != NULL ? vh_build_short_info(s, conn, desc, VIRTUALHERE_SERVER_DEVICE_ID) :
+                                  vh_msg_new(sizeof(VHDeviceInfo), VIRTUALHERE_MSG_DEVICE_INFO);
 
     notice->msg->device_id = cpu_to_le16(VIRTUALHERE_SERVER_DEVICE_ID);
     notice->msg->state     = VIRTUALHERE_DEVICE_STATE_GONE;
 
-    VIRTUALHERE_DPRINTF("%s: sending gone for %04x:%04x (%s record)\n", __func__,
-                        le16_to_cpu(notice->msg->vendor_id), le16_to_cpu(notice->msg->product_id),
-                        desc != NULL ? "full" : "bare");
+    VIRTUALHERE_DPRINTF("%s: sending gone for %04x:%04x (%s record)\n", __func__, le16_to_cpu(notice->msg->vendor_id),
+                        le16_to_cpu(notice->msg->product_id), desc != NULL ? "full" : "bare");
 
     conn->refcount++;
     qemu_coroutine_enter(qemu_coroutine_create(vh_notify_device_removed_co, notice));
@@ -728,9 +724,9 @@ static bool coroutine_fn vh_conn_handshake(USBVirtualHereConn* conn, QIOChannel*
 static void coroutine_fn vh_conn_dispatch(USBVirtualHereConn* conn, const uint8_t* msg, uint32_t len)
 {
     switch (msg[0]) {
-        case VIRTUALHERE_MSG_READY      : vh_conn_announce_device(conn); break;
-        case VIRTUALHERE_MSG_HEARTBEAT  : vh_conn_send_msg(conn, VIRTUALHERE_MSG_HEARTBEAT_ACK, msg, NULL, 0); break;
-        case VIRTUALHERE_MSG_TIME_PONG  : break;
+        case VIRTUALHERE_MSG_READY    : vh_conn_announce_device(conn); break;
+        case VIRTUALHERE_MSG_HEARTBEAT: vh_conn_send_msg(conn, VIRTUALHERE_MSG_HEARTBEAT_ACK, msg, NULL, 0); break;
+        case VIRTUALHERE_MSG_TIME_PONG: break;
         case VIRTUALHERE_MSG_USE_DEVICE:
             /* Retries arrive while the first claim is still waiting on descriptors. */
             VIRTUALHERE_DPRINTF("%s: use-device (in-use=%d pending=%d) -> %s\n", __func__, conn->using_device,

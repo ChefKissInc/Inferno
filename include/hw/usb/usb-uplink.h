@@ -23,7 +23,6 @@
 #include "hw/usb.h"
 #include "qapi/qapi-types-usb.h"
 #include "qemu/coroutine.h"
-#include "qemu/lockable.h"
 
 /* Offsets within the standard descriptors */
 #define USB_DEV_DESC_SIZE         0x12

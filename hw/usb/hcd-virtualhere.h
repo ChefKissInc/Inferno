@@ -2,11 +2,8 @@
 
 #include "qemu/osdep.h"
 #include "hw/sysbus.h"
-#include "hw/usb.h"
 #include "io/channel.h"
 #include "io/net-listener.h"
-#include "qemu/coroutine.h"
-#include "qemu/lockable.h"
 #include "qom/object.h"
 #include "hw/usb/usb-uplink.h"
 
@@ -23,12 +20,12 @@ typedef struct USBVirtualHerePacket
     USBUplinkPacket     base;
     USBVirtualHereConn* conn;
     QLIST_ENTRY(USBVirtualHerePacket) link;
-    int32_t             out_status;
-    uint8_t             hdr[VIRTUALHERE_HDR_LEN];
-    uint8_t             setup[VIRTUALHERE_SETUP_LEN];
-    uint8_t             ep_addr;
-    uint32_t            xfer_len;
-    void*               buffer;
+    int32_t  out_status;
+    uint8_t  hdr[VIRTUALHERE_HDR_LEN];
+    uint8_t  setup[VIRTUALHERE_SETUP_LEN];
+    uint8_t  ep_addr;
+    uint32_t xfer_len;
+    void*    buffer;
 } USBVirtualHerePacket;
 
 struct USBVirtualHereConn
@@ -42,8 +39,8 @@ struct USBVirtualHereConn
     bool                 using_device;
     bool                 use_pending;
     QLIST_HEAD(, USBVirtualHerePacket) packets;
-    char                 client_name[64];
-    char                 client_host[64];
+    char client_name[64];
+    char client_host[64];
 };
 
 struct USBVirtualHereState
