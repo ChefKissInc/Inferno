@@ -469,6 +469,8 @@ static void apple_spi_realize(DeviceState* dev, struct Error** errp)
         memory_region_init_io(&spi->iomem, OBJECT(dev), &apple_spi_reg_ops, spi, name, APPLE_SPI_MMIO_SIZE);
     }
 
+    memory_region_enable_lockless_io(&spi->iomem);
+
     sio = APPLE_SIO(object_property_get_link(OBJECT(dev), "sio", NULL));
 
     if (sio == NULL) {
@@ -522,8 +524,6 @@ static void apple_spi_init(Object* obj)
     fifo32_create(&spi->rx_fifo, REG_FIFO_DEPTH);
 
     qemu_mutex_init(&spi->lock);
-
-    memory_region_enable_lockless_io(&spi->iomem);
 }
 
 static void apple_spi_class_init(ObjectClass* klass, const void* data)
