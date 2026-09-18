@@ -57,6 +57,8 @@ struct USBVirtualHereState
 
     Notifier exit_notifier;
 
+    QEMUTimer* unplug_timer;
+
     USBVirtualHereConn* active_conn;
 
     char*   server_name;

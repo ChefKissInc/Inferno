@@ -588,6 +588,18 @@ static void coroutine_fn vh_notify_device_removed_co(void* opaque)
     vh_conn_unref(conn);
 }
 
+/* Attach runs before the core finishes wiring the device, so announce off a BH. */
+static void coroutine_fn vh_announce_attach_co(void* opaque)
+{
+    USBVirtualHereConn* conn = opaque;
+
+    if (!conn->closed) { vh_conn_announce_device(conn); }
+    vh_conn_unref(conn);
+}
+
+static void vh_announce_attach_bh(void* opaque)
+{ qemu_coroutine_enter(qemu_coroutine_create(vh_announce_attach_co, opaque)); }
+
 #define VIRTUALHERE_USE_DEVICE_WAIT_NS (10ULL * 1000 * 1000 * 1000)
 #define VIRTUALHERE_USE_DEVICE_POLL_NS (50 * 1000 * 1000)
 
@@ -804,6 +816,25 @@ static void virtualhere_accept(QIONetListener* listener, QIOChannelSocket* cioc,
     qemu_coroutine_enter(co);
 }
 
+/*
+ * A dwc3 run/stop toggle detaches and re-attaches the same device, so a device
+ * that comes straight back has re-enumerated rather than been unplugged.
+ */
+#define VIRTUALHERE_UNPLUG_SETTLE_MS 1000
+
+static void vh_unplug_timeout(void* opaque)
+{
+    USBVirtualHereState* s    = opaque;
+    USBVirtualHereConn*  conn = s->active_conn;
+
+    if (conn != NULL && !conn->closed) {
+        conn->using_device = false;
+        vh_conn_spawn(conn, vh_notify_device_removed_co);
+    }
+
+    usb_uplink_invalidate(&s->usb);
+}
+
 static void usb_virtualhere_attach(USBPort* port)
 {
     USBVirtualHereState* s = port->opaque;
@@ -813,8 +844,13 @@ static void usb_virtualhere_attach(USBPort* port)
 
     if (port->dev == NULL || !port->dev->attached) { return; }
 
-    /* The heartbeat re-announces, so a re-attach needs nothing more than this. */
+    timer_del(s->unplug_timer);
     usb_uplink_invalidate(&s->usb);
+
+    if (s->active_conn != NULL && !s->active_conn->closed) {
+        s->active_conn->refcount++;
+        aio_bh_schedule_oneshot(qemu_get_aio_context(), vh_announce_attach_bh, s->active_conn);
+    }
 }
 
 static void usb_virtualhere_detach(USBPort* port)
@@ -827,12 +863,13 @@ static void usb_virtualhere_detach(USBPort* port)
 
     if (conn != NULL && !conn->closed) { vh_conn_abort_packets(conn); }
 
-    usb_uplink_invalidate(&s->usb);
-
-    if (usb_uplink_active_except(&s->usb, port) == NULL && conn != NULL && !conn->closed) {
-        conn->using_device = false;
-        vh_conn_spawn(conn, vh_notify_device_removed_co);
+    if (usb_uplink_active_except(&s->usb, port) != NULL) {
+        usb_uplink_invalidate(&s->usb);
+        return;
     }
+
+    /* The descriptors are kept until it settles, so a real unplug can name it. */
+    timer_mod(s->unplug_timer, qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + VIRTUALHERE_UNPLUG_SETTLE_MS);
 }
 
 static USBBusOps  usb_virtualhere_bus_ops  = {};
@@ -883,6 +920,7 @@ static void usb_virtualhere_realize(DeviceState* dev, Error** errp)
     vh_init_server_guid(s);
 
     usb_uplink_init(&s->usb, dev, &usb_virtualhere_bus_ops, &usb_virtualhere_port_ops, s);
+    s->unplug_timer = timer_new_ms(QEMU_CLOCK_REALTIME, vh_unplug_timeout, s);
 
     if (!virtualhere_listen(s, errp)) { return; }
 
@@ -892,6 +930,11 @@ static void usb_virtualhere_realize(DeviceState* dev, Error** errp)
 
 static void usb_virtualhere_teardown(USBVirtualHereState* s)
 {
+    if (s->unplug_timer != NULL) {
+        timer_free(s->unplug_timer);
+        s->unplug_timer = NULL;
+    }
+
     if (s->active_conn != NULL) { vh_conn_close(s->active_conn); }
 
     mdns_service_unregister(s->mdns);
