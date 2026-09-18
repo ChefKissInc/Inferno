@@ -653,6 +653,14 @@ static IOMMUTLBEntry apple_dart_mapper_translate(IOMMUMemoryRegion* mr, hwaddr a
 
     sid = apple_dart_sid_remap(mapper, sid);
 
+    if (sid >= DART_MAX_STREAMS) {
+        apple_dart_mapper_set_error(
+            mapper, addr,
+            REG_FIELD_DP32(REG_FIELD_DP32(0, DART_ERROR_STATUS, FLAG, 1), DART_ERROR_STATUS, TTBR_INVLD, 1),
+            iommu->sid);
+        goto end;
+    }
+
     sid_config = qatomic_read(&mapper->regs.sid_config[sid]);
 
     // Disabled translation means bypass, not error (?)
