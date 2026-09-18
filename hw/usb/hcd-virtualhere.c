@@ -658,9 +658,13 @@ static void coroutine_fn vh_heartbeat_co(void* opaque)
     USBVirtualHereConn* conn  = opaque;
     uint32_t            stamp = cpu_to_le32(qemu_clock_get_ms(QEMU_CLOCK_REALTIME) / 1000);
 
-    if (!vh_conn_send_msg(conn, VIRTUALHERE_MSG_TIME_PING, NULL, &stamp, sizeof(stamp))) { return; }
+    if (vh_conn_send_msg(conn, VIRTUALHERE_MSG_TIME_PING, NULL, &stamp, sizeof(stamp))
+        && (!conn->using_device || usb_uplink_descriptors(&conn->s->usb) != NULL))
+    {
+        vh_conn_announce_device(conn);
+    }
 
-    if (!conn->using_device || usb_uplink_descriptors(&conn->s->usb) != NULL) { vh_conn_announce_device(conn); }
+    vh_conn_unref(conn);
 }
 
 static void vh_heartbeat_cb(void* opaque)
@@ -669,10 +673,10 @@ static void vh_heartbeat_cb(void* opaque)
 
     if (conn->closed) { return; }
 
-    Coroutine* co = qemu_coroutine_create(vh_heartbeat_co, conn);
-    qemu_coroutine_enter(co);
-
+    /* Re-arm first: the beat itself can fail the socket and free this timer. */
     timer_mod(conn->heartbeat_timer, qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + VIRTUALHERE_HEARTBEAT_PERIOD_MS);
+
+    vh_conn_spawn(conn, vh_heartbeat_co);
 }
 
 static void vh_copy_field(char* dst, size_t dst_size, const uint8_t* msg, uint32_t len, uint32_t off)
