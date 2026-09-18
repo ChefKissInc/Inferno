@@ -5,9 +5,6 @@
 config LINUX
     bool
 
-config LIBCBOR
-    bool
-
 config GNUTLS
     bool
 

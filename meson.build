@@ -1344,12 +1344,6 @@ if not get_option('coreaudio').auto() or (host_os == 'darwin' and have_system)
                          required: get_option('coreaudio'))
 endif
 
-libcbor = not_found
-if not get_option('libcbor').auto() or have_system
-  libcbor = dependency('libcbor', version: '>=0.7.0',
-                       required: get_option('libcbor'))
-endif
-
 gnutls = not_found
 if get_option('gnutls').enabled() or (get_option('gnutls').auto() and have_system)
   gnutls = dependency('gnutls', version: '>=3.5.18',
@@ -2397,7 +2391,6 @@ config_target_mak = {}
 config_base_arch_mak = {}
 
 host_kconfig = \
-  (libcbor.found() ? ['CONFIG_LIBCBOR=y'] : []) + \
   (gnutls.found() ? ['CONFIG_GNUTLS=y'] : []) + \
   (x11.found() ? ['CONFIG_X11=y'] : []) + \
   (host_os == 'linux' ? ['CONFIG_LINUX=y'] : [])
@@ -3489,7 +3482,6 @@ summary_info += {'bzip2 support':     libbzip2}
 summary_info += {'zstd support':      zstd}
 summary_info += {'libpmem support':   libpmem}
 summary_info += {'libdaxctl support': libdaxctl}
-summary_info += {'libcbor support':   libcbor}
 summary_info += {'libudev':           libudev}
 # Dummy dependency, keep .found()
 summary_info += {'FUSE lseek':        fuse_lseek.found()}
