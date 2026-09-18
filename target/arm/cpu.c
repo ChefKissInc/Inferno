@@ -126,7 +126,7 @@ static bool arm_cpu_has_work(CPUState* cs)
 {
     ARMCPU* cpu = container_of(cs, ARMCPU, parent_obj);
 
-    return (cpu->power_state != PSCI_OFF)
+    return (cpu->power_state != ARM_POWER_OFF)
            && cpu_test_interrupt(cs, CPU_INTERRUPT_FIQ | CPU_INTERRUPT_HARD | CPU_INTERRUPT_NMI | CPU_INTERRUPT_VINMI
                                          | CPU_INTERRUPT_VFNMI | CPU_INTERRUPT_VFIQ | CPU_INTERRUPT_VIRQ
                                          | CPU_INTERRUPT_VSERR | CPU_INTERRUPT_EXITTB);
@@ -231,7 +231,7 @@ static void arm_cpu_reset_hold(Object* obj, ResetType type)
     env->vfp.xregs[ARM_VFP_MVFR1] = cpu->isar.mvfr1;
     env->vfp.xregs[ARM_VFP_MVFR2] = cpu->isar.mvfr2;
 
-    cpu->power_state = cs->start_powered_off ? PSCI_OFF : PSCI_ON;
+    cpu->power_state = cs->start_powered_off ? ARM_POWER_OFF : ARM_POWER_ON;
 
     if (arm_feature(env, ARM_FEATURE_IWMMXT)) { env->iwmmxt.cregs[ARM_IWMMXT_wCID] = 0x69051000 | 'Q'; }
 

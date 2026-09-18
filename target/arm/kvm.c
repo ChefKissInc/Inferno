@@ -799,8 +799,8 @@ void kvm_arm_reset_vcpu(ARMCPU* cpu)
 static int kvm_arm_sync_mpstate_to_kvm(ARMCPU* cpu)
 {
     if (cap_has_mp_state) {
-        struct kvm_mp_state mp_state = {.mp_state = (cpu->power_state == PSCI_OFF) ? KVM_MP_STATE_STOPPED :
-                                                                                     KVM_MP_STATE_RUNNABLE};
+        struct kvm_mp_state mp_state = {.mp_state = (cpu->power_state == ARM_POWER_OFF) ? KVM_MP_STATE_STOPPED :
+                                                                                          KVM_MP_STATE_RUNNABLE};
         return kvm_vcpu_ioctl(CPU(cpu), KVM_SET_MP_STATE, &mp_state);
     }
     return 0;
@@ -815,7 +815,7 @@ static int kvm_arm_sync_mpstate_to_qemu(ARMCPU* cpu)
         struct kvm_mp_state mp_state;
         int                 ret = kvm_vcpu_ioctl(CPU(cpu), KVM_GET_MP_STATE, &mp_state);
         if (ret) { return ret; }
-        cpu->power_state = (mp_state.mp_state == KVM_MP_STATE_STOPPED) ? PSCI_OFF : PSCI_ON;
+        cpu->power_state = (mp_state.mp_state == KVM_MP_STATE_STOPPED) ? ARM_POWER_OFF : ARM_POWER_ON;
     }
     return 0;
 }

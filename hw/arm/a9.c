@@ -47,7 +47,7 @@
 
 bool apple_a9_cpu_is_asleep(AppleA9* acpu) { return CPU(acpu)->halted; }
 
-bool apple_a9_cpu_is_off(AppleA9* acpu) { return acpu->parent_obj.power_state == PSCI_OFF; }
+bool apple_a9_cpu_is_off(AppleA9* acpu) { return acpu->parent_obj.power_state == ARM_POWER_OFF; }
 
 void apple_a9_cpu_set_on(AppleA9* acpu)
 {

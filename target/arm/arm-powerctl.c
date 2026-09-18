@@ -84,7 +84,7 @@ static void arm_set_cpu_on_async_work(CPUState* target_cpu_state, run_on_cpu_dat
 
     /* Finally set the power status */
     assert(bql_locked());
-    target_cpu->power_state = PSCI_ON;
+    target_cpu->power_state = ARM_POWER_ON;
     cpu_synchronize_post_reset(target_cpu_state);
 }
 
@@ -118,7 +118,7 @@ int arm_set_cpu_on(uint64_t cpuid, uint64_t entry, uint64_t context_id, uint32_t
     }
 
     target_cpu = container_of(target_cpu_state, ARMCPU, parent_obj);
-    if (target_cpu->power_state == PSCI_ON) {
+    if (target_cpu->power_state == ARM_POWER_ON) {
         qemu_log_mask(LOG_GUEST_ERROR, "[ARM]%s: CPU %" PRId64 " is already on\n", __func__, cpuid);
         return QEMU_ARM_POWERCTL_ALREADY_ON;
     }
@@ -153,7 +153,7 @@ int arm_set_cpu_on(uint64_t cpuid, uint64_t entry, uint64_t context_id, uint32_t
      * fail (see 6.6 Implementation CPU_ON/CPU_OFF races in the PSCI
      * spec)
      */
-    if (target_cpu->power_state == PSCI_ON_PENDING) {
+    if (target_cpu->power_state == ARM_POWER_ON_PENDING) {
         qemu_log_mask(LOG_GUEST_ERROR, "[ARM]%s: CPU %" PRId64 " is already powering on\n", __func__, cpuid);
         return QEMU_ARM_POWERCTL_ON_PENDING;
     }
@@ -184,7 +184,7 @@ static void arm_set_cpu_on_and_reset_async_work(CPUState* target_cpu_state, run_
 
     /* Finally set the power status */
     assert(bql_locked());
-    target_cpu->power_state = PSCI_ON;
+    target_cpu->power_state = ARM_POWER_ON;
     cpu_synchronize_post_reset(target_cpu_state);
 }
 
@@ -203,7 +203,7 @@ int arm_set_cpu_on_and_reset(uint64_t cpuid)
     }
 
     target_cpu = container_of(target_cpu_state, ARMCPU, parent_obj);
-    if (target_cpu->power_state == PSCI_ON) {
+    if (target_cpu->power_state == ARM_POWER_ON) {
         qemu_log_mask(LOG_GUEST_ERROR, "[ARM]%s: CPU %" PRId64 " is already on\n", __func__, cpuid);
         return QEMU_ARM_POWERCTL_ALREADY_ON;
     }
@@ -214,7 +214,7 @@ int arm_set_cpu_on_and_reset(uint64_t cpuid)
      * fail (see 6.6 Implementation CPU_ON/CPU_OFF races in the PSCI
      * spec)
      */
-    if (target_cpu->power_state == PSCI_ON_PENDING) {
+    if (target_cpu->power_state == ARM_POWER_ON_PENDING) {
         qemu_log_mask(LOG_GUEST_ERROR, "[ARM]%s: CPU %" PRId64 " is already powering on\n", __func__, cpuid);
         return QEMU_ARM_POWERCTL_ON_PENDING;
     }
@@ -234,7 +234,7 @@ static void arm_set_cpu_off_async_work(CPUState* target_cpu_state, run_on_cpu_da
     /* Runs on the target cpu, which is about to stop executing for good. */
     arm_tlbi_batch_drain(&target_cpu->env);
 
-    target_cpu->power_state           = PSCI_OFF;
+    target_cpu->power_state           = ARM_POWER_OFF;
     target_cpu_state->halted          = 1;
     target_cpu_state->exception_index = EXCP_HLT;
 }
@@ -252,7 +252,7 @@ int arm_set_cpu_off(uint64_t cpuid)
     target_cpu_state = arm_get_cpu_by_id(cpuid);
     if (!target_cpu_state) { return QEMU_ARM_POWERCTL_INVALID_PARAM; }
     target_cpu = container_of(target_cpu_state, ARMCPU, parent_obj);
-    if (target_cpu->power_state == PSCI_OFF) {
+    if (target_cpu->power_state == ARM_POWER_OFF) {
         qemu_log_mask(LOG_GUEST_ERROR, "[ARM]%s: CPU %" PRId64 " is already off\n", __func__, cpuid);
         return QEMU_ARM_POWERCTL_IS_OFF;
     }
@@ -284,7 +284,7 @@ int arm_reset_cpu(uint64_t cpuid)
     if (!target_cpu_state) { return QEMU_ARM_POWERCTL_INVALID_PARAM; }
     target_cpu = container_of(target_cpu_state, ARMCPU, parent_obj);
 
-    if (target_cpu->power_state == PSCI_OFF) {
+    if (target_cpu->power_state == ARM_POWER_OFF) {
         qemu_log_mask(LOG_GUEST_ERROR, "[ARM]%s: CPU %" PRId64 " is off\n", __func__, cpuid);
         return QEMU_ARM_POWERCTL_IS_OFF;
     }

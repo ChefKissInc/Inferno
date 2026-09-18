@@ -834,14 +834,12 @@ struct ARMELChangeHook
     QLIST_ENTRY(ARMELChangeHook) node;
 };
 
-/* These values map onto the return values for
- * QEMU_PSCI_0_2_FN_AFFINITY_INFO */
-typedef enum ARMPSCIState
+typedef enum ARMPowerState
 {
-    PSCI_ON         = 0,
-    PSCI_OFF        = 1,
-    PSCI_ON_PENDING = 2
-} ARMPSCIState;
+    ARM_POWER_ON         = 0,
+    ARM_POWER_OFF        = 1,
+    ARM_POWER_ON_PENDING = 2
+} ARMPowerState;
 
 typedef struct ARMISARegisters ARMISARegisters;
 
@@ -970,7 +968,7 @@ struct ArchCPU
     MemoryRegion* secure_tag_memory;
 
     /* Current power state, access guarded by BQL */
-    ARMPSCIState power_state;
+    ARMPowerState power_state;
 
     /* CPU has virtualization extension */
     bool has_el2;

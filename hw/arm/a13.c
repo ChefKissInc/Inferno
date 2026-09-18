@@ -108,7 +108,7 @@ static QEMUTimer* ipicr_timer = NULL;
 
 bool apple_a13_is_asleep(const AppleA13State* acpu) { return CPU(acpu)->halted; }
 
-bool apple_a13_is_off(const AppleA13State* acpu) { return acpu->parent_obj.power_state == PSCI_OFF; }
+bool apple_a13_is_off(const AppleA13State* acpu) { return acpu->parent_obj.power_state == ARM_POWER_OFF; }
 
 void apple_a13_set_on(AppleA13State* acpu)
 {
@@ -134,7 +134,7 @@ void apple_a13_set_off(AppleA13State* acpu)
 {
     int ret = QEMU_ARM_POWERCTL_RET_SUCCESS;
 
-    if (acpu->parent_obj.power_state != PSCI_OFF) { ret = arm_set_cpu_off(acpu->parent_obj.mp_affinity); }
+    if (acpu->parent_obj.power_state != ARM_POWER_OFF) { ret = arm_set_cpu_off(acpu->parent_obj.mp_affinity); }
 
     if (ret != QEMU_ARM_POWERCTL_RET_SUCCESS) {
         error_report("%s: failed to turn off CPU %d: err %d", __func__, acpu->cpu_id, ret);
