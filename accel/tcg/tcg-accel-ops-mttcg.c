@@ -58,6 +58,16 @@ static void mttcg_force_rcu(Notifier* notify, void* data)
  * current CPUState for a given thread.
  */
 
+/* Whether anything the outer loop handles under the BQL is pending. */
+static bool mttcg_exit_needs_bql(CPUState* cpu, int r)
+{
+    if (r == EXCP_DEBUG || r == EXCP_ATOMIC) { return true; }
+    if (qatomic_read(&cpu->stop) || qatomic_read(&cpu->unplug)) { return true; }
+    if (!cpu_work_list_empty(cpu)) { return true; }
+
+    return cpu_thread_is_idle(cpu);
+}
+
 static void* mttcg_cpu_thread_fn(void* arg)
 {
     MttcgForceRcuNotifier force_rcu;
@@ -85,7 +95,13 @@ static void* mttcg_cpu_thread_fn(void* arg)
         if (cpu_can_run(cpu)) {
             int r;
             bql_unlock();
-            r = tcg_cpu_exec(cpu);
+
+            do {
+                r = tcg_cpu_exec(cpu);
+                qatomic_set(&cpu->exit_request, false);
+            }
+            while (!mttcg_exit_needs_bql(cpu, r));
+
             bql_lock();
             switch (r) {
                 case EXCP_DEBUG: cpu_handle_guest_debug(cpu); break;
