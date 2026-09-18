@@ -169,9 +169,13 @@ REG32(CONTROL_FRAME_SIZE, 0x4603C)
 #define GP_BLOCK_BASE (0x50000)
 #define GP_BLOCK_SIZE (0x8000)
 REG32(GP_CONFIG_CONTROL, 0x4)
-    REG_FIELD(GP_CONFIG_CONTROL, RUN, 0, 1)
-    REG_FIELD(GP_CONFIG_CONTROL, USE_DMA, 18, 1)
+    REG_FIELD(GP_CONFIG_CONTROL, NO_SCALE, 0, 1)
+    REG_FIELD(GP_CONFIG_CONTROL, SCALE_CROPPED, 4, 1)
+    REG_FIELD(GP_CONFIG_CONTROL, TWO_PLANE, 8, 1)
+    REG_FIELD(GP_CONFIG_CONTROL, MULTI_PLANE, 12, 1)
+    REG_FIELD(GP_CONFIG_CONTROL, GAMMA_SPACE, 16, 2)
     REG_FIELD(GP_CONFIG_CONTROL, HDR, 24, 1)
+    REG_FIELD(GP_CONFIG_CONTROL, WIDE_GAMUT, 30, 1)
     REG_FIELD(GP_CONFIG_CONTROL, ENABLED, 31, 1)
 REG32(GP_PIXEL_FORMAT, 0x1C)
 #define GP_PIXEL_FORMAT_BGRA ((BIT32(4) << 22) | BIT32(24) | (3 << 13))
@@ -791,11 +795,7 @@ static void adp_v4_gp_draw(ADPV4GenPipe* genpipe, AddressSpace* dma_as, pixman_i
     pixman_format_code_t fmt;
     pixman_image_t*      image;
 
-    if (REG_FIELD_EX32(genpipe->state.config_control, GP_CONFIG_CONTROL, RUN) == 0
-        || REG_FIELD_EX32(genpipe->state.config_control, GP_CONFIG_CONTROL, ENABLED) == 0)
-    {
-        return;
-    }
+    if (REG_FIELD_EX32(genpipe->state.config_control, GP_CONFIG_CONTROL, ENABLED) == 0) { return; }
 
     qemu_mutex_lock(&genpipe->lock);
     adp_v4_gp_read(genpipe, dma_as);
