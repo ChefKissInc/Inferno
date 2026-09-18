@@ -576,16 +576,37 @@ static bool coroutine_fn vh_handle_bulk_submit(USBVirtualHereConn* conn, const u
     return true;
 }
 
+typedef struct VHRemovalNotice
+{
+    USBVirtualHereConn* conn;
+    VHDeviceInfo*       msg;
+} VHRemovalNotice;
+
 static void coroutine_fn vh_notify_device_removed_co(void* opaque)
 {
-    USBVirtualHereConn*      conn = opaque;
-    g_autofree VHDeviceInfo* gone = vh_msg_new(sizeof(*gone), VIRTUALHERE_MSG_DEVICE_INFO);
+    g_autofree VHRemovalNotice* notice = opaque;
+    g_autofree VHDeviceInfo*    gone   = notice->msg;
 
-    gone->device_id = cpu_to_le16(VIRTUALHERE_SERVER_DEVICE_ID);
-    gone->state     = VIRTUALHERE_DEVICE_STATE_GONE;
+    vh_conn_send_lz4(notice->conn, (const uint8_t*)gone, sizeof(*gone));
+    vh_conn_unref(notice->conn);
+}
 
-    vh_conn_send_lz4(conn, (const uint8_t*)gone, sizeof(*gone));
-    vh_conn_unref(conn);
+/* The reference server removes a device by re-sending its announce with state 0. */
+static void vh_notify_device_removed(USBVirtualHereConn* conn)
+{
+    USBVirtualHereState*        s      = conn->s;
+    const USBUplinkDescriptors* desc   = usb_uplink_descriptors_cached(&s->usb);
+    VHRemovalNotice*            notice = g_new0(VHRemovalNotice, 1);
+
+    notice->conn = conn;
+    notice->msg  = desc != NULL ? vh_build_short_info(s, conn, desc, VIRTUALHERE_SERVER_DEVICE_ID)
+                                : vh_msg_new(sizeof(VHDeviceInfo), VIRTUALHERE_MSG_DEVICE_INFO);
+
+    notice->msg->device_id = cpu_to_le16(VIRTUALHERE_SERVER_DEVICE_ID);
+    notice->msg->state     = VIRTUALHERE_DEVICE_STATE_GONE;
+
+    conn->refcount++;
+    qemu_coroutine_enter(qemu_coroutine_create(vh_notify_device_removed_co, notice));
 }
 
 /* Attach runs before the core finishes wiring the device, so announce off a BH. */
@@ -829,7 +850,7 @@ static void vh_unplug_timeout(void* opaque)
 
     if (conn != NULL && !conn->closed) {
         conn->using_device = false;
-        vh_conn_spawn(conn, vh_notify_device_removed_co);
+        vh_notify_device_removed(conn);
     }
 
     usb_uplink_invalidate(&s->usb);
