@@ -508,9 +508,7 @@ static inline bool cpu_handle_exception(CPUState* cpu, int* ret)
 
     const TCGCPUOps* tcg_ops = cpu->cc->tcg_ops;
 
-    bql_lock();
     tcg_ops->do_interrupt(cpu);
-    bql_unlock();
     cpu->exception_index = -1;
 
     if (unlikely(cpu->singlestep_enabled)) {

@@ -98,9 +98,19 @@ struct TCGCPUOps
     /** @mmu_index: Callback for choosing softmmu mmu index */
     int (*mmu_index)(CPUState* cpu, bool ifetch);
 
-    /** @do_interrupt: Callback for interrupt handling.  */
+    /**
+     * @do_interrupt: Callback for interrupt handling.
+     *
+     * Called without the BQL held; the target takes it for the paths that
+     * need it.
+     */
     void (*do_interrupt)(CPUState* cpu);
-    /** @cpu_exec_interrupt: Callback for processing interrupts in cpu_exec */
+    /**
+     * @cpu_exec_interrupt: Callback for processing interrupts in cpu_exec
+     *
+     * Receives a bitmask of the pending interrupts, and is called WITH the
+     * BQL held.
+     */
     bool (*cpu_exec_interrupt)(CPUState* cpu, int interrupt_request);
     /** @cpu_exec_reset: Callback for reset in cpu_exec.  */
     void (*cpu_exec_reset)(CPUState* cpu);

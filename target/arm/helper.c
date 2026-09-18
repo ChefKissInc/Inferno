@@ -9952,17 +9952,11 @@ void arm_cpu_do_interrupt(CPUState* cs)
     }
 
     if (tcg_enabled() && arm_is_psci_call(cpu, cs->exception_index)) {
+        BQL_LOCK_GUARD();
         arm_handle_psci_call(cpu);
         qemu_log_mask(CPU_LOG_INT, "...handled as PSCI call\n");
         return;
     }
-
-    /*
-     * Hooks may change global state so BQL should be held, also the
-     * BQL needs to be held for any modification of
-     * cs->interrupt_request.
-     */
-    assert(bql_locked());
 
     arm_call_pre_el_change_hook(cpu);
 
