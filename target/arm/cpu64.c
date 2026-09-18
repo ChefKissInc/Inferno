@@ -492,7 +492,7 @@ void arm_cpu_pauth_finalize(ARMCPU* cpu, Error** errp)
                 isar1 = REG_FIELD_DP64(isar1, ID_AA64ISAR1, APA, 0);
                 isar1 = REG_FIELD_DP64(isar1, ID_AA64ISAR1, GPA, 0);
                 isar1 = REG_FIELD_DP64(isar1, ID_AA64ISAR1, API, PauthFeat_NOOP);
-                isar1 = REG_FIELD_DP64(isar1, ID_AA64ISAR1, GPI, 1);
+                isar1 = REG_FIELD_DP64(isar1, ID_AA64ISAR1, GPI, 0);
             }
             else if (cpu->prop_pauth_qarma5) {
                 isar2 = REG_FIELD_DP64(isar2, ID_AA64ISAR2, APA3, 0);

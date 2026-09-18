@@ -7107,11 +7107,19 @@ static bool trans_GMI(DisasContext* s, arg_rrr* a)
 
 static bool trans_PACGA(DisasContext* s, arg_rrr* a)
 {
-    if (dc_isar_feature(aa64_pauth, s)) {
-        gen_helper_pacga(cpu_reg(s, a->rd), tcg_env, cpu_reg(s, a->rn), cpu_reg_sp(s, a->rm));
+    if (!dc_isar_feature(aa64_pauth, s)) { return false; }
+
+    /* PAUTH_ACTIVE does not cover generic authentication. */
+    if (dc_isar_feature(aa64_pauth_noop, s)) {
+        TCGv_i64 pac = tcg_temp_new_i64();
+
+        tcg_gen_xor_i64(pac, cpu_reg(s, a->rn), cpu_reg_sp(s, a->rm));
+        tcg_gen_andi_i64(cpu_reg(s, a->rd), pac, 0xffffffff00000000ull);
         return true;
     }
-    return false;
+
+    gen_helper_pacga(cpu_reg(s, a->rd), tcg_env, cpu_reg(s, a->rn), cpu_reg_sp(s, a->rm));
+    return true;
 }
 
 typedef void ArithOneOp(TCGv_i64, TCGv_i64);
@@ -8844,9 +8852,8 @@ static bool do_wkdm(DisasContext* s, arg_rr* a, bool decompress)
     if (s->current_el == 0) { return false; }
 
     tcg_rd = cpu_reg_sp(s, a->rd);
-    if (decompress) {
-        gen_helper_wkdmd(tcg_rd, tcg_env, tcg_rd, cpu_reg_sp(s, a->rn));
-    } else {
+    if (decompress) { gen_helper_wkdmd(tcg_rd, tcg_env, tcg_rd, cpu_reg_sp(s, a->rn)); }
+    else {
         gen_helper_wkdmc(tcg_rd, tcg_env, tcg_rd, cpu_reg_sp(s, a->rn));
     }
     return true;
