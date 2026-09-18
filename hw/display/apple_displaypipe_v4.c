@@ -136,6 +136,7 @@ struct AppleDisplayPipeV4State
     qemu_irq            irqs[9];
     uint32_t            int_status;
     uint32_t            int_enable;
+    uint32_t            commit_pending;
     QEMUTimer*          vsync_timer;
     uint64_t            next_vsync_ns;
     ADPV4GenPipe        genpipe[ADP_V4_GP_COUNT];
@@ -147,6 +148,9 @@ struct AppleDisplayPipeV4State
 
 // clang-format off
 // pipe control
+REG32(CONTROL_SHADOW_FIFO_STATUS, 0x45004)
+    REG_FIELD(CONTROL_SHADOW_FIFO_STATUS, EMPTY, 0, 1)
+    REG_FIELD(CONTROL_SHADOW_FIFO_STATUS, PENDING, 4, 3)
 REG32(CONTROL_INT_STATUS, 0x45818)
     REG_FIELD(CONTROL_INT, MODE_CHANGED, 1, 1)
     REG_FIELD(CONTROL_INT, UNDERRUN, 3, 1)
@@ -164,6 +168,9 @@ REG32(CONTROL_INT_ENABLE, 0x4581C)
 REG32(CONTROL_VERSION, 0x46020)
 #define CONTROL_VERSION_A0 (0x70044)
 #define CONTROL_VERSION_A1 (0x70045)
+REG32(CONTROL_UPDATE, 0x4602C)
+    REG_FIELD(CONTROL_UPDATE, TAG, 8, 4)
+    REG_FIELD(CONTROL_UPDATE, COMMIT, 12, 1)
 REG32(CONTROL_FRAME_SIZE, 0x4603C)
 
 #define GP_BLOCK_BASE (0x50000)
@@ -449,6 +456,13 @@ static void adp_v4_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigned 
         addr -= 0x200000;
     }
 
+    if (addr >= GP_BLOCK_BASE_FOR(0) && addr < (BLEND_BLOCK_BASE + BLEND_BLOCK_SIZE)
+        && qatomic_read(&adp->commit_pending))
+    {
+        qemu_log_mask(LOG_GUEST_ERROR, "disp: write @ 0x" HWADDR_FMT_plx " while a commit is pending.\n", addr);
+        return;
+    }
+
     if (addr >= GP_BLOCK_BASE_FOR(0) && addr < GP_BLOCK_END_FOR(0)) {
         return adp_v4_gp_reg_write(&adp->genpipe[0], addr - GP_BLOCK_BASE_FOR(0), data);
     }
@@ -474,9 +488,14 @@ static void adp_v4_reg_write(void* opaque, hwaddr addr, uint64_t data, unsigned 
             adp_v4_update_irqs(adp);
             break;
         }
-        case (0x4602C >> 2): {
-            ADP_INFO("disp: REG_0x4602C <- 0x%X", (uint32_t)data);
-            if (data & BIT32(12)) { qemu_bh_schedule(adp->update_disp_image_bh); }
+        case R_CONTROL_UPDATE: {
+            ADP_INFO("disp: update <- 0x%X", (uint32_t)data);
+            if (REG_FIELD_EX32((uint32_t)data, CONTROL_UPDATE, COMMIT)) {
+                if (qatomic_xchg(&adp->commit_pending, 1) != 0) {
+                    qemu_log_mask(LOG_GUEST_ERROR, "disp: commit while one is still pending.\n");
+                }
+                qemu_bh_schedule(adp->update_disp_image_bh);
+            }
             break;
         }
         default: {
@@ -514,6 +533,12 @@ static uint64_t adp_v4_reg_read(void* const opaque, hwaddr addr, unsigned size)
         case R_CONTROL_FRAME_SIZE: {
             ADP_INFO("disp: frame size -> 0x%X", (adp->width << 16) | adp->height);
             return (adp->width << 16) | adp->height;
+        }
+        case R_CONTROL_SHADOW_FIFO_STATUS: {
+            if (qatomic_read(&adp->commit_pending)) {
+                return REG_FIELD_DP32(0, CONTROL_SHADOW_FIFO_STATUS, PENDING, 1);
+            }
+            return REG_FIELD_DP32(0, CONTROL_SHADOW_FIFO_STATUS, EMPTY, 1);
         }
         case R_CONTROL_INT_STATUS: {
             ADP_INFO("disp: int status -> 0x%X", qatomic_read(&adp->int_status));
@@ -737,6 +762,7 @@ static void adp_v4_reset_hold(Object* obj, ResetType type)
 
     qatomic_set(&adp->int_status, 0);
     qatomic_set(&adp->int_enable, 0);
+    qatomic_set(&adp->commit_pending, 0);
 
     adp_v4_update_irqs(adp);
 
@@ -794,6 +820,7 @@ static void adp_v4_gp_draw(ADPV4GenPipe* genpipe, AddressSpace* dma_as, pixman_i
 {
     pixman_format_code_t fmt;
     pixman_image_t*      image;
+    pixman_transform_t   transform;
 
     if (REG_FIELD_EX32(genpipe->state.config_control, GP_CONFIG_CONTROL, ENABLED) == 0) { return; }
 
@@ -826,6 +853,8 @@ static void adp_v4_update_disp_bh(void* opaque)
     disp_image = qemu_console_surface(adp->console)->image;
 
     for (i = 0; i < ADP_V4_GP_COUNT; ++i) { adp_v4_gp_draw(&adp->genpipe[i], &adp->dma_as, disp_image, adp->console); }
+
+    qatomic_set(&adp->commit_pending, 0);
 
     qatomic_or(&adp->int_status, R_CONTROL_INT_FRAME_PROCESSED_MASK);
     adp_v4_update_irqs(adp);
