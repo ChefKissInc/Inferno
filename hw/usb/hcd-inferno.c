@@ -35,10 +35,10 @@
 // #define DEBUG_HCD_INFERNO
 
 #ifdef DEBUG_HCD_INFERNO
-    #define DPRINTF(fmt, ...)                                \
-        do {                                                 \
+    #define DPRINTF(fmt, ...)                                    \
+        do {                                                     \
             fprintf(stderr, "hcd-inferno: " fmt, ##__VA_ARGS__); \
-        }                                                    \
+        }                                                        \
         while (0)
 #else
     #define DPRINTF(fmt, ...) \
@@ -118,7 +118,8 @@ static USBDevice* usb_inferno_host_find_device(USBInfernoHostState* s, uint8_t a
     return NULL;
 }
 
-static void coroutine_fn usb_inferno_host_respond_error(USBInfernoHostState* s, inferno_request_header* req, uint32_t status)
+static void coroutine_fn usb_inferno_host_respond_error(USBInfernoHostState* s, inferno_request_header* req,
+                                                        uint32_t status)
 {
     inferno_header_t        hdr  = {0};
     inferno_response_header resp = {0};
@@ -148,8 +149,8 @@ static void coroutine_fn usb_inferno_host_respond_error(USBInfernoHostState* s, 
 
 static void coroutine_fn usb_inferno_host_respond_packet_co(void* opaque)
 {
-    USBInfernoPacket*           pkt    = opaque;
-    USBInfernoHostState*        s      = pkt->s;
+    USBInfernoPacket*       pkt    = opaque;
+    USBInfernoHostState*    s      = pkt->s;
     USBPacket*              p      = &pkt->p;
     inferno_header_t        hdr    = {0};
     inferno_response_header resp   = {0};
@@ -229,11 +230,11 @@ static void coroutine_fn usb_inferno_host_msg_loop_co(void* opaque)
 
         switch (hdr.type) {
             case INFERNO_REQUEST: {
-                inferno_request_header   pkt_hdr;
-                g_autofree void*         buffer = NULL;
+                inferno_request_header       pkt_hdr;
+                g_autofree void*             buffer = NULL;
                 g_autofree USBInfernoPacket* pkt    = g_new0(USBInfernoPacket, 1);
-                USBEndpoint*             ep     = NULL;
-                USBDevice*               dev    = NULL;
+                USBEndpoint*                 ep     = NULL;
+                USBDevice*                   dev    = NULL;
 
                 if (unlikely(inferno_read(ioc, &pkt_hdr, sizeof(pkt_hdr)) != sizeof(pkt_hdr))) {
                     usb_inferno_host_closed(s);
@@ -294,7 +295,7 @@ static void coroutine_fn usb_inferno_host_msg_loop_co(void* opaque)
                 return;
             case INFERNO_CANCEL: {
                 inferno_cancel_header pkt_hdr = {0};
-                USBInfernoPacket*         pkt     = NULL;
+                USBInfernoPacket*     pkt     = NULL;
                 USBPacket*            p       = NULL;
 
                 if (unlikely(inferno_read(ioc, &pkt_hdr, sizeof(pkt_hdr)) != sizeof(pkt_hdr))) {
@@ -471,7 +472,7 @@ static USBPortOps usb_inferno_host_port_ops = {
 static void usb_inferno_host_realize(DeviceState* dev, Error** errp)
 {
     USBInfernoHostState* s;
-    int              i;
+    int                  i;
 
     s = USB_INFERNO_HOST(dev);
 
@@ -520,7 +521,7 @@ static void usb_inferno_host_unrealize(DeviceState* dev)
 static void usb_inferno_host_init(Object* obj)
 {
     USBInfernoHostState* s = USB_INFERNO_HOST(obj);
-    s->closed          = true;
+    s->closed              = true;
 }
 
 static const Property usb_inferno_host_props[] = {

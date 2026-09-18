@@ -36,10 +36,10 @@
 #include "trace.h"
 
 #if 0
-    #define DPRINTF(fmt, ...)                                       \
-        do {                                                        \
+    #define DPRINTF(fmt, ...)                                           \
+        do {                                                            \
             fprintf(stderr, "dev-inferno-remote: " fmt, ##__VA_ARGS__); \
-        }                                                           \
+        }                                                               \
         while (0)
 #else
     #define DPRINTF(fmt, ...) \
@@ -47,7 +47,8 @@
         while (0)
 #endif
 
-static USBInfernoInflightPacket* usb_inferno_remote_take_inflight_packet(USBInfernoRemoteState* s, int pid, uint8_t ep, uint64_t id)
+static USBInfernoInflightPacket* usb_inferno_remote_take_inflight_packet(USBInfernoRemoteState* s, int pid, uint8_t ep,
+                                                                         uint64_t id)
 {
     USBInfernoInflightPacket* p;
 
@@ -81,7 +82,7 @@ static void usb_inferno_remote_drop_inflight_packet(USBInfernoRemoteState* s, US
 static void usb_inferno_remote_clean_inflight_queue(USBInfernoRemoteState* s)
 {
     USBInfernoInflightPacket* p;
-    USBDevice*            dev = USB_DEVICE(s);
+    USBDevice*                dev = USB_DEVICE(s);
 
     QEMU_LOCK_GUARD(&s->queue_mutex);
 
@@ -111,7 +112,7 @@ static void usb_inferno_remote_clean_send_queue(USBInfernoRemoteState* s)
 static void usb_inferno_remote_clean_completed_queue(USBInfernoRemoteState* s)
 {
     USBInfernoCompletedPacket* p;
-    USBDevice*             dev = USB_DEVICE(s);
+    USBDevice*                 dev = USB_DEVICE(s);
 
     QEMU_LOCK_GUARD(&s->completed_queue_mutex);
 
@@ -129,7 +130,7 @@ static void usb_inferno_remote_clean_completed_queue(USBInfernoRemoteState* s)
 static void usb_inferno_remote_cleanup(void* opaque)
 {
     USBInfernoRemoteState* s   = opaque;
-    QIOChannel*        ioc = s->ioc;
+    QIOChannel*            ioc = s->ioc;
 
     if (ioc == NULL) { return; }
 
@@ -148,15 +149,15 @@ static void usb_inferno_remote_cleanup(void* opaque)
 static void usb_inferno_remote_update_addr_bh(void* opaque)
 {
     USBInfernoRemoteState* s   = opaque;
-    USBDevice*         dev = USB_DEVICE(s);
-    dev->addr              = s->addr;
+    USBDevice*             dev = USB_DEVICE(s);
+    dev->addr                  = s->addr;
     trace_usb_set_addr(dev->addr);
 }
 
 static void usb_inferno_remote_completed_bh(void* opaque)
 {
     USBInfernoRemoteState* s   = opaque;
-    USBDevice*         dev = USB_DEVICE(s);
+    USBDevice*             dev = USB_DEVICE(s);
 
     USBInfernoCompletedPacket* p;
 
@@ -201,7 +202,7 @@ static void usb_inferno_remote_closed(USBInfernoRemoteState* s)
 }
 
 static ssize_t coroutine_fn usb_inferno_remote_read(USBInfernoRemoteState* s, QIOChannel* ioc, void* buffer,
-                                                unsigned int length)
+                                                    unsigned int length)
 {
     struct iovec iov = {.iov_base = buffer, .iov_len = length};
     Error*       err = NULL;
@@ -221,7 +222,7 @@ static ssize_t coroutine_fn usb_inferno_remote_read(USBInfernoRemoteState* s, QI
 
 static void coroutine_fn usb_inferno_remote_send_co(void* opaque)
 {
-    USBInfernoRemoteState* s      = opaque;
+    USBInfernoRemoteState* s  = opaque;
     g_autoptr(QIOChannel) ioc = NULL;
 
     if (s->ioc == NULL) { return; }
@@ -231,8 +232,8 @@ static void coroutine_fn usb_inferno_remote_send_co(void* opaque)
 
     for (;;) {
         USBInfernoRemoteMsg* m = NULL;
-        struct iovec     iov;
-        Error*           err = NULL;
+        struct iovec         iov;
+        Error*               err = NULL;
 
         WITH_QEMU_LOCK_GUARD(&s->send_mutex)
         {
@@ -269,7 +270,7 @@ static void usb_inferno_remote_send_bh(void* opaque)
 
 static void usb_inferno_remote_send(USBInfernoRemoteState* s, const struct iovec* iov, int niov)
 {
-    size_t           len = iov_size(iov, niov);
+    size_t               len = iov_size(iov, niov);
     USBInfernoRemoteMsg* m   = g_malloc(sizeof(USBInfernoRemoteMsg) + len);
 
     m->len = len;
@@ -288,10 +289,10 @@ static bool coroutine_fn usb_inferno_remote_read_one(USBInfernoRemoteState* s, Q
 
     switch (hdr.type) {
         case INFERNO_RESPONSE: {
-            inferno_response_header rhdr      = {0};
-            USBPacket*              p         = NULL;
-            USBInfernoInflightPacket*   pkt       = NULL;
-            bool                    cancelled = false;
+            inferno_response_header   rhdr      = {0};
+            USBPacket*                p         = NULL;
+            USBInfernoInflightPacket* pkt       = NULL;
+            bool                      cancelled = false;
 
             if (usb_inferno_remote_read(s, ioc, &rhdr, sizeof(rhdr)) != sizeof(rhdr)) { return false; }
 
@@ -354,8 +355,8 @@ static bool coroutine_fn usb_inferno_remote_read_one(USBInfernoRemoteState* s, Q
 
             if (p->status != USB_RET_ASYNC && !cancelled) {
                 USBInfernoCompletedPacket* c = g_malloc0(sizeof(USBInfernoCompletedPacket));
-                c->p                     = p;
-                c->addr                  = rhdr.addr;
+                c->p                         = p;
+                c->addr                      = rhdr.addr;
 
                 WITH_QEMU_LOCK_GUARD(&s->completed_queue_mutex) { QTAILQ_INSERT_TAIL(&s->completed_queue, c, queue); }
 
@@ -376,7 +377,7 @@ static bool coroutine_fn usb_inferno_remote_read_one(USBInfernoRemoteState* s, Q
 
 static void coroutine_fn usb_inferno_remote_msg_loop_co(void* opaque)
 {
-    USBInfernoRemoteState* s      = opaque;
+    USBInfernoRemoteState* s  = opaque;
     g_autoptr(QIOChannel) ioc = NULL;
 
     if (s->ioc == NULL) { return; }
@@ -389,9 +390,9 @@ static void coroutine_fn usb_inferno_remote_msg_loop_co(void* opaque)
 static void usb_inferno_remote_accept(void* opaque)
 {
     USBInfernoRemoteState* s   = opaque;
-    Error*             err = NULL;
-    QIOChannel*        ioc;
-    int                fd;
+    Error*                 err = NULL;
+    QIOChannel*            ioc;
+    int                    fd;
 
     fd = qemu_accept(s->socket, NULL, NULL);
     if (fd < 0) { return; }
@@ -423,7 +424,7 @@ static void usb_inferno_remote_accept(void* opaque)
 
 static void usb_inferno_remote_realize(USBDevice* dev, Error** errp)
 {
-    USBInfernoRemoteState* s          = USB_INFERNO_REMOTE(dev);
+    USBInfernoRemoteState* s      = USB_INFERNO_REMOTE(dev);
     g_autoptr(SocketAddress) addr = NULL;
 
     dev->speed        = USB_SPEED_HIGH;
@@ -495,9 +496,9 @@ static void usb_inferno_remote_unrealize(USBDevice* dev)
 
 static void usb_inferno_remote_handle_reset(USBDevice* dev)
 {
-    inferno_header_t   hdr = {0};
+    inferno_header_t       hdr = {0};
     USBInfernoRemoteState* s   = USB_INFERNO_REMOTE(dev);
-    struct iovec       iov;
+    struct iovec           iov;
 
     if (s->closed) { return; }
 
@@ -514,10 +515,10 @@ static void usb_inferno_remote_handle_reset(USBDevice* dev)
 
 static void usb_inferno_remote_cancel_packet(USBDevice* dev, USBPacket* p)
 {
-    USBInfernoRemoteState*    s   = USB_INFERNO_REMOTE(dev);
-    inferno_header_t      hdr = {0};
-    inferno_cancel_header pkt = {0};
-    struct iovec          iov[2];
+    USBInfernoRemoteState* s   = USB_INFERNO_REMOTE(dev);
+    inferno_header_t       hdr = {0};
+    inferno_cancel_header  pkt = {0};
+    struct iovec           iov[2];
 
     if (p->combined) {
         usb_combined_packet_cancel(dev, p);
@@ -545,13 +546,13 @@ static void usb_inferno_remote_cancel_packet(USBDevice* dev, USBPacket* p)
 
 static void usb_inferno_remote_handle_packet(USBDevice* dev, USBPacket* p)
 {
-    USBInfernoRemoteState*     s              = USB_INFERNO_REMOTE(dev);
-    inferno_header_t       hdr            = {0};
-    inferno_request_header pkt            = {0};
-    USBInfernoInflightPacket*  inflightPacket = NULL;
-    g_autofree void*       buffer         = NULL;
-    struct iovec           iov[3];
-    int                    niov = 2;
+    USBInfernoRemoteState*    s              = USB_INFERNO_REMOTE(dev);
+    inferno_header_t          hdr            = {0};
+    inferno_request_header    pkt            = {0};
+    USBInfernoInflightPacket* inflightPacket = NULL;
+    g_autofree void*          buffer         = NULL;
+    struct iovec              iov[3];
+    int                       niov = 2;
 
     if (s->closed) {
         p->status = USB_RET_STALL;

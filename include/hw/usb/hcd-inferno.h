@@ -34,11 +34,11 @@ OBJECT_DECLARE_SIMPLE_TYPE(USBInfernoHostState, USB_INFERNO_HOST)
 
 typedef struct USBInfernoPacket
 {
-    USBPacket        p;
-    void*            buffer;
-    USBDevice*       dev;
+    USBPacket            p;
+    void*                buffer;
+    USBDevice*           dev;
     USBInfernoHostState* s;
-    uint8_t          addr;
+    uint8_t              addr;
 } USBInfernoPacket;
 
 struct USBInfernoHostState
