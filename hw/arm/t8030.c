@@ -523,6 +523,13 @@ static void t8030_memory_setup(AppleT8030MachineState* t8030)
     else {
         cmdline = g_strconcat("-restore rd=md0 nand-enable-reformat=1 ", machine->kernel_cmdline, NULL);
     }
+
+    if (hwaccel_enabled() && !apple_boot_contains_boot_arg(cmdline, "aprr_jit=", true)) {
+        char* old_cmdline = cmdline;
+        cmdline           = g_strconcat(old_cmdline, " aprr_jit=0", NULL);
+        g_free(old_cmdline);
+    }
+
     info_report("Boot Args: [%s]", cmdline);
 
     AppleDTNode* chosen = apple_dt_get_node(t8030->device_tree, "chosen");
