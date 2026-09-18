@@ -197,8 +197,7 @@ bool cpu_restore_state(CPUState* cpu, uintptr_t host_pc);
  * call can be used to check if it makes sense to return to the main loop
  * or to continue executing the interruptible instruction.
  */
-static inline bool cpu_loop_exit_requested(CPUState* cpu)
-{ return (int32_t)qatomic_read(&cpu->neg.icount_decr.u32) < 0; }
+static inline bool cpu_loop_exit_requested(CPUState* cpu) { return qatomic_read(&cpu->neg.tb_exit_request); }
 
 G_NORETURN void cpu_loop_exit_noexc(CPUState* cpu);
 G_NORETURN void cpu_loop_exit_atomic(CPUState* cpu, uintptr_t pc);

@@ -568,7 +568,7 @@ void tcg_kick_vcpu_thread(CPUState* cpu)
     qatomic_store_release(&cpu->exit_request, true);
 
     /* Ensure cpu_exec will see the exit request after TCG has exited.  */
-    qatomic_store_release(&cpu->neg.icount_decr.u16.high, -1);
+    qatomic_store_release(&cpu->neg.tb_exit_request, true);
 }
 
 static inline bool cpu_handle_interrupt(CPUState* cpu, TranslationBlock** last_tb)
@@ -586,7 +586,7 @@ static inline bool cpu_handle_interrupt(CPUState* cpu, TranslationBlock** last_t
      * cpu->interrupt_request (see also store-release in
      * tcg_kick_vcpu_thread())
      */
-    qatomic_set_mb(&cpu->neg.icount_decr.u16.high, 0);
+    qatomic_set_mb(&cpu->neg.tb_exit_request, false);
 
     if (unlikely(cpu_test_interrupt(cpu, ~0))) {
         bql_lock();
@@ -681,7 +681,7 @@ static inline void cpu_loop_exec_tb(CPUState* cpu, TranslationBlock* tb, vaddr p
          * will also have set something else (eg exit_request or
          * interrupt_request) which will be handled by
          * cpu_handle_interrupt.  cpu_handle_interrupt will also
-         * clear cpu->icount_decr.u16.high.
+         * clear cpu->neg.tb_exit_request.
          */
         return;
     }

@@ -37,24 +37,22 @@ bool translator_io_start(DisasContextBase* db)
 
 static void gen_tb_start(DisasContextBase* db, uint32_t cflags)
 {
-    TCGv_i32 count = NULL;
+    TCGv_i32 req = NULL;
 
     if (!(cflags & CF_NOIRQ)) {
-        count = tcg_temp_new_i32();
-        tcg_gen_ld_i32(count, tcg_env, offsetof(CPUState, neg.icount_decr.u32) - sizeof(CPUState));
+        QEMU_BUILD_BUG_ON(sizeof_field(CPUState, neg.tb_exit_request) != 1);
+        req = tcg_temp_new_i32();
+        tcg_gen_ld8u_i32(req, tcg_env, offsetof(CPUState, neg.tb_exit_request) - sizeof(CPUState));
     }
 
     /*
-     * Emit the check against icount_decr.u32 to see if we should exit
-     * unless we suppress the check with CF_NOIRQ. If we are using
-     * icount and have suppressed interruption the higher level code
-     * should have ensured we don't run more instructions than the
-     * budget.
+     * Emit the check against tb_exit_request to see if we should exit,
+     * unless we suppress the check with CF_NOIRQ.
      */
     if (cflags & CF_NOIRQ) { tcg_ctx->exitreq_label = NULL; }
     else {
         tcg_ctx->exitreq_label = gen_new_label();
-        tcg_gen_brcondi_i32(TCG_COND_LT, count, 0, tcg_ctx->exitreq_label);
+        tcg_gen_brcondi_i32(TCG_COND_NE, req, 0, tcg_ctx->exitreq_label);
     }
 }
 

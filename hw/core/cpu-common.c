@@ -94,7 +94,7 @@ static void cpu_common_reset_hold(Object* obj, ResetType type)
     cpu->interrupt_request = 0;
     cpu->halted            = cpu->start_powered_off;
     cpu->mem_io_pc         = 0;
-    qatomic_set(&cpu->neg.icount_decr.u32, 0);
+    qatomic_set(&cpu->neg.tb_exit_request, false);
     cpu->neg.can_do_io   = true;
     cpu->exception_index = -1;
     cpu->crash_occurred  = false;

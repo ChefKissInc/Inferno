@@ -340,37 +340,18 @@ typedef struct CPUTLB
 #endif
 } CPUTLB;
 
-/*
- * High 16 bits: Set to -1 to force TCG to stop executing linked TBs
- * for this CPU and return to its top level loop (even in non-icount mode).
- * This allows a single read-compare-cbranch-write sequence to test
- * for both decrementer underflow and exceptions.
- */
-typedef union IcountDecr
-{
-    uint32_t u32;
-    struct
-    {
-#if HOST_BIG_ENDIAN
-        uint16_t high;
-        uint16_t low;
-#else
-        uint16_t low;
-        uint16_t high;
-#endif
-    } u16;
-} IcountDecr;
-
 /**
  * CPUNegativeOffsetState: Elements of CPUState most efficiently accessed
  *                         from CPUArchState, via small negative offsets.
+ * @tb_exit_request: Set to force TCG to stop executing linked TBs for this
+ *                   CPU and return to its top level loop.
  * @can_do_io: True if memory-mapped IO is allowed.
  */
 typedef struct CPUNegativeOffsetState
 {
-    CPUTLB     tlb;
-    IcountDecr icount_decr;
-    bool       can_do_io;
+    CPUTLB tlb;
+    bool   tb_exit_request;
+    bool   can_do_io;
 } CPUNegativeOffsetState;
 
 struct KVMState;
