@@ -94,8 +94,6 @@ int arm_set_cpu_on(uint64_t cpuid, uint64_t entry, uint64_t context_id, uint32_t
     ARMCPU*           target_cpu;
     struct CpuOnInfo* info;
 
-    assert(bql_locked());
-
     DPRINTF("cpu %" PRId64 " (EL %d, %s) @ 0x%" PRIx64 " with R0 = 0x%" PRIx64 "\n", cpuid, target_el,
             target_aa64 ? "aarch64" : "aarch32", entry, context_id);
 
@@ -193,8 +191,6 @@ int arm_set_cpu_on_and_reset(uint64_t cpuid)
     CPUState* target_cpu_state;
     ARMCPU*   target_cpu;
 
-    assert(bql_locked());
-
     /* Retrieve the cpu we are powering up */
     target_cpu_state = arm_get_cpu_by_id(cpuid);
     if (!target_cpu_state) {
@@ -244,8 +240,6 @@ int arm_set_cpu_off(uint64_t cpuid)
     CPUState* target_cpu_state;
     ARMCPU*   target_cpu;
 
-    assert(bql_locked());
-
     DPRINTF("cpu %" PRId64 "\n", cpuid);
 
     /* change to the cpu we are powering up */
@@ -265,6 +259,8 @@ int arm_set_cpu_off(uint64_t cpuid)
 
 static void arm_reset_cpu_async_work(CPUState* target_cpu_state, run_on_cpu_data data)
 {
+    assert(bql_locked());
+
     /* Reset the cpu */
     cpu_reset(target_cpu_state);
     cpu_synchronize_post_reset(target_cpu_state);
@@ -274,8 +270,6 @@ int arm_reset_cpu(uint64_t cpuid)
 {
     CPUState* target_cpu_state;
     ARMCPU*   target_cpu;
-
-    assert(bql_locked());
 
     DPRINTF("cpu %" PRId64 "\n", cpuid);
 
