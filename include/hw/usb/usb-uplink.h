@@ -52,9 +52,9 @@ typedef struct USBUplinkDescriptors
     uint32_t configs_len;
     uint8_t  num_configs;
     uint8_t  speed; /* USB_SPEED_* */
-    char* manufacturer;
-    char* product;
-    char* serial;
+    char*    manufacturer;
+    char*    product;
+    char*    serial;
 } USBUplinkDescriptors;
 
 void usb_uplink_descriptors_free(USBUplinkDescriptors* desc);

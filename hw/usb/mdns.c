@@ -117,14 +117,14 @@ static void WINAPI mdns_registered(DWORD status, void* opaque, DNS_SERVICE_INSTA
 
 MDNSService* mdns_service_register(const char* name, const char* type, uint16_t port, const char* txt, Error** errp)
 {
-    g_autofree char*      instance_name = g_strdup_printf("%s.%s.local", name, type);
-    g_autofree char*      host_name     = g_strdup_printf("%s.local", g_get_host_name());
-    g_autofree gunichar2* winstance     = g_utf8_to_utf16(instance_name, -1, NULL, NULL, NULL);
-    g_autofree gunichar2* whost         = g_utf8_to_utf16(host_name, -1, NULL, NULL, NULL);
-    g_autofree gunichar2* wtxt          = txt != NULL ? g_utf8_to_utf16(txt, -1, NULL, NULL, NULL) : NULL;
-    PWSTR                 keys[1]       = {(PWSTR)wtxt};
-    PWSTR                        values[1] = {NULL};
-    DNS_SERVICE_REGISTER_REQUEST req       = {0};
+    g_autofree char*             instance_name = g_strdup_printf("%s.%s.local", name, type);
+    g_autofree char*             host_name     = g_strdup_printf("%s.local", g_get_host_name());
+    g_autofree gunichar2*        winstance     = g_utf8_to_utf16(instance_name, -1, NULL, NULL, NULL);
+    g_autofree gunichar2*        whost         = g_utf8_to_utf16(host_name, -1, NULL, NULL, NULL);
+    g_autofree gunichar2*        wtxt          = txt != NULL ? g_utf8_to_utf16(txt, -1, NULL, NULL, NULL) : NULL;
+    PWSTR                        keys[1]       = {(PWSTR)wtxt};
+    PWSTR                        values[1]     = {NULL};
+    DNS_SERVICE_REGISTER_REQUEST req           = {0};
     MDNSService*                 svc;
     DWORD                        status;
 
