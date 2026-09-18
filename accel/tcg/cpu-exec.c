@@ -42,26 +42,6 @@
 #include "tb-internal.h"
 #include "internal-common.h"
 
-/* -icount align implementation. */
-
-typedef struct SyncClocks
-{
-    int64_t diff_clk;
-    int64_t realtime_clock;
-} SyncClocks;
-
-/* Allow the guest to have a max 3ms advance.
- * The difference between the 2 clocks could therefore
- * oscillate around 0.
- */
-#define VM_CLOCK_ADVANCE     3000000
-#define THRESHOLD_REDUCE     1.5
-#define MAX_DELAY_PRINT_RATE 2000000000LL
-#define MAX_NB_PRINTS        100
-
-int64_t max_delay;
-int64_t max_advance;
-
 struct tb_desc
 {
     TCGTBCPUState  s;
@@ -691,7 +671,7 @@ static inline void cpu_loop_exec_tb(CPUState* cpu, TranslationBlock* tb, vaddr p
 
 /* main execution loop */
 
-static int __attribute__((noinline)) cpu_exec_loop(CPUState* cpu, SyncClocks* sc)
+static int __attribute__((noinline)) cpu_exec_loop(CPUState* cpu)
 {
     int ret;
 
@@ -707,8 +687,8 @@ static int __attribute__((noinline)) cpu_exec_loop(CPUState* cpu, SyncClocks* sc
 
             /*
              * When requested, use an exact setting for cflags for the next
-             * execution.  This is used for icount, precise smc, and stop-
-             * after-access watchpoints.  Since this request should never
+             * execution.  This is used for precise smc and stop-after-access
+             * watchpoints.  Since this request should never
              * have CF_INVALID set, -1 is a convenient invalid value that
              * does not require tcg headers for cpu_common_reset.
              */
@@ -753,20 +733,18 @@ static int __attribute__((noinline)) cpu_exec_loop(CPUState* cpu, SyncClocks* sc
     return ret;
 }
 
-static int cpu_exec_setjmp(CPUState* cpu, SyncClocks* sc)
+static int cpu_exec_setjmp(CPUState* cpu)
 {
     /* Prepare setjmp context for exception handling. */
     if (unlikely(sigsetjmp(cpu->jmp_env, 0) != 0)) { cpu_exec_longjmp_cleanup(cpu); }
 
-    return cpu_exec_loop(cpu, sc);
+    return cpu_exec_loop(cpu);
 }
 
 int cpu_exec(CPUState* cpu)
 {
-    int        ret;
-    SyncClocks sc = {0};
+    int ret;
 
-    /* replay_interrupt may need current_cpu */
     current_cpu = cpu;
 
     if (cpu_handle_halt(cpu)) { return EXCP_HALTED; }
@@ -774,7 +752,7 @@ int cpu_exec(CPUState* cpu)
     RCU_READ_LOCK_GUARD();
     cpu_exec_enter(cpu);
 
-    ret = cpu_exec_setjmp(cpu, &sc);
+    ret = cpu_exec_setjmp(cpu);
 
     cpu_exec_exit(cpu);
     return ret;

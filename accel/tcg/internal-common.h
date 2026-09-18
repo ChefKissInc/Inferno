@@ -12,9 +12,6 @@
 #include "exec/translation-block.h"
 #include "accel/tcg/tb-cpu-state.h"
 
-extern int64_t max_delay;
-extern int64_t max_advance;
-
 extern bool one_insn_per_tb;
 
 /*
