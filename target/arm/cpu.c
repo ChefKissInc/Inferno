@@ -671,13 +671,7 @@ static void arm_cpu_initfn(Object* obj)
 
     qdev_init_gpio_out_named(DEVICE(cpu), &cpu->pmu_interrupt, "pmu-interrupt", 1);
 
-    cpu->psci_version = QEMU_PSCI_VERSION_0_1; /* By default assume PSCI v0.1 */
-    cpu->kvm_target   = QEMU_KVM_ARM_TARGET_NONE;
-
-    if (tcg_enabled() || hvf_enabled()) {
-        /* TCG and HVF implement PSCI 1.1 */
-        cpu->psci_version = QEMU_PSCI_VERSION_1_1;
-    }
+    cpu->kvm_target = QEMU_KVM_ARM_TARGET_NONE;
 }
 
 /*
@@ -936,9 +930,6 @@ static void arm_cpu_post_init(Object* obj)
         if (tcg_enabled()) { qdev_property_add_static(DEVICE(obj), &arm_cpu_has_neon_property); }
     }
 
-    /* Not DEFINE_PROP_UINT32: we want this to be settable after realize */
-    object_property_add_uint32_ptr(obj, "psci-conduit", &cpu->psci_conduit, OBJ_PROP_FLAG_READWRITE);
-
     if (arm_feature(&cpu->env, ARM_FEATURE_GENERIC_TIMER)) {
         qdev_property_add_static(DEVICE(cpu), &arm_cpu_gt_cntfrq_property);
     }
@@ -1046,9 +1037,7 @@ static void arm_cpu_realizefn(DeviceState* dev, Error** errp)
      * this is the first point where we can report it.
      */
     if (cpu->host_cpu_probe_failed) {
-        if (!hwaccel_enabled()) {
-            error_setg(errp, "The 'host' CPU type can only be used with hwaccel");
-        }
+        if (!hwaccel_enabled()) { error_setg(errp, "The 'host' CPU type can only be used with hwaccel"); }
         else {
             error_setg(errp, "Failed to retrieve host CPU features");
         }

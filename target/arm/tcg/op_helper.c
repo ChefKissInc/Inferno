@@ -910,32 +910,14 @@ void HELPER(pre_smc)(CPUARMState* env, uint32_t syndrome)
 
     /*
      * SMC behaviour is summarized in the following table.
-     * This helper handles the "Trap to EL2" and "Undef insn" cases.
-     * The "Trap to EL3" and "PSCI call" cases are handled in the exception
-     * helper.
+     * This helper handles the "Trap to EL2" and "Undef insn" cases; the
+     * "Trap to EL3" case is handled in the exception helper.
      *
-     *  -> ARM_FEATURE_EL3 and !SMD
      *                           HCR_TSC && NS EL1   !HCR_TSC || !NS EL1
      *
-     *  Conduit SMC, valid call  Trap to EL2         PSCI Call
-     *  Conduit SMC, inval call  Trap to EL2         Trap to EL3
-     *  Conduit not SMC          Trap to EL2         Trap to EL3
-     *
-     *
-     *  -> ARM_FEATURE_EL3 and SMD
-     *                           HCR_TSC && NS EL1   !HCR_TSC || !NS EL1
-     *
-     *  Conduit SMC, valid call  Trap to EL2         PSCI Call
-     *  Conduit SMC, inval call  Trap to EL2         Undef insn
-     *  Conduit not SMC          Trap to EL2         Undef insn
-     *
-     *
-     *  -> !ARM_FEATURE_EL3
-     *                           HCR_TSC && NS EL1   !HCR_TSC || !NS EL1
-     *
-     *  Conduit SMC, valid call  Trap to EL2         PSCI Call
-     *  Conduit SMC, inval call  Trap to EL2         Undef insn
-     *  Conduit not SMC          Undef or trap[1]    Undef insn
+     *  ARM_FEATURE_EL3, !SMD    Trap to EL2         Trap to EL3
+     *  ARM_FEATURE_EL3, SMD     Trap to EL2         Undef insn
+     *  !ARM_FEATURE_EL3         Undef or trap[1]    Undef insn
      *
      * [1] In this case:
      *  - if HCR_EL2.NV == 1 we must trap to EL2
@@ -954,17 +936,10 @@ void HELPER(pre_smc)(CPUARMState* env, uint32_t syndrome)
      */
     bool smd = arm_feature(env, ARM_FEATURE_AARCH64) ? smd_flag : smd_flag && !secure;
 
-    if (!arm_feature(env, ARM_FEATURE_EL3) && !(arm_hcr_el2_eff(env) & HCR_NV)
-        && cpu->psci_conduit != QEMU_PSCI_CONDUIT_SMC)
-    {
+    if (!arm_feature(env, ARM_FEATURE_EL3) && !(arm_hcr_el2_eff(env) & HCR_NV)) {
         /*
-         * If we have no EL3 then traditionally SMC always UNDEFs and can't be
-         * trapped to EL2. For nested virtualization, SMC can be trapped to
-         * the outer hypervisor. PSCI-via-SMC is a sort of ersatz EL3
-         * firmware within QEMU, and we want an EL2 guest to be able
-         * to forbid its EL1 from making PSCI calls into QEMU's
-         * "firmware" via HCR.TSC, so for these purposes treat
-         * PSCI-via-SMC as implying an EL3.
+         * Without EL3, SMC always UNDEFs and cannot be trapped to EL2. For
+         * nested virtualization it can be trapped to the outer hypervisor.
          * This handles the very last line of the previous table.
          */
         raise_exception(env, EXCP_UDEF, syn_uncategorized(), exception_target_el(env));
@@ -972,8 +947,6 @@ void HELPER(pre_smc)(CPUARMState* env, uint32_t syndrome)
 
     if (cur_el == 1 && (arm_hcr_el2_eff(env) & HCR_TSC)) {
         /* In NS EL1, HCR controlled routing to EL2 has priority over SMD.
-         * We also want an EL2 guest to be able to forbid its EL1 from
-         * making PSCI calls into QEMU's "firmware" via HCR.TSC.
          * This handles all the "Trap to EL2" cases of the previous table.
          */
         raise_exception(env, EXCP_HYP_TRAP, syndrome, 2);

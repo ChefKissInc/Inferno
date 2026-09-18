@@ -969,12 +969,6 @@ struct ArchCPU
     MemoryRegion* tag_memory;
     MemoryRegion* secure_tag_memory;
 
-    /* PSCI version for this CPU
-     * Bits[31:16] = Major Version
-     * Bits[15:0] = Minor Version
-     */
-    uint32_t psci_version;
-
     /* Current power state, access guarded by BQL */
     ARMPSCIState power_state;
 
@@ -993,11 +987,6 @@ struct ArchCPU
 
     /* CPU has MTE enabled in KVM mode */
     bool kvm_mte;
-
-    /* PSCI conduit used to invoke PSCI methods
-     * 0 - disabled, 1 - smc, 2 - hvc
-     */
-    uint32_t psci_conduit;
 
     /* [QEMU_]KVM_ARM_TARGET_* constant for this CPU, or
      * QEMU_KVM_ARM_TARGET_NONE if the kernel doesn't support this CPU type.
@@ -1196,9 +1185,8 @@ int arm_cpu_gdb_write_register(CPUState* cpu, uint8_t* buf, int reg);
  * This includes that on reset we need to configure the parts of the
  * CPU corresponding to EL3 so that the real guest code can run at its
  * lower exception level. This function does that post-reset CPU setup,
- * for when we do direct boot of a guest kernel, and for when we
- * emulate PSCI and similar firmware interfaces starting a CPU at a
- * lower exception level.
+ * for when we do direct boot of a guest kernel, and for when firmware
+ * interfaces start a CPU at a lower exception level.
  *
  * @target_el must be an EL implemented by the CPU between 1 and 3.
  * We do not support dropping into a Secure EL other than 3.
@@ -2573,13 +2561,6 @@ static inline int sve_vq(CPUARMState* env) { return EX_TBFLAG_A64(env->hflags, V
  * Return the SVL cached within env->hflags, in units of quadwords.
  */
 static inline int sme_vq(CPUARMState* env) { return EX_TBFLAG_A64(env->hflags, SVL) + 1; }
-
-enum
-{
-    QEMU_PSCI_CONDUIT_DISABLED = 0,
-    QEMU_PSCI_CONDUIT_SMC      = 1,
-    QEMU_PSCI_CONDUIT_HVC      = 2,
-};
 
 /* Return the address space index to use for a memory access */
 static inline int arm_asidx_from_attrs(CPUState* cs, MemTxAttrs attrs)
