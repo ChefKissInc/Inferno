@@ -335,6 +335,7 @@ static USBVirtualHerePacket* vh_packet_new(USBVirtualHereConn* conn)
     conn->refcount++;
     pkt->conn = conn;
     usb_packet_init(&pkt->base.p);
+    QLIST_INSERT_HEAD(&conn->packets, pkt, link);
     return pkt;
 }
 
@@ -342,6 +343,7 @@ static void vh_packet_free(USBVirtualHerePacket* pkt)
 {
     USBVirtualHereConn* conn = pkt->conn;
 
+    QLIST_REMOVE(pkt, link);
     usb_packet_cleanup(&pkt->base.p);
     g_free(pkt->buffer);
     g_free(pkt);
@@ -394,6 +396,32 @@ static void virtualhere_port_complete(USBPort* port, USBPacket* p)
 
     Coroutine* co = qemu_coroutine_create(vh_send_bulk_ack_co, pkt);
     qemu_coroutine_enter(co);
+}
+
+/* The USB core orphans queued packets on detach; the client still wants an ack. */
+static void vh_conn_abort_packets(USBVirtualHereConn* conn)
+{
+    QLIST_HEAD(, USBVirtualHerePacket) aborted = QLIST_HEAD_INITIALIZER(aborted);
+    USBVirtualHerePacket *pkt, *next;
+
+    /* Cancel everything first: answering one packet can free another's entry. */
+    QLIST_FOREACH_SAFE(pkt, &conn->packets, link, next)
+    {
+        if (!usb_packet_is_inflight(&pkt->base.p)) { continue; }
+
+        usb_cancel_packet(&pkt->base.p);
+        pkt->base.p.actual_length = 0;
+        pkt->out_status           = -ENODEV;
+
+        QLIST_REMOVE(pkt, link);
+        QLIST_INSERT_HEAD(&aborted, pkt, link);
+    }
+
+    while ((pkt = QLIST_FIRST(&aborted)) != NULL) {
+        QLIST_REMOVE(pkt, link);
+        QLIST_INSERT_HEAD(&conn->packets, pkt, link);
+        qemu_coroutine_enter(qemu_coroutine_create(vh_send_bulk_ack_co, pkt));
+    }
 }
 
 static bool coroutine_fn vh_conn_announce_device(USBVirtualHereConn* conn)
@@ -667,6 +695,7 @@ static void coroutine_fn vh_conn_dispatch(USBVirtualHereConn* conn, const uint8_
             uint8_t released[4] = {1, 0, 0, 0};
 
             conn->using_device = false;
+            vh_conn_abort_packets(conn);
             usb_uplink_release(&conn->s->usb);
             vh_conn_send_msg(conn, VIRTUALHERE_MSG_UNBIND_ACK, msg, released, sizeof(released));
             vh_conn_announce_device(conn);
@@ -720,6 +749,8 @@ static void vh_conn_close(USBVirtualHereConn* conn)
     if (conn->closed) { return; }
     conn->closed = true;
 
+    vh_conn_abort_packets(conn);
+
     /* The claim dies with the connection, so the device must come back clean. */
     if (conn->using_device) {
         conn->using_device = false;
@@ -764,6 +795,7 @@ static void virtualhere_accept(QIONetListener* listener, QIOChannelSocket* cioc,
     object_ref(OBJECT(conn->ioc));
     qio_channel_set_blocking(conn->ioc, false, NULL);
     qemu_co_mutex_init(&conn->write_mutex);
+    QLIST_INIT(&conn->packets);
     conn->heartbeat_timer = timer_new_ms(QEMU_CLOCK_REALTIME, vh_heartbeat_cb, conn);
 
     s->active_conn = conn;
@@ -787,16 +819,17 @@ static void usb_virtualhere_attach(USBPort* port)
 
 static void usb_virtualhere_detach(USBPort* port)
 {
-    USBVirtualHereState* s = port->opaque;
+    USBVirtualHereState* s    = port->opaque;
+    USBVirtualHereConn*  conn = s->active_conn;
 
     VIRTUALHERE_DPRINTF("%s: port[%d] detached, remaining=%p\n", __func__, port->index,
                         usb_uplink_active_except(&s->usb, port));
 
+    if (conn != NULL && !conn->closed) { vh_conn_abort_packets(conn); }
+
     usb_uplink_invalidate(&s->usb);
 
-    if (usb_uplink_active_except(&s->usb, port) == NULL && s->active_conn != NULL && !s->active_conn->closed) {
-        USBVirtualHereConn* conn = s->active_conn;
-
+    if (usb_uplink_active_except(&s->usb, port) == NULL && conn != NULL && !conn->closed) {
         conn->using_device = false;
         vh_conn_spawn(conn, vh_notify_device_removed_co);
     }

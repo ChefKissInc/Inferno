@@ -22,6 +22,7 @@ typedef struct USBVirtualHerePacket
 {
     USBUplinkPacket     base;
     USBVirtualHereConn* conn;
+    QLIST_ENTRY(USBVirtualHerePacket) link;
     int32_t             out_status;
     uint8_t             hdr[VIRTUALHERE_HDR_LEN];
     uint8_t             setup[VIRTUALHERE_SETUP_LEN];
@@ -39,6 +40,7 @@ struct USBVirtualHereConn
     QEMUTimer*           heartbeat_timer;
     bool                 closed;
     bool                 using_device;
+    QLIST_HEAD(, USBVirtualHerePacket) packets;
     char                 client_name[64];
     char                 client_host[64];
 };
