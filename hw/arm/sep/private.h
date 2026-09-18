@@ -123,7 +123,7 @@ AppleSEPMonitorState* apple_sep_monitor_create(void);
 #define TYPE_APPLE_SEP_SSC "apple-sep.ssc"
 OBJECT_DECLARE_SIMPLE_TYPE(AppleSEPSSCState, APPLE_SEP_SSC)
 
-AppleSEPSSCState* apple_sep_ssc_create(AppleI2CState* i2c, uint8_t addr, AppleSEP* sep);
+AppleSEPSSCState* apple_sep_ssc_create(AppleI2CState* i2c, uint8_t addr, AppleSEP* sep, BlockBackend* blk);
 
 /* pka.c */
 #define TYPE_APPLE_SEP_PKA "apple-sep.pka"

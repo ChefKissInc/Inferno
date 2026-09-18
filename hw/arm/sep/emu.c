@@ -555,9 +555,8 @@ AppleSEP* apple_sep_from_node(AppleDTNode* node, MemoryRegion* ool_mr, vaddr bas
         BlockBackend* blk_ssc = blk_by_legacy_dinfo(dinfo_ssc);
         assert_nonnull(blk_ssc);
         blk_set_perm(blk_ssc, BLK_PERM_CONSISTENT_READ | BLK_PERM_WRITE, BLK_PERM_ALL, &error_fatal);
-        AppleSEPSSCState* ssc = apple_sep_ssc_create(APPLE_I2C(i2c), 0x71, s);
+        AppleSEPSSCState* ssc = apple_sep_ssc_create(APPLE_I2C(i2c), 0x71, s, blk_ssc);
         assert_nonnull(ssc);
-        qdev_prop_set_drive_err(DEVICE(ssc), "drive", blk_ssc, &error_fatal);
     }
 
     object_property_add_child(OBJECT(s), "aess", OBJECT(s->aess = apple_sep_aess_create(s)));

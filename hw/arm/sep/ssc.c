@@ -22,11 +22,13 @@
 #include "qemu/cutils.h"
 #include "qemu/log.h"
 #include "qapi/error.h"
+#include "qemu/error-report.h"
 #include "hw/arm/sep/private.h"
 #include "hw/i2c/apple_i2c.h"
 #include "system/block-backend-global-state.h"
 #include "system/block-backend-io.h"
 #include "hw/qdev-properties-system.h"
+#include "system/runstate.h"
 #include <nettle/ccm.h>
 #include <nettle/cmac.h>
 #include <nettle/ecc-curve.h>
@@ -68,6 +70,9 @@
 
 #define SSC_REQUEST_MAX_COPIES 4    // 0 .. 3
 
+#define SSC_STORE_KEYS_OFFSET (KBKDF_KEY_KEY_FILE_OFFSET * CMD_METADATA_DATA_PAYLOAD_LENGTH * SSC_REQUEST_MAX_COPIES)
+#define SSC_STORE_SIZE        (SSC_STORE_KEYS_OFFSET + KBKDF_KEY_MAX_SLOTS * KBKDF_KEY_KEY_LENGTH)
+
 #define SSC_RESPONSE_FLAG_COMMAND_SIZE_MISMATCH    0x02
 #define SSC_RESPONSE_FLAG_COMMAND_OR_FIELD_INVALID 0x04
 #define SSC_RESPONSE_FLAG_KEYSLOT_INVALID          0x08
@@ -79,11 +84,18 @@ struct AppleSEPSSCState
 {
     I2CSlave parent_obj;
 
-    BlockBackend* blk;
-    uint32_t      req_cur;
-    uint32_t      resp_cur;
-    uint8_t       req_cmd[0x100];
-    uint8_t       resp_cmd[0x100];
+    BlockBackend*       blk;
+    uint8_t*            store;
+    QEMUBH*             flush_bh;
+    VMChangeStateEntry* vmstate_entry;
+    QEMUIOVector        flush_qiov;
+    uint64_t            store_blk_len;
+    bool                store_dirty;
+    bool                flush_in_flight;
+    uint32_t            req_cur;
+    uint32_t            resp_cur;
+    uint8_t             req_cmd[0x100];
+    uint8_t             resp_cmd[0x100];
 
     AppleSEP*             sep;
     struct ecc_scalar     ecc_key_main, ecc_keys[KBKDF_KEY_MAX_SLOTS];
@@ -94,6 +106,73 @@ struct AppleSEPSSCState
     uint32_t              kbkdf_counter[KBKDF_KEY_MAX_SLOTS];
     uint8_t               cpsn[0x07];
 };
+
+static bool ssc_store_range_valid(uint64_t offset, uint64_t len)
+{
+    if (offset > SSC_STORE_SIZE || len > SSC_STORE_SIZE - offset) {
+        qemu_log_mask(LOG_GUEST_ERROR, "apple_sep_ssc: store access 0x%" PRIx64 "+0x%" PRIx64 " out of bounds\n",
+                      offset, len);
+        return false;
+    }
+    return true;
+}
+
+static void ssc_store_read(AppleSEPSSCState* ssc_state, uint64_t offset, uint64_t len, void* buf)
+{
+    if (!ssc_store_range_valid(offset, len)) {
+        memset(buf, 0, len);
+        return;
+    }
+    memcpy(buf, ssc_state->store + offset, len);
+}
+
+static void ssc_store_write(AppleSEPSSCState* ssc_state, uint64_t offset, uint64_t len, const void* buf)
+{
+    if (!ssc_store_range_valid(offset, len)) { return; }
+    memcpy(ssc_state->store + offset, buf, len);
+
+    ssc_state->store_dirty = true;
+    if (ssc_state->blk) { qemu_bh_schedule(ssc_state->flush_bh); }
+}
+
+static void ssc_flush_done(void* opaque, int ret)
+{
+    AppleSEPSSCState* ssc_state = opaque;
+
+    ssc_state->flush_in_flight = false;
+    if (ret < 0) { qemu_log_mask(LOG_GUEST_ERROR, "apple_sep_ssc: store writeback failed: %s\n", strerror(-ret)); }
+
+    /* Written again while the flush was in flight. */
+    if (ssc_state->store_dirty) { qemu_bh_schedule(ssc_state->flush_bh); }
+}
+
+static void ssc_flush_sync(AppleSEPSSCState* ssc_state)
+{
+    int ret;
+
+    if (ssc_state->blk == NULL || !ssc_state->store_dirty) { return; }
+
+    ssc_state->store_dirty = false;
+    ret                    = blk_pwrite(ssc_state->blk, 0, ssc_state->store_blk_len, ssc_state->store, 0);
+    if (ret < 0) { qemu_log_mask(LOG_GUEST_ERROR, "apple_sep_ssc: store writeback failed: %s\n", strerror(-ret)); }
+}
+
+static void ssc_vm_state_change(void* opaque, bool running, RunState state)
+{
+    if (!running) { ssc_flush_sync(opaque); }
+}
+
+static void ssc_flush_bh(void* opaque)
+{
+    AppleSEPSSCState* ssc_state = opaque;
+
+    if (ssc_state->flush_in_flight || !ssc_state->store_dirty) { return; }
+
+    ssc_state->store_dirty     = false;
+    ssc_state->flush_in_flight = true;
+    qemu_iovec_init_buf(&ssc_state->flush_qiov, ssc_state->store, ssc_state->store_blk_len);
+    blk_aio_pwritev(ssc_state->blk, 0, &ssc_state->flush_qiov, 0, ssc_flush_done, ssc_state);
+}
 
 static int apple_sep_ssc_event(I2CSlave* s, enum i2c_event event)
 {
@@ -663,10 +742,9 @@ static void answer_cmd_0x3_metadata_write(struct AppleSEPSSCState* ssc_state, ui
     // req_dec_out, 0); // Is it really necessary to write the mac_key or any
     // metadata to blk_offset?
     uint8_t zeroes_0x40[CMD_METADATA_DATA_PAYLOAD_LENGTH] = {0};
-    blk_pwrite(ssc_state->blk, blk_offset, CMD_METADATA_DATA_PAYLOAD_LENGTH, zeroes_0x40,
-               0);    // clear it on metadata write, all 0x40 bytes at
-                      // blk_offset. is this correct?
-    blk_pwrite(ssc_state->blk, key_offset, CMD_METADATA_PAYLOAD_LENGTH, req_dec_out, 0);
+    // clear it on metadata write, all 0x40 bytes at blk_offset. is this correct?
+    ssc_store_write(ssc_state, blk_offset, CMD_METADATA_DATA_PAYLOAD_LENGTH, zeroes_0x40);
+    ssc_store_write(ssc_state, key_offset, CMD_METADATA_PAYLOAD_LENGTH, req_dec_out);
 
     uint8_t resp_nop_out[1] = {0x00};
     HEXDUMP("cmd_0x03_resp: resp_nop_out", resp_nop_out, 1);
@@ -711,7 +789,7 @@ static void answer_cmd_0x4_metadata_data_read(struct AppleSEPSSCState* ssc_state
     HEXDUMP("cmd_0x04_req: req_nop_out", req_nop_out, 1);
 
     uint8_t resp_dec_out[CMD_METADATA_DATA_PAYLOAD_LENGTH] = {0};
-    blk_pread(ssc_state->blk, blk_offset, CMD_METADATA_DATA_PAYLOAD_LENGTH, resp_dec_out, 0);
+    ssc_store_read(ssc_state, blk_offset, CMD_METADATA_DATA_PAYLOAD_LENGTH, resp_dec_out);
 
     HEXDUMP("cmd_0x04_resp: resp_dec_out", resp_dec_out, CMD_METADATA_DATA_PAYLOAD_LENGTH);
     int err1 = aes_ccm_crypt(ssc_state, kbkdf_index, &response[0x00], CMD_METADATA_DATA_PAYLOAD_LENGTH, resp_dec_out,
@@ -754,7 +832,7 @@ static void answer_cmd_0x5_metadata_data_write(struct AppleSEPSSCState* ssc_stat
     do_response_prefix(request, response, SSC_RESPONSE_FLAG_OK);
     HEXDUMP("cmd_0x05_req: req_dec_out", req_dec_out, CMD_METADATA_DATA_PAYLOAD_LENGTH);
 
-    blk_pwrite(ssc_state->blk, blk_offset, CMD_METADATA_DATA_PAYLOAD_LENGTH, req_dec_out, 0);
+    ssc_store_write(ssc_state, blk_offset, CMD_METADATA_DATA_PAYLOAD_LENGTH, req_dec_out);
 
     uint8_t resp_nop_out[1] = {0x00};
     HEXDUMP("cmd_0x05_resp: resp_nop_out", resp_nop_out, 1);
@@ -809,9 +887,8 @@ static void answer_cmd_0x6_metadata_read(struct AppleSEPSSCState* ssc_state, uin
     HEXDUMP("cmd_0x06_req: req_nop_out", req_nop_out, 1);
 
     uint8_t resp_dec_out[CMD_METADATA_PAYLOAD_LENGTH] = {0};
-    blk_pread(ssc_state->blk, blk_offset, CMD_METADATA_PAYLOAD_LENGTH, resp_dec_out, 0);
-    blk_pread(ssc_state->blk, key_offset, CMD_METADATA_PAYLOAD_LENGTH, ssc_state->slot_hmac_key[kbkdf_index_dataslot],
-              0);
+    ssc_store_read(ssc_state, blk_offset, CMD_METADATA_PAYLOAD_LENGTH, resp_dec_out);
+    ssc_store_read(ssc_state, key_offset, CMD_METADATA_PAYLOAD_LENGTH, ssc_state->slot_hmac_key[kbkdf_index_dataslot]);
 
     HEXDUMP("cmd_0x06_resp: resp_dec_out", resp_dec_out, CMD_METADATA_PAYLOAD_LENGTH);
     int err1 = aes_ccm_crypt(ssc_state, kbkdf_index_key, &response[0x00], CMD_METADATA_PAYLOAD_LENGTH, resp_dec_out,
@@ -992,12 +1069,67 @@ static void apple_sep_ssc_reset_enter(Object* obj, ResetType type)
     memcpy(ssc->cpsn, cpsn, sizeof(cpsn));
 }
 
-AppleSEPSSCState* apple_sep_ssc_create(AppleI2CState* i2c, uint8_t addr, AppleSEP* sep)
+static void apple_sep_ssc_realize(DeviceState* dev, Error** errp)
+{
+    AppleSEPSSCState* ssc = APPLE_SEP_SSC(dev);
+    int64_t           len;
+    int               ret;
+
+    ssc->store = g_malloc0(SSC_STORE_SIZE);
+
+    if (ssc->blk == NULL) { return; }
+
+    len = blk_getlength(ssc->blk);
+    if (len < 0) {
+        error_setg_errno(errp, -len, "apple_sep_ssc: cannot determine store size");
+        return;
+    }
+
+    /* A short image is not an error: the tail is neither read nor written. */
+    len                = MIN(len, SSC_STORE_SIZE);
+    ssc->store_blk_len = len;
+    if (len < SSC_STORE_SIZE) {
+        warn_report("apple_sep_ssc: store is 0x%" PRIx64 " bytes, want 0x%x; the tail will not persist", (uint64_t)len,
+                    SSC_STORE_SIZE);
+    }
+    if (len > 0) {
+        ret = blk_pread(ssc->blk, 0, len, ssc->store, 0);
+        if (ret < 0) {
+            error_setg_errno(errp, -ret, "apple_sep_ssc: cannot read store");
+            return;
+        }
+    }
+
+    ssc->flush_bh      = qemu_bh_new(ssc_flush_bh, ssc);
+    ssc->vmstate_entry = qemu_add_vm_change_state_handler(ssc_vm_state_change, ssc);
+}
+
+static void apple_sep_ssc_unrealize(DeviceState* dev)
+{
+    AppleSEPSSCState* ssc = APPLE_SEP_SSC(dev);
+
+    if (ssc->vmstate_entry != NULL) {
+        qemu_del_vm_change_state_handler(ssc->vmstate_entry);
+        ssc->vmstate_entry = NULL;
+    }
+    if (ssc->flush_bh != NULL) {
+        ssc_flush_sync(ssc);
+        qemu_bh_delete(ssc->flush_bh);
+        ssc->flush_bh = NULL;
+    }
+    g_free(ssc->store);
+    ssc->store = NULL;
+}
+
+AppleSEPSSCState* apple_sep_ssc_create(AppleI2CState* i2c, uint8_t addr, AppleSEP* sep, BlockBackend* blk)
 {
     AppleSEPSSCState* ssc;
 
-    ssc      = APPLE_SEP_SSC(i2c_slave_create_simple(i2c->bus, TYPE_APPLE_SEP_SSC, addr));
+    ssc      = APPLE_SEP_SSC(i2c_slave_new(TYPE_APPLE_SEP_SSC, addr));
     ssc->sep = sep;
+
+    qdev_prop_set_drive_err(DEVICE(ssc), "drive", blk, &error_fatal);
+    i2c_slave_realize_and_unref(I2C_SLAVE(ssc), i2c->bus, &error_fatal);
 
     return ssc;
 }
@@ -1014,7 +1146,9 @@ static void apple_sep_ssc_class_init(ObjectClass* klass, const void* data)
 
     rc->phases.enter = apple_sep_ssc_reset_enter;
 
-    dc->desc = "Apple SSC";
+    dc->desc      = "Apple SSC";
+    dc->realize   = apple_sep_ssc_realize;
+    dc->unrealize = apple_sep_ssc_unrealize;
     set_bit(DEVICE_CATEGORY_MISC, dc->categories);
 
     c->event = apple_sep_ssc_event;
