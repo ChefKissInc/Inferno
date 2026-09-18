@@ -204,7 +204,7 @@ REG32(GP_LAYER_0_POSITION, 0x68)
 REG32(GP_LAYER_1_POSITION, 0x6C)
 REG32(GP_LAYER_0_DIMENSIONS, 0x70)
 REG32(GP_LAYER_1_DIMENSIONS, 0x74)
-REG32(GP_SRC_POSITION, 0x78)
+REG32(GP_SRC_RECT, 0x78)
 REG32(GP_DEST_POSITION, 0x7C)
 REG32(GP_DEST_DIMENSIONS, 0x80)
 REG32(GP_SRC_ACTIVE_REGION_0_POSITION, 0x98)
@@ -835,6 +835,19 @@ static void adp_v4_gp_draw(ADPV4GenPipe* genpipe, AddressSpace* dma_as, pixman_i
             genpipe->state.image = image =
                 pixman_image_create_bits(fmt, genpipe->state.src_width, genpipe->state.src_height,
                                          (uint32_t*)genpipe->state.buf, genpipe->state.stride);
+        }
+
+        if (genpipe->state.src_width != genpipe->state.dest_width
+            || genpipe->state.src_height != genpipe->state.dest_height)
+        {
+            pixman_transform_init_scale(
+                &transform, pixman_double_to_fixed((double)genpipe->state.src_width / genpipe->state.dest_width),
+                pixman_double_to_fixed((double)genpipe->state.src_height / genpipe->state.dest_height));
+            pixman_image_set_filter(image, PIXMAN_FILTER_BILINEAR, NULL, 0);
+            pixman_image_set_transform(image, &transform);
+        }
+        else {
+            pixman_image_set_transform(image, NULL);
         }
 
         pixman_image_composite(PIXMAN_OP_SRC, image, NULL, disp_image, 0, 0, 0, 0, 0, 0, genpipe->state.dest_width,
