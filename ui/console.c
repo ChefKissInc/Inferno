@@ -721,7 +721,7 @@ QemuConsole* graphic_console_init(DeviceState* dev, uint32_t head, const Graphic
     }
     else {
         trace_console_gfx_new();
-        s = (QemuConsole*)object_new(TYPE_QEMU_GRAPHIC_CONSOLE);
+        s = QEMU_CONSOLE(object_new(TYPE_QEMU_GRAPHIC_CONSOLE));
     }
     QEMU_GRAPHIC_CONSOLE(s)->head = head;
     graphic_console_set_hwops(s, hw_ops, opaque);
