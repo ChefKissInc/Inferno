@@ -43,7 +43,7 @@ static bool bool_from_onoffauto(OnOffAuto val, bool def)
         case ON_OFF_AUTO_AUTO: return def;
         case ON_OFF_AUTO_ON  : return true;
         case ON_OFF_AUTO_OFF : return false;
-        default              : abort();
+        default              : assert_not_reached();
     }
 }
 

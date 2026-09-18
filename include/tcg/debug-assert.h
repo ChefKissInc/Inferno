@@ -15,14 +15,10 @@
         while (0)
     #define tcg_debug_assert_not_reached() assert_not_reached()
 #else
-    #ifdef NDEBUG
-        #define tcg_debug_assert(X) (void)0
-    #else
-        #define tcg_debug_assert(X)                    \
-            do {                                       \
-                if (!(X)) { __builtin_unreachable(); } \
-            }                                          \
-            while (0)
-    #endif
+    #define tcg_debug_assert(X)                    \
+        do {                                       \
+            if (!(X)) { __builtin_unreachable(); } \
+        }                                          \
+        while (0)
     #define tcg_debug_assert_not_reached() __builtin_unreachable()
 #endif

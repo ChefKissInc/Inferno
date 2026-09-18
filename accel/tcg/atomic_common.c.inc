@@ -55,7 +55,7 @@ Int128 HELPER(nonatomic_cmpxchgo)(CPUArchState* env, uint64_t addr, Int128 cmpv,
     }
     return oldv;
 #else
-    g_assert_not_reached();
+    assert_not_reached();
 #endif
 }
 

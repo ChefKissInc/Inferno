@@ -806,7 +806,7 @@ static int ap_to_rw_prot_is_user(CPUARMState* env, ARMMMUIdx mmu_idx, int ap, in
         case 7:
             if (!arm_feature(env, ARM_FEATURE_V6K)) { return 0; }
             return PAGE_READ;
-        default: assert_not_reached();
+        default: qemu_build_not_reached();
     }
 }
 
@@ -873,7 +873,7 @@ static inline int pte_to_sprr_prot_is_guarded(CPUARMState* env, int ap, int xn, 
             case 1 : prot = PAGE_READ | PAGE_EXEC; break;
             case 2 : prot = PAGE_READ; break;
             case 3 : prot = PAGE_READ | PAGE_WRITE; break;
-            default: assert_not_reached();
+            default: qemu_build_not_reached();
         }
     }
     else {
@@ -891,7 +891,7 @@ static inline int pte_to_sprr_prot_is_guarded(CPUARMState* env, int ap, int xn, 
                     prot = 0;
                 }
                 break;
-            default: assert_not_reached();
+            default: qemu_build_not_reached();
         }
     }
 
@@ -1201,7 +1201,7 @@ static int get_S2prot(CPUARMState* env, int s2ap, int xn, bool s1_is_el0)
             case 3:
                 if (!s1_is_el0) { prot |= PAGE_EXEC; }
                 break;
-            default: assert_not_reached();
+            default: qemu_build_not_reached();
         }
     }
     else {

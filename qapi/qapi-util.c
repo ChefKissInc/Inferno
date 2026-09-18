@@ -27,7 +27,7 @@ static bool compat_policy_input_ok1(const char* adjective, CompatPolicyInput pol
             error_set(errp, error_class, "%s %s %s disabled by policy", adjective, kind, name);
             return false;
         case COMPAT_POLICY_INPUT_CRASH:
-        default                       : abort();
+        default                       : assert_not_reached();
     }
 }
 

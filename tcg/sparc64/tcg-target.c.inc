@@ -257,7 +257,7 @@ static bool patch_reloc(tcg_insn_unit* src_rw, int type, intptr_t value, intptr_
             insn &= ~INSN_IMM13(-1);
             insn |= INSN_IMM13(value);
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 
     *src_rw = insn;
@@ -402,9 +402,9 @@ static void tcg_out_movi(TCGContext* s, TCGType type, TCGReg ret, tcg_target_lon
     tcg_out_movi_int(s, type, ret, arg, false, TCG_REG_T3);
 }
 
-static void tcg_out_ext8s(TCGContext* s, TCGType type, TCGReg rd, TCGReg rs) { g_assert_not_reached(); }
+static void tcg_out_ext8s(TCGContext* s, TCGType type, TCGReg rd, TCGReg rs) { assert_not_reached(); }
 
-static void tcg_out_ext16s(TCGContext* s, TCGType type, TCGReg rd, TCGReg rs) { g_assert_not_reached(); }
+static void tcg_out_ext16s(TCGContext* s, TCGType type, TCGReg rd, TCGReg rs) { assert_not_reached(); }
 
 static void tcg_out_ext8u(TCGContext* s, TCGReg rd, TCGReg rs) { tcg_out_arithi(s, rd, rs, 0xff, ARITH_AND); }
 
@@ -429,7 +429,7 @@ static bool tcg_out_xchg(TCGContext* s, TCGType type, TCGReg r1, TCGReg r2) { re
 static void tcg_out_addi_ptr(TCGContext* s, TCGReg rd, TCGReg rs, tcg_target_long imm)
 {
     /* This function is only used for passing structs by reference. */
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 static void tcg_out_ldst_rr(TCGContext* s, TCGReg data, TCGReg a1, TCGReg a2, int op)

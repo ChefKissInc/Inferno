@@ -125,7 +125,7 @@ static TCGReg tcg_target_call_oarg_reg(TCGCallReturnKind kind, int slot)
 #ifdef _WIN64
         case TCG_CALL_RET_BY_VEC: tcg_debug_assert(slot == 0); return TCG_REG_XMM0;
 #endif
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -178,7 +178,7 @@ static bool patch_reloc(tcg_insn_unit* code_ptr, int type, intptr_t value, intpt
             if (value != (int8_t)value) { return false; }
             tcg_patch8(code_ptr, value);
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
     return true;
 }
@@ -616,7 +616,7 @@ static void tcg_out_vex_opc(TCGContext* s, int opc, int r, int v, int rm, int in
             tmp = 1;
         }
         else {
-            g_assert_not_reached();
+            assert_not_reached();
         }
         tmp |= (r & 8 ? 0 : 0x80);     /* VEX.R */
         tmp |= (index & 8 ? 0 : 0x40); /* VEX.X */
@@ -657,7 +657,7 @@ static void tcg_out_evex_opc(TCGContext* s, int opc, int r, int v, int rm, int i
         mm = 1;
     }
     else {
-        g_assert_not_reached();
+        assert_not_reached();
     }
 
     /* EVEX.pp */
@@ -741,7 +741,7 @@ static void tcg_out_sib_offset(TCGContext* s, int r, int rm, int index, int shif
             }
 
             /* ??? The memory isn't directly addressable.  */
-            g_assert_not_reached();
+            assert_not_reached();
         }
         else {
             /* Absolute address.  */
@@ -876,7 +876,7 @@ static bool tcg_out_mov(TCGContext* s, TCGType type, TCGReg ret, TCGReg arg)
             tcg_out_vex_modrm(s, OPC_MOVDQA_VxWx | P_VEXL, ret, 0, arg);
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
     return true;
 }
@@ -908,7 +908,7 @@ static bool tcg_out_dup_vec(TCGContext* s, TCGType type, unsigned vece, TCGReg r
                 tcg_out8(s, 0);
                 break;
             case MO_64: tcg_out_vex_modrm(s, OPC_PUNPCKLQDQ, r, a, a); break;
-            default   : g_assert_not_reached();
+            default   : assert_not_reached();
         }
     }
     return true;
@@ -934,7 +934,7 @@ static bool tcg_out_dupm_vec(TCGContext* s, TCGType type, unsigned vece, TCGReg 
                 tcg_out8(s, 0); /* imm8 */
                 tcg_out_dup_vec(s, type, vece, r, r);
                 break;
-            default: g_assert_not_reached();
+            default: assert_not_reached();
         }
     }
     return true;
@@ -1038,7 +1038,7 @@ static void tcg_out_movi(TCGContext* s, TCGType type, TCGReg ret, tcg_target_lon
                 tcg_out_movi_vec(s, type, ret, arg);
             }
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -1067,7 +1067,7 @@ static inline void tcg_out_pushi(TCGContext* s, tcg_target_long val)
         tcg_out32(s, val);
     }
     else {
-        g_assert_not_reached();
+        assert_not_reached();
     }
 }
 
@@ -1124,7 +1124,7 @@ static void tcg_out_ld(TCGContext* s, TCGType type, TCGReg ret, TCGReg arg1, int
             tcg_debug_assert(ret >= 16);
             tcg_out_vex_modrm_offset(s, OPC_MOVDQU_VxWx | P_VEXL, ret, 0, arg1, arg2);
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -1171,7 +1171,7 @@ static void tcg_out_st(TCGContext* s, TCGType type, TCGReg arg, TCGReg arg1, int
             tcg_debug_assert(arg >= 16);
             tcg_out_vex_modrm_offset(s, OPC_MOVDQU_WxVx | P_VEXL, arg, 0, arg1, arg2);
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -1359,7 +1359,7 @@ static void tgen_arithi(TCGContext* s, int c, int r0, tcg_target_long val, int c
         return;
     }
 
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 static void tcg_out_addi(TCGContext* s, int reg, tcg_target_long val)
@@ -2134,7 +2134,7 @@ static void tcg_out_qemu_ld_direct(TCGContext* s, TCGReg datalo, TCGReg datahi, 
             tcg_out_vec_to_pair(s, TCG_TYPE_I64, datalo, datahi, TCG_TMP_VEC);
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -2267,7 +2267,7 @@ static void tcg_out_qemu_st_direct(TCGContext* s, TCGReg datalo, TCGReg datahi, 
             }
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -2984,7 +2984,7 @@ static void tgen_deposit(TCGContext* s, TCGType type, TCGReg a0, TCGReg a1, TCGR
         tcg_out_modrm(s, OPC_MOVB_EvGv, a2, a0 + 4);
     }
     else {
-        g_assert_not_reached();
+        assert_not_reached();
     }
 }
 
@@ -3004,7 +3004,7 @@ static void tgen_depositi(TCGContext* s, TCGType type, TCGReg a0, TCGReg a1, tcg
         tcg_out8(s, a2);
     }
     else {
-        g_assert_not_reached();
+        assert_not_reached();
     }
 }
 
@@ -3042,7 +3042,7 @@ static void tgen_extract(TCGContext* s, TCGType type, TCGReg a0, TCGReg a1, unsi
         }
         return;
     }
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 static const TCGOutOpExtract outop_extract = {
@@ -3067,7 +3067,7 @@ static void tgen_sextract(TCGContext* s, TCGType type, TCGReg a0, TCGReg a1, uns
         }
         return;
     }
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 static const TCGOutOpExtract outop_sextract = {
@@ -3245,7 +3245,7 @@ static bool tcg_out_cmp_vec_noinv(TCGContext* s, TCGType type, unsigned vece, TC
     switch (cond) {
         case TCG_COND_EQ: tcg_out_vex_modrm_type(s, cmpeq_insn[vece], v0, v1, v2, type); break;
         case TCG_COND_GT: tcg_out_vex_modrm_type(s, cmpgt_insn[vece], v0, v1, v2, type); break;
-        default         : g_assert_not_reached();
+        default         : assert_not_reached();
     }
     return fixup & NEED_INV;
 }
@@ -3494,7 +3494,7 @@ static void tcg_out_vec_op(TCGContext* s, TCGOpcode opc, unsigned vecl, unsigned
                 insn = (have_avx2 ? OPC_VPBLENDD : OPC_BLENDPS);
             }
             else {
-                g_assert_not_reached();
+                assert_not_reached();
             }
             sub = args[3];
             goto gen_simd_imm8;
@@ -3564,7 +3564,7 @@ static void tcg_out_vec_op(TCGContext* s, TCGOpcode opc, unsigned vecl, unsigned
 
         case INDEX_op_mov_vec: /* Always emitted via tcg_out_mov.  */
         case INDEX_op_dup_vec: /* Always emitted via tcg_out_dup_vec.  */
-        default              : g_assert_not_reached();
+        default              : assert_not_reached();
     }
 }
 
@@ -3833,7 +3833,7 @@ static void expand_vec_sari(TCGType type, unsigned vece, TCGv_vec v0, TCGv_vec v
             tcg_temp_free_vec(t1);
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -3979,7 +3979,7 @@ static void expand_vec_mul(TCGType type, unsigned vece, TCGv_vec v0, TCGv_vec v1
             tcg_temp_free_vec(t4);
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 

@@ -369,6 +369,6 @@ bool visit_type_enum(Visitor* v, const char* name, int* obj, const QEnumLookup* 
         case VISITOR_DEALLOC:
             /* nothing to deallocate for a scalar */
             return true;
-        default: abort();
+        default: assert_not_reached();
     }
 }

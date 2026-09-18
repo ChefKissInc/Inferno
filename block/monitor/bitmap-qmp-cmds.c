@@ -222,7 +222,7 @@ BdrvDirtyBitmap* block_dirty_bitmap_merge(const char* dst_node, const char* dst_
                 src        = block_dirty_bitmap_lookup(src_node, src_bitmap, NULL, errp);
                 if (!src) { goto fail; }
                 break;
-            default: abort();
+            default: assert_not_reached();
         }
 
         /* We do backup only for first merge operation */

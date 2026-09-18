@@ -90,7 +90,7 @@ static void string_output_set(StringOutputVisitor* sov, char* string)
             g_string_append(sov->string, string);
             break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 }
 
@@ -174,7 +174,7 @@ static bool print_type_int64(Visitor* v, const char* name, int64_t* obj, Error**
             }
             break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     l = sov->ranges;

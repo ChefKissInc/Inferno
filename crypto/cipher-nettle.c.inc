@@ -422,7 +422,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                 case QCRYPTO_CIPHER_MODE_CBC: drv = &qcrypto_nettle_des_driver_cbc; break;
                 case QCRYPTO_CIPHER_MODE_CTR: drv = &qcrypto_nettle_des_driver_ctr; break;
                 case QCRYPTO_CIPHER_MODE_XTS: goto bad_cipher_mode;
-                default                     : g_assert_not_reached();
+                default                     : assert_not_reached();
             }
 
             ctx              = g_new0(QCryptoNettleDES, 1);
@@ -441,7 +441,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                 case QCRYPTO_CIPHER_MODE_CBC: drv = &qcrypto_nettle_des3_driver_cbc; break;
                 case QCRYPTO_CIPHER_MODE_CTR: drv = &qcrypto_nettle_des3_driver_ctr; break;
                 case QCRYPTO_CIPHER_MODE_XTS: goto bad_cipher_mode;
-                default                     : g_assert_not_reached();
+                default                     : assert_not_reached();
             }
 
             ctx              = g_new0(QCryptoNettleDES3, 1);
@@ -463,7 +463,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                     aes128_set_encrypt_key(&ctx->key_xts[0], key + nkey);
                     aes128_set_decrypt_key(&ctx->key_xts[1], key + nkey);
                     break;
-                default: g_assert_not_reached();
+                default: assert_not_reached();
             }
             aes128_set_encrypt_key(&ctx->key[0], key);
             aes128_set_decrypt_key(&ctx->key[1], key);
@@ -484,7 +484,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                     aes192_set_encrypt_key(&ctx->key_xts[0], key + nkey);
                     aes192_set_decrypt_key(&ctx->key_xts[1], key + nkey);
                     break;
-                default: g_assert_not_reached();
+                default: assert_not_reached();
             }
             aes192_set_encrypt_key(&ctx->key[0], key);
             aes192_set_decrypt_key(&ctx->key[1], key);
@@ -505,7 +505,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                     aes256_set_encrypt_key(&ctx->key_xts[0], key + nkey);
                     aes256_set_decrypt_key(&ctx->key_xts[1], key + nkey);
                     break;
-                default: g_assert_not_reached();
+                default: assert_not_reached();
             }
             aes256_set_encrypt_key(&ctx->key[0], key);
             aes256_set_decrypt_key(&ctx->key[1], key);
@@ -522,7 +522,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                 case QCRYPTO_CIPHER_MODE_CBC: drv = &qcrypto_nettle_cast128_driver_cbc; break;
                 case QCRYPTO_CIPHER_MODE_CTR: drv = &qcrypto_nettle_cast128_driver_ctr; break;
                 case QCRYPTO_CIPHER_MODE_XTS: goto bad_cipher_mode;
-                default                     : g_assert_not_reached();
+                default                     : assert_not_reached();
             }
 
             ctx              = g_new0(QCryptoNettleCAST128, 1);
@@ -546,7 +546,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                     nkey             /= 2;
                     serpent_set_key(&ctx->key_xts, nkey, key + nkey);
                     break;
-                default: g_assert_not_reached();
+                default: assert_not_reached();
             }
             serpent_set_key(&ctx->key, nkey, key);
 
@@ -567,7 +567,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                     nkey             /= 2;
                     twofish_set_key(&ctx->key_xts, nkey, key + nkey);
                     break;
-                default: g_assert_not_reached();
+                default: assert_not_reached();
             }
             twofish_set_key(&ctx->key, nkey, key);
 
@@ -582,7 +582,7 @@ static QCryptoCipher* qcrypto_cipher_ctx_new(QCryptoCipherAlgo alg, QCryptoCiphe
                 case QCRYPTO_CIPHER_MODE_CBC:
                 case QCRYPTO_CIPHER_MODE_CTR:
                 case QCRYPTO_CIPHER_MODE_XTS: goto bad_cipher_mode;
-                default                     : g_assert_not_reached();
+                default                     : assert_not_reached();
             }
 
             ctx              = g_new0(QCryptoNettleSm4, 1);

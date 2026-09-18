@@ -235,11 +235,7 @@ static void qht_map_debug__all_locked(struct qht_map* map)
 }
 #else
 
-    #define qht_debug_assert(X) \
-        do {                    \
-            (void)(X);          \
-        }                       \
-        while (0)
+    #define qht_debug_assert(X) ((void)sizeof(!(X)))
 
 static inline void qht_bucket_debug__locked(struct qht_bucket* b) { }
 

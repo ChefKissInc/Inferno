@@ -122,7 +122,7 @@ static void vnc_init_basic_info(SocketAddress* addr, VncBasicInfo* info, Error**
         case SOCKET_ADDRESS_TYPE_FD:
             error_setg(errp, "Unsupported socket address type %s", SocketAddressType_str(addr->type));
             break;
-        default: abort();
+        default: assert_not_reached();
     }
 }
 
@@ -324,7 +324,7 @@ VncInfo* qmp_query_vnc(Error** errp)
             case SOCKET_ADDRESS_TYPE_FD:
                 error_setg(errp, "Unsupported socket address type %s", SocketAddressType_str(addr->type));
                 goto out_error;
-            default: abort();
+            default: assert_not_reached();
         }
 
         info->has_family = true;

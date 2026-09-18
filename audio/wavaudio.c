@@ -89,7 +89,7 @@ static int wav_init_out(HWVoiceOut* hw, struct audsettings* as, void* drv_opaque
 
         case AUDIO_FORMAT_F32: dolog("WAVE files can not handle float formats\n"); return -1;
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     hdr[34] = bits16 ? 0x10 : 0x08;

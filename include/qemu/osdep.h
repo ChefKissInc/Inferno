@@ -238,16 +238,35 @@ extern "C"
 #endif
 
 #ifdef NDEBUG
-    #define assert(_expr)                           (void)0
-    #define assert_false(_expr)                     (void)0
-    #define assert_true(_expr)                      (void)0
-    #define assert_null(_expr)                      (void)0
-    #define assert_nonnull(_expr)                   (void)0
-    #define assert_cmp(_expr, _op, _fmt, _expected) (void)0
-    #define assert_cmphex(_expr, _op, _expected)    (void)0
-    #define assert_cmpuint(_expr, _op, _expected)   (void)0
-    #define assert_cmpint(_expr, _op, _expected)    (void)0
-    #define assert_not_reached()                    __builtin_unreachable()
+    #define assert(_expr)                           ((void)sizeof(!(_expr)))
+    #define assert_false(_expr)                     assert((_expr) == false)
+    #define assert_true(_expr)                      assert((_expr) == true)
+    #define assert_null(_expr)                      assert((_expr) == NULL)
+    #define assert_nonnull(_expr)                   assert((_expr) != NULL)
+    #define assert_cmp(_expr, _op, _fmt, _expected) ((void)sizeof((_expr) _op (_expected)))
+    #define assert_cmphex(_expr, _op, _expected)                                            \
+        assert_cmp((unsigned long long)(_expr), _op, "", (unsigned long long)(_expected))
+    #define assert_cmpuint(_expr, _op, _expected)                                           \
+        assert_cmp((unsigned long long)(_expr), _op, "", (unsigned long long)(_expected))
+    #define assert_cmpint(_expr, _op, _expected) assert_cmp((long long)(_expr), _op, "", (long long)(_expected))
+    #define assert_not_reached()                 __builtin_unreachable()
+
+    #define debug_assert(_expr)                        \
+        do {                                           \
+            if (!(_expr)) { __builtin_unreachable(); } \
+        }                                              \
+        while (0)
+    #define debug_assert_false(_expr)                     debug_assert((_expr) == false)
+    #define debug_assert_true(_expr)                      debug_assert((_expr) == true)
+    #define debug_assert_null(_expr)                      debug_assert((_expr) == NULL)
+    #define debug_assert_nonnull(_expr)                   debug_assert((_expr) != NULL)
+    #define debug_assert_cmp(_expr, _op, _fmt, _expected) debug_assert((_expr) _op (_expected))
+    #define debug_assert_cmphex(_expr, _op, _expected)                                            \
+        debug_assert_cmp((unsigned long long)(_expr), _op, "", (unsigned long long)(_expected))
+    #define debug_assert_cmpuint(_expr, _op, _expected)                                           \
+        debug_assert_cmp((unsigned long long)(_expr), _op, "", (unsigned long long)(_expected))
+    #define debug_assert_cmpint(_expr, _op, _expected)                                            \
+        debug_assert_cmp((long long)(_expr), _op, "", (long long)(_expected))
 #else
     #define assert(_expr)                                                                                          \
         do {                                                                                                       \
@@ -281,6 +300,16 @@ extern "C"
     #define assert_cmpuint(_expr, _op, _expected)                                               \
         assert_cmp((unsigned long long)(_expr), _op, "0x%llu", (unsigned long long)(_expected))
     #define assert_cmpint(_expr, _op, _expected) assert_cmp((long long)(_expr), _op, "0x%lld", (long long)(_expected))
+
+    #define debug_assert(_expr)                           assert(_expr)
+    #define debug_assert_false(_expr)                     assert_false(_expr)
+    #define debug_assert_true(_expr)                      assert_true(_expr)
+    #define debug_assert_null(_expr)                      assert_null(_expr)
+    #define debug_assert_nonnull(_expr)                   assert_nonnull(_expr)
+    #define debug_assert_cmp(_expr, _op, _fmt, _expected) assert_cmp(_expr, _op, _fmt, _expected)
+    #define debug_assert_cmphex(_expr, _op, _expected)    assert_cmphex(_expr, _op, _expected)
+    #define debug_assert_cmpuint(_expr, _op, _expected)   assert_cmpuint(_expr, _op, _expected)
+    #define debug_assert_cmpint(_expr, _op, _expected)    assert_cmpint(_expr, _op, _expected)
     #define assert_not_reached()                                                                           \
         do {                                                                                               \
             fprintf(stderr, "[%s@%s:%d] Code should NOT be reached!\n", __FUNCTION__, __FILE__, __LINE__); \

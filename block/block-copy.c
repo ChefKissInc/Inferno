@@ -170,7 +170,7 @@ static int64_t block_copy_chunk_size(BlockCopyState* s)
         case COPY_RANGE_FULL        : return MIN(MAX(s->cluster_size, BLOCK_COPY_MAX_COPY_RANGE), s->max_transfer);
         default:
             /* Cannot have COPY_WRITE_ZEROES here.  */
-            abort();
+            assert_not_reached();
     }
 }
 
@@ -522,7 +522,7 @@ static int coroutine_fn GRAPH_RDLOCK block_copy_do_copy(BlockCopyState* s, int64
             qemu_vfree(bounce_buffer);
             break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     return ret;

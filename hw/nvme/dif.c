@@ -507,7 +507,7 @@ uint16_t nvme_dif_rw(NvmeCtrl* n, NvmeRequest* req)
 
                         break;
 
-                    default: abort();
+                    default: assert_not_reached();
                 }
 
                 switch (NVME_ID_NS_DPS_TYPE(ns->id_ns.dps)) {

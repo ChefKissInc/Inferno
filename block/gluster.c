@@ -409,7 +409,7 @@ static struct glfs* qemu_gluster_glfs_init(BlockdevOptionsGluster* gconf, Error*
                 break;
             case SOCKET_ADDRESS_TYPE_VSOCK:
             case SOCKET_ADDRESS_TYPE_FD   :
-            default                       : abort();
+            default                       : assert_not_reached();
         }
 
         if (ret < 0) { goto out; }

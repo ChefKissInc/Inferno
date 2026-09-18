@@ -1415,7 +1415,7 @@ static int qcrypto_block_luks_amend_erase_keyslots(QCryptoBlock* block, QCryptoB
         size_t        i;
         int           slot_count;
 
-        assert(QCRYPTO_BLOCK_LUKS_NUM_KEY_SLOTS <= sizeof(slots_to_erase_bitmap) * 8);
+        qemu_build_assert(QCRYPTO_BLOCK_LUKS_NUM_KEY_SLOTS <= sizeof(slots_to_erase_bitmap) * 8);
 
         for (i = 0; i < QCRYPTO_BLOCK_LUKS_NUM_KEY_SLOTS; i++) {
             int rv = qcrypto_block_luks_load_key(block, i, old_password, tmpkey, readfunc, opaque, errp);

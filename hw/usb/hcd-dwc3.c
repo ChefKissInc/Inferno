@@ -318,13 +318,13 @@ static bool dwc3_bd_writeback(DWC3State* s, DWC3BufferDesc* desc, USBPacket* p, 
         // " is necessary outside of very special circumstances maybe skip over
         // the updates for short packets
 #if 0
-        assert_cmphex(0x10, ==, sizeof(trb->bp) + sizeof(trb->status) + sizeof(trb->ctrl));
+        qemu_build_assert(0x10 == sizeof(trb->bp) + sizeof(trb->status) + sizeof(trb->ctrl));
         if (dma_memory_write(desc->sgl.as, trb->addr + 0x0, &trb->bp, 0x10, MEMTXATTRS_UNSPECIFIED) != MEMTX_OK) {
             qemu_log_mask(LOG_GUEST_ERROR, "%s: dma_memory_write trb->bp/status/ctrl failed\n", __func__);
         }
 #endif
 #if 1
-        assert_cmphex(0x8, ==, sizeof(trb->status) + sizeof(trb->ctrl));
+        qemu_build_assert(0x8 == sizeof(trb->status) + sizeof(trb->ctrl));
         if (dma_memory_write(desc->sgl.as, trb->addr + 0x8, &trb->status, 0x8, MEMTXATTRS_UNSPECIFIED) != MEMTX_OK) {
             qemu_log_mask(LOG_GUEST_ERROR, "%s: dma_memory_write trb->status/ctrl failed\n", __func__);
         }
@@ -471,7 +471,7 @@ static bool dwc3_bd_writeback(DWC3State* s, DWC3BufferDesc* desc, USBPacket* p, 
                             event.endpoint_event = DEPEVT_XFERINPROGRESS;
                             dwc3_ep_trb_event(s, desc->epid, trb, event);
                             break;
-                        default: assert_not_reached(); break;
+                        default: qemu_build_not_reached(); break;
                     }
                 }
                 else {

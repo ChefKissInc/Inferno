@@ -1951,7 +1951,7 @@ void gdb_read_byte(uint8_t ch)
                     gdbserver_state.state = gdb_handle_packet(gdbserver_state.line_buf);
                 }
                 break;
-            default: abort();
+            default: assert_not_reached();
         }
     }
 }

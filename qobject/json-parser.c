@@ -500,7 +500,7 @@ static QObject* parse_literal(JSONParserContext* ctxt)
             /* FIXME our lexer matches RFC 8259 in forbidding Inf or NaN,
              * but those might be useful extensions beyond JSON */
             return QOBJECT(qnum_from_double(strtod(token->str, NULL)));
-        default: abort();
+        default: assert_not_reached();
     }
 }
 

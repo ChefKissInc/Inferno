@@ -206,7 +206,7 @@ static int audio_pcm_info_eq(struct audio_pcm_info* info, struct audsettings* as
             /* fall through */
         case AUDIO_FORMAT_U32: bits = 32; break;
 
-        default: abort();
+        default: assert_not_reached();
     }
     return info->freq == as->freq && info->nchannels == as->nchannels && info->is_signed == is_signed
            && info->is_float == is_float && info->bits == bits
@@ -243,7 +243,7 @@ void audio_pcm_init_info(struct audio_pcm_info* info, struct audsettings* as)
             mul  = 4;
             break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     info->freq             = as->freq;

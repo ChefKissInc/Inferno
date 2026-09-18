@@ -128,7 +128,7 @@ int qio_dns_resolver_lookup_sync(QIODNSResolver* resolver, SocketAddress* addr, 
         case SOCKET_ADDRESS_TYPE_VSOCK:
         case SOCKET_ADDRESS_TYPE_FD   : return qio_dns_resolver_lookup_sync_nop(resolver, addr, naddrs, addrs, errp);
 
-        default: abort();
+        default: assert_not_reached();
     }
 }
 

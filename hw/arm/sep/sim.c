@@ -383,9 +383,11 @@ static void apple_sep_sim_handle_control_msg(AppleSEPSim* s, SEPMessage* msg)
 
             char      error_desc[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
             asn1_node art_defs = NULL;
-            assert_cmpuint(asn1_array2tree(art_definitions_array, &art_defs, error_desc), ==, ASN1_SUCCESS);
+            int       ret      = asn1_array2tree(art_definitions_array, &art_defs, error_desc);
+            assert_cmpuint(ret, ==, ASN1_SUCCESS);
             asn1_node art = NULL;
-            assert_cmpuint(asn1_create_element(art_defs, "ART.Header", &art), ==, ASN1_SUCCESS);
+            ret           = asn1_create_element(art_defs, "ART.Header", &art);
+            assert_cmpuint(ret, ==, ASN1_SUCCESS);
             uint8_t val = 0;
             asn1_write_value(art, "Version", &val, sizeof(val));
             uint16_t val16 = 0;
@@ -397,7 +399,8 @@ static void apple_sep_sim_handle_control_msg(AppleSEPSim* s, SEPMessage* msg)
             asn1_write_value(art, "InfoHMAC", byte0x20, sizeof(byte0x20));
             char data[512];
             int  data_len = sizeof(data);
-            assert_cmpuint(asn1_der_coding(art, "", data, &data_len, error_desc), ==, ASN1_SUCCESS);
+            ret           = asn1_der_coding(art, "", data, &data_len, error_desc);
+            assert_cmpuint(ret, ==, ASN1_SUCCESS);
             asn1_delete_structure(&art);
             asn1_delete_structure(&art_defs);
 

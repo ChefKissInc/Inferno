@@ -981,7 +981,7 @@ void qcow2_free_any_cluster(BlockDriverState* bs, uint64_t l2_entry, enum qcow2_
             break;
         case QCOW2_CLUSTER_ZERO_PLAIN :
         case QCOW2_CLUSTER_UNALLOCATED: break;
-        default                       : abort();
+        default                       : assert_not_reached();
     }
 }
 
@@ -1125,7 +1125,7 @@ int qcow2_update_snapshot_refcount(BlockDriverState* bs, int64_t l1_table_offset
                         case QCOW2_CLUSTER_ZERO_PLAIN :
                         case QCOW2_CLUSTER_UNALLOCATED: refcount = 0; break;
 
-                        default: abort();
+                        default: assert_not_reached();
                     }
 
                     if (refcount == 1) { entry |= QCOW_OFLAG_COPIED; }
@@ -1544,7 +1544,7 @@ static int coroutine_fn GRAPH_RDLOCK check_refcounts_l2(BlockDriverState* bs, Bd
                 }
                 break;
 
-            default: abort();
+            default: assert_not_reached();
         }
     }
 

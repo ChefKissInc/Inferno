@@ -231,7 +231,7 @@ static void ats_write(CPUARMState* env, const ARMCPRegInfo* ri, uint64_t value)
             mmu_idx = ARMMMUIdx_E10_0;
             ss      = ARMSS_NonSecure;
             break;
-        default: assert_not_reached();
+        default: qemu_build_not_reached();
     }
 
     par64 = do_ats_write(env, value, access_perm, mmu_idx, ss);
@@ -316,7 +316,7 @@ static void ats_write64(CPUARMState* env, const ARMCPRegInfo* ri, uint64_t value
                                    (guarded ? ARMMMUIdx_GE10_1 : ARMMMUIdx_E10_1);
             break;
         case 6 : /* AT S12E0R, AT S12E0W */ mmu_idx = regime_e20 ? ARMMMUIdx_E20_0 : ARMMMUIdx_E10_0; break;
-        default: assert_not_reached();
+        default: qemu_build_not_reached();
     }
 
     ss                  = for_el3 ? arm_security_space(env) : arm_security_space_below_el3(env);

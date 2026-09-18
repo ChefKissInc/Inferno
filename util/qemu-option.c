@@ -375,7 +375,7 @@ static bool qemu_opt_parse(QemuOpt* opt, Error** errp)
         case QEMU_OPT_BOOL  : return qapi_bool_parse(opt->name, opt->str, &opt->value.boolean, errp);
         case QEMU_OPT_NUMBER: return parse_option_number(opt->name, opt->str, &opt->value.uint, errp);
         case QEMU_OPT_SIZE  : return parse_option_size(opt->name, opt->str, &opt->value.uint, errp);
-        default             : abort();
+        default             : assert_not_reached();
     }
 }
 

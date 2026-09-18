@@ -628,7 +628,7 @@ static int raw_open_common(BlockDriverState* bs, QDict* options, int bdrv_flags,
             break;
         case ON_OFF_AUTO_OFF : s->use_lock = false; break;
         case ON_OFF_AUTO_AUTO: s->use_lock = qemu_has_ofd_lock(); break;
-        default              : abort();
+        default              : assert_not_reached();
     }
 
     s->drop_cache          = qemu_opt_get_bool(opts, "drop-cache", true);

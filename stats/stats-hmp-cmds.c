@@ -194,7 +194,7 @@ void hmp_info_stats(Monitor* mon, const QDict* qdict)
             int cpu_index = monitor_get_cpu_index(mon);
             filter        = stats_filter(target, names, cpu_index, provider);
             break;
-        default: abort();
+        default: assert_not_reached();
     }
 
     stats = qmp_query_stats(filter, &err);

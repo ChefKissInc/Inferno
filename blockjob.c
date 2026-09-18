@@ -443,7 +443,7 @@ BlockErrorAction block_job_error_action(BlockJob* job, BlockdevOnError on_err, i
         case BLOCKDEV_ON_ERROR_STOP  : action = BLOCK_ERROR_ACTION_STOP; break;
         case BLOCKDEV_ON_ERROR_REPORT: action = BLOCK_ERROR_ACTION_REPORT; break;
         case BLOCKDEV_ON_ERROR_IGNORE: action = BLOCK_ERROR_ACTION_IGNORE; break;
-        default                      : abort();
+        default                      : assert_not_reached();
     }
     if (!block_job_is_internal(job)) {
         qapi_event_send_block_job_error(job->job.id, is_read ? IO_OPERATION_TYPE_READ : IO_OPERATION_TYPE_WRITE,

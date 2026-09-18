@@ -57,7 +57,7 @@ static void neon_load_element64(TCGv_i64 var, int reg, int ele, MemOp mop)
         case MO_UW: tcg_gen_ld16u_i64(var, tcg_env, offset); break;
         case MO_UL: tcg_gen_ld32u_i64(var, tcg_env, offset); break;
         case MO_UQ: tcg_gen_ld_i64(var, tcg_env, offset); break;
-        default   : assert_not_reached();
+        default   : qemu_build_not_reached();
     }
 }
 
@@ -82,7 +82,7 @@ static void neon_store_element64(int reg, int ele, MemOp size, TCGv_i64 var)
         case MO_16: tcg_gen_st16_i64(var, tcg_env, offset); break;
         case MO_32: tcg_gen_st32_i64(var, tcg_env, offset); break;
         case MO_64: tcg_gen_st_i64(var, tcg_env, offset); break;
-        default   : assert_not_reached();
+        default   : qemu_build_not_reached();
     }
 }
 
@@ -431,7 +431,7 @@ static bool trans_VLD_all_lanes(DisasContext* s, arg_VLD_all_lanes* a)
                     align = pow2_align(size + 2);
                 }
                 break;
-            default: assert_not_reached();
+            default: qemu_build_not_reached();
         }
     }
 

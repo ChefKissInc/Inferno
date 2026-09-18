@@ -1103,7 +1103,7 @@ int socket_connect(SocketAddress* addr, Error** errp)
 
         case SOCKET_ADDRESS_TYPE_VSOCK: fd = vsock_connect_saddr(&addr->u.vsock, errp); break;
 
-        default: abort();
+        default: assert_not_reached();
     }
     return fd;
 }
@@ -1141,7 +1141,7 @@ int socket_listen(SocketAddress* addr, int num, Error** errp)
 
         case SOCKET_ADDRESS_TYPE_VSOCK: fd = vsock_listen_saddr(&addr->u.vsock, num, errp); break;
 
-        default: abort();
+        default: assert_not_reached();
     }
     return fd;
 }
@@ -1304,7 +1304,7 @@ SocketAddress* socket_address_flatten(SocketAddressLegacy* addr_legacy)
             addr->type = SOCKET_ADDRESS_TYPE_FD;
             QAPI_CLONE_MEMBERS(FdSocketAddress, &addr->u.fd, addr_legacy->u.fd.data);
             break;
-        default: abort();
+        default: assert_not_reached();
     }
 
     return addr;

@@ -833,7 +833,7 @@ static void s8000_create_nvme(AppleS8000MachineState* s8000)
     assert_nonnull(prop);
     s->dma_mr = MEMORY_REGION(apple_dart_iommu_mr(dart, *(uint32_t*)prop->data));
     assert_nonnull(s->dma_mr);
-    assert_nonnull(object_property_add_const_link(OBJECT(nvme), "dma_mr", OBJECT(s->dma_mr)));
+    object_property_add_const_link(OBJECT(nvme), "dma_mr", OBJECT(s->dma_mr));
     address_space_init(&s->dma_as, s->dma_mr, "apcie0.dma");
 
     sysbus_realize_and_unref(nvme, &error_fatal);
@@ -1134,7 +1134,7 @@ static void s8000_create_sep(AppleS8000MachineState* s8000)
         sysbus_connect_irq(SYS_BUS_DEVICE(s8000->sep), i, qdev_get_gpio_in(DEVICE(s8000->aic), ints[i]));
     }
 
-    assert_nonnull(object_property_add_const_link(OBJECT(s8000->sep), "dma-mr", OBJECT(s8000->sys_mem)));
+    object_property_add_const_link(OBJECT(s8000->sep), "dma-mr", OBJECT(s8000->sys_mem));
 
     sysbus_realize_and_unref(SYS_BUS_DEVICE(s8000->sep), &error_fatal);
 }

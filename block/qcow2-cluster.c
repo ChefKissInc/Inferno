@@ -592,7 +592,7 @@ int qcow2_get_host_offset(BlockDriverState* bs, uint64_t offset, unsigned int* b
             }
             break;
         }
-        default: abort();
+        default: assert_not_reached();
     }
 
     sc = count_contiguous_subclusters(bs, nb_clusters, sc_index, l2_slice, &l2_index);
@@ -1138,7 +1138,7 @@ static bool GRAPH_RDLOCK cluster_needs_new_alloc(BlockDriverState* bs, uint64_t 
         case QCOW2_CLUSTER_UNALLOCATED:
         case QCOW2_CLUSTER_COMPRESSED :
         case QCOW2_CLUSTER_ZERO_PLAIN : return true;
-        default                       : abort();
+        default                       : assert_not_reached();
     }
 }
 

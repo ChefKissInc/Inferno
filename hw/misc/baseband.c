@@ -238,7 +238,7 @@ static void baseband_gpio_set_reset_det(DeviceState* dev, int level)
 static void apple_baseband_add_pcie_cap_hmap(AppleBasebandDeviceState* s, PCIDevice* dev)
 {
     DPRINTF("%s: pci_is_express: %d\n", __func__, pci_is_express(dev));
-    assert_cmpuint(sizeof(s->hmap), ==, 0x70);
+    qemu_build_assert(sizeof(s->hmap) == 0x70);
     s->hmap         = (custom_hmap_t){0};
     s->hmap.vsec_id = 0x24;
     pcie_add_capability(dev, PCI_EXT_CAP_ID_VNDR, 0x0, s->hmap_hardcoded_offset, sizeof(s->hmap));
@@ -1015,8 +1015,8 @@ static void apple_baseband_device_qdev_reset_hold(Object* obj, ResetType type)
         s->image_ptr = NULL;
     }
     s->baseband_context0 = (baseband_context0_t){0};
-    assert_cmpuint(sizeof(s->baseband_context0), ==, 0x68);
-    assert_cmpuint(sizeof(custom_baseband0_t), ==, 60);
+    qemu_build_assert(sizeof(s->baseband_context0) == 0x68);
+    qemu_build_assert(sizeof(custom_baseband0_t) == 60);
 
     // TODO: pcie_cap_slot_reset can and will silently revert
     // set_power/set_enable when it's being done here

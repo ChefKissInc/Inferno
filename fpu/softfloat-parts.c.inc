@@ -28,7 +28,7 @@ static void partsN(return_nan)(FloatPartsN* a, float_status* s)
         case float_class_qnan:
             if (s->default_nan_mode) { parts_default_nan(a, s); }
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -95,7 +95,7 @@ static FloatPartsN* partsN(pick_nan)(FloatPartsN* a, FloatPartsN* b, float_statu
             if (cmp == 0) { cmp = a->sign < b->sign; }
             ret = cmp > 0 ? a : b;
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 
     if (is_snan(ret->cls)) { parts_silence_nan(ret, s); }
@@ -136,7 +136,7 @@ static FloatPartsN* partsN(pick_nan_muladd)(FloatPartsN* a, FloatPartsN* b, Floa
             case float_infzeronan_dnan_if_qnan:
                 if (is_qnan(c->cls)) { goto default_nan; }
                 break;
-            default: g_assert_not_reached();
+            default: assert_not_reached();
         }
         ret = c;
     }
@@ -226,7 +226,7 @@ static void partsN(canonicalize)(FloatPartsN* p, float_status* status, const Flo
                 }
                 /* otherwise normal */
                 break;
-            default: g_assert_not_reached();
+            default: assert_not_reached();
         }
     }
 
@@ -306,7 +306,7 @@ static void partsN(uncanon_normal)(FloatPartsN* p, float_status* s, const FloatF
                 inc = p->frac_lo & frac_lsb ? 0 : round_mask;
             }
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 
     exp = p->exp + fmt->exp_bias;
@@ -357,7 +357,7 @@ static void partsN(uncanon_normal)(FloatPartsN* p, float_status* s, const FloatF
                     }
                     break;
 
-                default: g_assert_not_reached();
+                default: assert_not_reached();
             }
         }
         frac_shr(p, frac_shift);
@@ -456,7 +456,7 @@ static void partsN(uncanon)(FloatPartsN* p, float_status* s, const FloatFmt* fmt
                         break;
                     case float_expmax_e4m3  : partsN(uncanon_e4m3_overflow)(p, s, fmt, saturate); break;
                     case float_expmax_normal:
-                    default                 : g_assert_not_reached();
+                    default                 : assert_not_reached();
                 }
                 return;
             case float_class_qnan:
@@ -467,7 +467,7 @@ static void partsN(uncanon)(FloatPartsN* p, float_status* s, const FloatFmt* fmt
                 return;
             default: break;
         }
-        g_assert_not_reached();
+        assert_not_reached();
     }
 }
 
@@ -850,7 +850,7 @@ static void partsN(sqrt)(FloatPartsN* a, float_status* status, const FloatFmt* f
             case float_class_inf:
                 if (unlikely(a->sign)) { goto d_nan; }
                 return;
-            default: g_assert_not_reached();
+            default: assert_not_reached();
         }
     }
 
@@ -1048,7 +1048,7 @@ static bool partsN(round_to_int_normal)(FloatPartsN* a, FloatRoundMode rmode, in
             case float_round_up       : one = !a->sign; break;
             case float_round_down     : one = a->sign; break;
             case float_round_to_odd   : one = true; break;
-            default                   : g_assert_not_reached();
+            default                   : assert_not_reached();
         }
 
         frac_clear(a);
@@ -1096,7 +1096,7 @@ static bool partsN(round_to_int_normal)(FloatPartsN* a, FloatRoundMode rmode, in
         case float_round_up          : inc = a->sign ? 0 : rnd_mask; break;
         case float_round_down        : inc = a->sign ? rnd_mask : 0; break;
         case float_round_to_odd      : inc = a->frac_lo & frac_lsb ? 0 : rnd_mask; break;
-        default                      : g_assert_not_reached();
+        default                      : assert_not_reached();
     }
 
     if (shift_adj == 0) {
@@ -1131,7 +1131,7 @@ static void partsN(round_to_int)(FloatPartsN* a, FloatRoundMode rmode, int scale
         case float_class_denormal:
             if (parts_round_to_int_normal(a, rmode, scale, fmt->frac_size)) { float_raise(float_flag_inexact, s); }
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -1189,7 +1189,7 @@ static int64_t partsN(float_to_sint)(FloatPartsN* p, FloatRoundMode rmode, int s
             }
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 
     float_raise(flags, s);
@@ -1257,7 +1257,7 @@ static uint64_t partsN(float_to_uint)(FloatPartsN* p, FloatRoundMode rmode, int 
             }
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 
     float_raise(flags, s);
@@ -1328,7 +1328,7 @@ static int64_t partsN(float_to_sint_modulo)(FloatPartsN* p, FloatRoundMode rmode
             if (p->sign) { r = -r; }
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 
     if (overflow) { flags = float_flag_invalid | float_flag_invalid_cvti; }
@@ -1440,14 +1440,14 @@ static FloatPartsN* partsN(minmax)(FloatPartsN* a, FloatPartsN* b, float_status*
             case float_class_denormal: break;
             case float_class_inf     : a_exp = INT16_MAX; break;
             case float_class_zero    : a_exp = INT16_MIN; break;
-            default                  : g_assert_not_reached();
+            default                  : assert_not_reached();
         }
         switch (b->cls) {
             case float_class_normal  :
             case float_class_denormal: break;
             case float_class_inf     : b_exp = INT16_MAX; break;
             case float_class_zero    : b_exp = INT16_MIN; break;
-            default                  : g_assert_not_reached();
+            default                  : assert_not_reached();
         }
     }
 
@@ -1548,7 +1548,7 @@ static void partsN(scalbn)(FloatPartsN* a, int n, float_status* s)
             float_raise(float_flag_input_denormal_used, s);
             /* fall through */
         case float_class_normal: a->exp += MIN(MAX(n, -0x10000), 0x10000); break;
-        default                : g_assert_not_reached();
+        default                : assert_not_reached();
     }
 }
 
@@ -1580,7 +1580,7 @@ static void partsN(log2)(FloatPartsN* a, float_status* s, const FloatFmt* fmt)
             case float_class_inf:
                 if (unlikely(a->sign)) { goto d_nan; }
                 return;
-            default: g_assert_not_reached();
+            default: assert_not_reached();
         }
     }
     if (unlikely(a->sign)) { goto d_nan; }

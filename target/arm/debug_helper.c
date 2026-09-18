@@ -294,7 +294,7 @@ static bool bp_wp_matches(ARMCPU* cpu, int n, bool is_wp)
         case 0:
             if (extract32(pac, 1, 1) == 0) { return false; }
             break;
-        default: assert_not_reached();
+        default: qemu_build_not_reached();
     }
 
     wt  = REG_FIELD_EX64(cr, DBGWCR, WT);

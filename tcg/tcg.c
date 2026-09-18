@@ -1557,7 +1557,7 @@ static void init_call_layout(TCGHelperInfo* info)
                 }
                 break;
 
-            default: assert_not_reached();
+            default: qemu_build_not_reached();
         }
     }
     info->nr_in = cum.info_in_idx;
@@ -2631,7 +2631,7 @@ void tcg_dump_ops(TCGContext* s, FILE* f, bool have_prefs)
                         case TCG_BAR_LDAQ: b_op = "acq"; break;
                         case TCG_BAR_STRL: b_op = "rel"; break;
                         case TCG_BAR_SC  : b_op = "seq"; break;
-                        default          : assert_not_reached();
+                        default          : qemu_build_not_reached();
                     }
 
                     switch (membar & TCG_MO_ALL) {
@@ -2651,7 +2651,7 @@ void tcg_dump_ops(TCGContext* s, FILE* f, bool have_prefs)
                         case TCG_MO_LD_LD | TCG_MO_ST_LD | TCG_MO_ST_ST: m_op = "rr+wr+ww"; break;
                         case TCG_MO_LD_ST | TCG_MO_ST_LD | TCG_MO_ST_ST: m_op = "rw+wr+ww"; break;
                         case TCG_MO_ALL                                : m_op = "all"; break;
-                        default                                        : assert_not_reached();
+                        default                                        : qemu_build_not_reached();
                     }
 
                     col += ne_fprintf(f, "%s%s:%s", (k ? "," : ""), b_op, m_op);
@@ -4759,7 +4759,7 @@ static void tcg_reg_alloc_op(TCGContext* s, const TCGOp* op)
                 }
                 break;
 
-            default: assert_not_reached();
+            default: qemu_build_not_reached();
         }
 
         if (copyto_new_reg) {
@@ -4846,7 +4846,7 @@ static void tcg_reg_alloc_op(TCGContext* s, const TCGOp* op)
                     reg = new_args[arg_ct->pair_index] - 1;
                     break;
 
-                default: assert_not_reached();
+                default: qemu_build_not_reached();
             }
             tcg_regset_set_reg(o_allocated_regs, reg);
             set_temp_val_reg(s, ts, reg);
@@ -5794,7 +5794,7 @@ static void tcg_out_ld_helper_ret(TCGContext* s, const TCGLabelQemuLdst* ldst, b
                     tcg_out_ld(s, TCG_TYPE_I64, ldst->datalo_reg, TCG_REG_CALL_STACK, ofs_slot0 + 8 * HOST_BIG_ENDIAN);
                     tcg_out_ld(s, TCG_TYPE_I64, ldst->datahi_reg, TCG_REG_CALL_STACK, ofs_slot0 + 8 * !HOST_BIG_ENDIAN);
                     return;
-                default: assert_not_reached();
+                default: qemu_build_not_reached();
             }
             break;
 

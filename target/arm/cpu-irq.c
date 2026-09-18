@@ -71,7 +71,7 @@ static inline bool arm_excp_unmasked(CPUState* cs, unsigned int excp_idx, unsign
                 return false;
             }
             return !(env->daif & PSTATE_A);
-        default: assert_not_reached();
+        default: qemu_build_not_reached();
     }
 
     /*

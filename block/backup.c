@@ -198,7 +198,7 @@ static int coroutine_fn backup_loop(BackupBlockJob* job)
             case BLOCK_ERROR_ACTION_IGNORE:
                 /* Proceed to new block-copy call to retry. */
                 break;
-            default: abort();
+            default: assert_not_reached();
         }
 
         block_copy_call_free(s);

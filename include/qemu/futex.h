@@ -41,7 +41,7 @@ static inline void qemu_futex_wait(void* f, unsigned val)
         switch (errno) {
             case EWOULDBLOCK: return;
             case EINTR      : break; /* get out of switch and retry */
-            default         : abort();
+            default         : assert_not_reached();
         }
     }
 }

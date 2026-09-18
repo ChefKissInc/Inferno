@@ -654,7 +654,7 @@ static void dump_qobject(int comp_indent, QObject* obj)
             qemu_printf("%s", qbool_get_bool(value) ? "true" : "false");
             break;
         }
-        default: abort();
+        default: assert_not_reached();
     }
 }
 
@@ -707,7 +707,7 @@ static bool qobject_is_empty_dump(const QObject* obj)
 
         case QTYPE_QLIST: return qlist_empty(qobject_to(QList, obj));
 
-        default: abort();
+        default: assert_not_reached();
     }
 }
 

@@ -115,7 +115,7 @@ bool blkconf_blocksizes(BlockConf* conf, Error** errp)
             use_bs         = false;
             break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     /* fill in detected values if they are not defined via qemu command line */
@@ -196,7 +196,7 @@ bool blkconf_apply_backend_options(BlockConf* conf, bool readonly, bool resizabl
         case ON_OFF_AUTO_ON  : wce = true; break;
         case ON_OFF_AUTO_OFF : wce = false; break;
         case ON_OFF_AUTO_AUTO: wce = blk_enable_write_cache(blk); break;
-        default              : abort();
+        default              : assert_not_reached();
     }
 
     rerror = conf->rerror;

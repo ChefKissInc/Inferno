@@ -60,7 +60,7 @@ static uint32_t pcie_aer_uncor_default_severity(uint32_t status)
         case PCI_ERR_UNC_MCBTLP         :
         case PCI_ERR_UNC_ATOP_EBLOCKED  :
         case PCI_ERR_UNC_TLP_PRF_BLOCKED: return PCI_ERR_ROOT_CMD_NONFATAL_EN;
-        default                         : abort(); break;
+        default                         : assert_not_reached(); break;
     }
     return PCI_ERR_ROOT_CMD_FATAL_EN;
 }
@@ -293,7 +293,7 @@ static void pcie_aer_msg_root_port(PCIDevice* dev, const PCIEAERMsg* msg)
             if (!(root_status & PCI_ERR_ROOT_UNCOR_RCV)) { root_status |= PCI_ERR_ROOT_FIRST_FATAL; }
             root_status |= PCI_ERR_ROOT_FATAL_RCV;
             break;
-        default: abort(); break;
+        default: assert_not_reached(); break;
     }
     if (pcie_aer_msg_is_uncor(msg)) {
         if (root_status & PCI_ERR_ROOT_UNCOR_RCV) { root_status |= PCI_ERR_ROOT_MULTI_UNCOR_RCV; }

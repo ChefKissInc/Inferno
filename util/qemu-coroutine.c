@@ -298,7 +298,7 @@ void qemu_aio_coroutine_enter(AioContext* ctx, Coroutine* co)
                 trace_qemu_coroutine_terminate(to);
                 coroutine_delete(to);
                 break;
-            default: abort();
+            default: assert_not_reached();
         }
     }
 }

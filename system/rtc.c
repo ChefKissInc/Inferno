@@ -87,7 +87,7 @@ time_t qemu_timedate_diff(struct tm* tm)
             seconds       = mktime(&tmp);
             break;
         }
-        default: abort();
+        default: assert_not_reached();
     }
 
     return seconds - qemu_ref_timedate(QEMU_CLOCK_HOST);

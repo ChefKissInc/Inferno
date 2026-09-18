@@ -44,7 +44,7 @@ char* qemu_find_file(QemuFileType type, const char* name)
 
     switch (type) {
         case QEMU_FILE_TYPE_KEYMAP: subdir = "keymaps/"; break;
-        default                   : abort();
+        default                   : assert_not_reached();
     }
 
     for (i = 0; i < data_dir_idx; i++) {

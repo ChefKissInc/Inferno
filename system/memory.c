@@ -107,7 +107,7 @@ enum ListenerDirection
                     if (_listener->_callback) { _listener->_callback(_listener, ##_args); } \
                 }                                                                           \
                 break;                                                                      \
-            default: abort();                                                               \
+            default: qemu_build_not_reached();                                              \
         }                                                                                   \
     }                                                                                       \
     while (0)
@@ -127,7 +127,7 @@ enum ListenerDirection
                     if (_listener->_callback) { _listener->_callback(_listener, _section, ##_args); } \
                 }                                                                                     \
                 break;                                                                                \
-            default: abort();                                                                         \
+            default: qemu_build_not_reached();                                                        \
         }                                                                                             \
     }                                                                                                 \
     while (0)

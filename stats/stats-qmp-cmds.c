@@ -55,7 +55,7 @@ static bool invoke_stats_cb(StatsCallbacks* entry, StatsResultList** stats_resul
                 targets = filter->u.vcpu.vcpus;
             }
             break;
-        default: abort();
+        default: assert_not_reached();
     }
 
     entry->stats_cb(stats_results, filter->target, names, targets, errp);

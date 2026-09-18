@@ -447,7 +447,7 @@ static unsigned mirror_perform(MirrorBlockJob* s, int64_t offset, unsigned bytes
             }
             co = qemu_coroutine_create(mirror_co_discard, op);
             break;
-        default: abort();
+        default: assert_not_reached();
     }
     op->co = co;
 
@@ -1382,7 +1382,7 @@ static void coroutine_fn do_sync_target_write(MirrorBlockJob* job, MirrorMethod 
             ret = blk_co_pdiscard(job->target, offset, bytes);
             break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     job->active_write_bytes_in_flight -= bytes;
@@ -1497,7 +1497,7 @@ static int coroutine_fn GRAPH_RDLOCK bdrv_mirror_top_do_write(BlockDriverState* 
 
         case MIRROR_METHOD_DISCARD: ret = bdrv_co_pdiscard(bs->backing, offset, bytes); break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     if (!copy_to_target && s->job && s->job->dirty_bitmap) {

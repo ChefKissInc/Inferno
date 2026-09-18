@@ -55,7 +55,7 @@ static bool yank_instance_equal(const YankInstance* a, const YankInstance* b)
 
         case YANK_INSTANCE_TYPE_MIGRATION: return true;
 
-        default: abort();
+        default: assert_not_reached();
     }
 }
 

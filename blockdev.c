@@ -2519,7 +2519,7 @@ void qmp_drive_mirror(DriveMirror* arg, Error** errp)
                 bdrv_img_create(arg->target, format, explicit_backing->filename, explicit_backing->drv->format_name,
                                 NULL, size, flags, false, &local_err);
                 break;
-            default: abort();
+            default: assert_not_reached();
         }
     }
 

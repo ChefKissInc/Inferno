@@ -166,7 +166,7 @@ static bool patch_reloc(tcg_insn_unit* code_ptr, int type, intptr_t value, intpt
         case R_AARCH64_CALL26  : return reloc_pc26(code_ptr, (const tcg_insn_unit*)value);
         case R_AARCH64_CONDBR19: return reloc_pc19(code_ptr, (const tcg_insn_unit*)value);
         case R_AARCH64_TSTBR14 : return reloc_pc14(code_ptr, (const tcg_insn_unit*)value);
-        default                : g_assert_not_reached();
+        default                : assert_not_reached();
     }
 }
 
@@ -337,7 +337,7 @@ static bool tcg_target_const_match(int64_t val, int ct, TCGType type, TCGCond co
             break;
         default:
             /* Both bits should not be set for the same insn.  */
-            g_assert_not_reached();
+            assert_not_reached();
     }
 
     return 0;
@@ -1005,7 +1005,7 @@ static void tcg_out_movi(TCGContext* s, TCGType type, TCGReg rd, tcg_target_long
     switch (type) {
         case TCG_TYPE_I32:
         case TCG_TYPE_I64: tcg_debug_assert(rd < 32); break;
-        default          : g_assert_not_reached();
+        default          : assert_not_reached();
     }
 
     /* For 32-bit values, discard potential garbage in value.  For 64-bit
@@ -1084,7 +1084,7 @@ static bool tcg_out_xchg(TCGContext* s, TCGType type, TCGReg r1, TCGReg r2) { re
 static void tcg_out_addi_ptr(TCGContext* s, TCGReg rd, TCGReg rs, tcg_target_long imm)
 {
     /* This function is only used for passing structs by reference. */
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 /* Define something more legible for general use.  */
@@ -1142,7 +1142,7 @@ static bool tcg_out_mov(TCGContext* s, TCGType type, TCGReg ret, TCGReg arg)
             tcg_out_insn(s, 3616, ORR, 1, 0, ret, arg, arg);
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
     return true;
 }
@@ -1169,7 +1169,7 @@ static void tcg_out_ld(TCGContext* s, TCGType type, TCGReg ret, TCGReg base, int
             insn = I3312_LDRVQ;
             lgsz = 4;
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
     tcg_out_ldst(s, insn, ret, base, ofs, lgsz);
 }
@@ -1196,7 +1196,7 @@ static void tcg_out_st(TCGContext* s, TCGType type, TCGReg src, TCGReg base, int
             insn = I3312_STRVQ;
             lgsz = 4;
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
     tcg_out_ldst(s, insn, src, base, ofs, lgsz);
 }
@@ -1339,7 +1339,7 @@ static void tgen_brcondi(TCGContext* s, TCGType ext, TCGCond c, TCGReg a, tcg_ta
         switch (c) {
             case TCG_COND_TSTEQ: tcg_out_insn(s, 3205, TBZ, a, tbit, 0); break;
             case TCG_COND_TSTNE: tcg_out_insn(s, 3205, TBNZ, a, tbit, 0); break;
-            default            : g_assert_not_reached();
+            default            : qemu_build_not_reached();
         }
     }
     else {
@@ -1347,7 +1347,7 @@ static void tgen_brcondi(TCGContext* s, TCGType ext, TCGCond c, TCGReg a, tcg_ta
         switch (c) {
             case TCG_COND_EQ: tcg_out_insn(s, 3201, CBZ, ext, a, 0); break;
             case TCG_COND_NE: tcg_out_insn(s, 3201, CBNZ, ext, a, 0); break;
-            default         : g_assert_not_reached();
+            default         : qemu_build_not_reached();
         }
     }
 }
@@ -1534,7 +1534,7 @@ static void tcg_out_qemu_ld_direct(TCGContext* s, MemOp memop, TCGType ext, TCGR
         case MO_UL: tcg_out_ldst_r(s, I3312_LDRW, data_r, h.base, h.index_ext, h.index); break;
         case MO_SL: tcg_out_ldst_r(s, I3312_LDRSWX, data_r, h.base, h.index_ext, h.index); break;
         case MO_UQ: tcg_out_ldst_r(s, I3312_LDRX, data_r, h.base, h.index_ext, h.index); break;
-        default   : g_assert_not_reached();
+        default   : assert_not_reached();
     }
 }
 
@@ -1545,7 +1545,7 @@ static void tcg_out_qemu_st_direct(TCGContext* s, MemOp memop, TCGReg data_r, Ho
         case MO_16: tcg_out_ldst_r(s, I3312_STRH, data_r, h.base, h.index_ext, h.index); break;
         case MO_32: tcg_out_ldst_r(s, I3312_STRW, data_r, h.base, h.index_ext, h.index); break;
         case MO_64: tcg_out_ldst_r(s, I3312_STRX, data_r, h.base, h.index_ext, h.index); break;
-        default   : g_assert_not_reached();
+        default   : assert_not_reached();
     }
 }
 
@@ -2720,7 +2720,7 @@ static void tcg_out_vec_op(TCGContext* s, TCGOpcode opc, unsigned vecl, unsigned
 
         case INDEX_op_mov_vec: /* Always emitted via tcg_out_mov.  */
         case INDEX_op_dup_vec: /* Always emitted via tcg_out_dup_vec.  */
-        default              : g_assert_not_reached();
+        default              : assert_not_reached();
     }
 }
 
@@ -2820,7 +2820,7 @@ void tcg_expand_vec_op(TCGOpcode opc, TCGType type, unsigned vece, TCGArg a0, ..
             tcg_temp_free_vec(t2);
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 

@@ -108,7 +108,7 @@ void qmp_display_reload(DisplayReloadOptions* arg, Error** errp)
             error_setg(errp, "vnc is invalid, missing 'CONFIG_VNC'");
 #endif
             break;
-        default: abort();
+        default: assert_not_reached();
     }
 }
 
@@ -122,7 +122,7 @@ void qmp_display_update(DisplayUpdateOptions* arg, Error** errp)
             error_setg(errp, "vnc is invalid, missing 'CONFIG_VNC'");
 #endif
             break;
-        default: abort();
+        default: assert_not_reached();
     }
 }
 

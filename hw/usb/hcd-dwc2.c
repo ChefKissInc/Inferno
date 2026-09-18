@@ -1107,7 +1107,7 @@ static void dwc2_device_process_packet(DWC2State* s, USBPacket* p)
                         case D0EPCTL_MPS_32: mps = 32; break;
                         case D0EPCTL_MPS_16: mps = 16; break;
                         case D0EPCTL_MPS_8 : mps = 8; break;
-                        default            : assert_not_reached(); break;
+                        default            : qemu_build_not_reached(); break;
                     }
                 }
                 else {
@@ -1253,7 +1253,7 @@ static void dwc2_device_process_packet(DWC2State* s, USBPacket* p)
                         case D0EPCTL_MPS_32: mps = 32; break;
                         case D0EPCTL_MPS_16: mps = 16; break;
                         case D0EPCTL_MPS_8 : mps = 8; break;
-                        default            : assert_not_reached(); break;
+                        default            : qemu_build_not_reached(); break;
                     }
                 }
                 else {

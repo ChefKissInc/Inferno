@@ -382,7 +382,7 @@ static char* qemu_chr_socket_address(SocketChardev* s, const char* prefix)
             break;
         case SOCKET_ADDRESS_TYPE_VSOCK:
             return g_strdup_printf("%svsock:%s:%s", prefix, s->addr->u.vsock.cid, s->addr->u.vsock.port);
-        default: abort();
+        default: assert_not_reached();
     }
 }
 

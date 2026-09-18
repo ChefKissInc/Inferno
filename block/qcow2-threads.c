@@ -337,7 +337,7 @@ ssize_t coroutine_fn qcow2_co_compress(BlockDriverState* bs, void* dest, size_t 
 #ifdef CONFIG_ZSTD
         case QCOW2_COMPRESSION_TYPE_ZSTD: fn = qcow2_zstd_compress; break;
 #endif
-        default: abort();
+        default: assert_not_reached();
     }
 
     return qcow2_co_do_compress(bs, dest, dest_size, src, src_size, fn);
@@ -368,7 +368,7 @@ ssize_t coroutine_fn qcow2_co_decompress(BlockDriverState* bs, void* dest, size_
 #ifdef CONFIG_ZSTD
         case QCOW2_COMPRESSION_TYPE_ZSTD: fn = qcow2_zstd_decompress; break;
 #endif
-        default: abort();
+        default: assert_not_reached();
     }
 
     return qcow2_co_do_compress(bs, dest, dest_size, src, src_size, fn);

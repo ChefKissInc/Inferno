@@ -92,7 +92,7 @@ static GenericList* next_list(Visitor* v, GenericList* tail, size_t size)
         case LM_UNPARSED:
             /* we have an unparsed string or something left in a range */
             break;
-        default: abort();
+        default: assert_not_reached();
     }
 
     tail->next = g_malloc0(size);
@@ -108,7 +108,7 @@ static bool check_list(Visitor* v, Error** errp)
         case LM_UINT64_RANGE:
         case LM_UNPARSED    : error_setg(errp, "Fewer list elements expected"); return false;
         case LM_END         : return true;
-        default             : abort();
+        default             : assert_not_reached();
     }
 }
 
@@ -189,7 +189,7 @@ LM_END
 }
 return true;
 case LM_END: error_setg(errp, "Fewer list elements expected"); return false;
-default    : abort();
+default    : assert_not_reached();
     }
     }
 
@@ -260,7 +260,7 @@ default    : abort();
     }
     return true;
 case LM_END: error_setg(errp, "Fewer list elements expected"); return false;
-default    : abort();
+default    : assert_not_reached();
     }
     }
 

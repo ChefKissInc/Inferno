@@ -503,7 +503,7 @@ static bool nvme_ns_init_fdp(NvmeNamespace* ns, Error** errp)
 
             case NVME_RUHA_CTRL: error_setg(errp, "reclaim unit handle is controller assigned"); return false;
 
-            default: abort();
+            default: assert_not_reached();
         }
 
         *ph = *ruhid;

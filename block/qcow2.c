@@ -3778,7 +3778,7 @@ static int coroutine_fn GRAPH_RDLOCK qcow2_co_copy_range_from(BlockDriverState* 
 
             case QCOW2_SUBCLUSTER_NORMAL: child = s->data_file; break;
 
-            default: abort();
+            default: assert_not_reached();
         }
         qemu_co_mutex_unlock(&s->lock);
         ret = bdrv_co_copy_range_from(child, copy_offset, dst, dst_offset, cur_bytes, read_flags, cur_write_flags);
@@ -4735,7 +4735,7 @@ static ImageInfoSpecific* GRAPH_RDLOCK qcow2_get_specific_info(BlockDriverState*
                 qencrypt->format = BLOCKDEV_QCOW2_ENCRYPTION_FORMAT_LUKS;
                 qencrypt->u.luks = encrypt_info->u.luks;
                 break;
-            default: abort();
+            default: assert_not_reached();
         }
         /* Since we did shallow copy above, erase any pointers
          * in the original info */

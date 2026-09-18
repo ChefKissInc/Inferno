@@ -591,7 +591,7 @@ AppleSEP* apple_sep_from_node(AppleDTNode* node, MemoryRegion* ool_mr, vaddr bas
 #if 1
     s->ool_mr = ool_mr;
     assert_nonnull(s->ool_mr);
-    assert_nonnull(object_property_add_const_link(OBJECT(s), "ool-mr", OBJECT(s->ool_mr)));
+    object_property_add_const_link(OBJECT(s), "ool-mr", OBJECT(s->ool_mr));
     s->ool_as = g_new0(AddressSpace, 1);
     assert_nonnull(s->ool_as);
     address_space_init(s->ool_as, s->ool_mr, "sep.ool");

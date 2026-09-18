@@ -2491,7 +2491,7 @@ static void nvme_copy_source_range_parse(void* ranges, int idx, uint8_t format, 
             nvme_copy_source_range_parse_format1_3(ranges, idx, slba, nlb, snsid, apptag, appmask, reftag);
             break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 }
 

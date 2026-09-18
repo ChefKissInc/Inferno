@@ -291,7 +291,7 @@ void qmp_blockdev_change_medium(const char* device, const char* id, const char* 
 
         case BLOCKDEV_CHANGE_READ_ONLY_MODE_READ_WRITE: bdrv_flags |= BDRV_O_RDWR; break;
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     options       = qdict_new();

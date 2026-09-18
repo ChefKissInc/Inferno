@@ -214,7 +214,7 @@ static wint_t console_getch(enum maybe_keycode* maybe_keycode)
         case KEY_CODE_YES: *maybe_keycode = CURSES_KEYCODE; break;
         case OK          : *maybe_keycode = CURSES_CHAR; break;
         case ERR         : ret = -1; break;
-        default          : abort();
+        default          : assert_not_reached();
     }
     return ret;
 }

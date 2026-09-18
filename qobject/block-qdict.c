@@ -537,7 +537,7 @@ static QObject* qdict_crumple_for_keyval_qiv(QDict* src, Error** errp)
                 /* @src isn't flat; qdict_crumple() will fail */
                 continue;
             case QTYPE_QBOOL: s = qbool_get_bool(qobject_to(QBool, ent->value)) ? "on" : "off"; break;
-            default         : abort();
+            default         : assert_not_reached();
         }
 
         if (!tmp) { tmp = qdict_clone_shallow(src); }

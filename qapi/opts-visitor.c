@@ -244,7 +244,7 @@ static GenericList* opts_next_list(Visitor* v, GenericList* tail, size_t size)
             break;
         }
 
-        default: abort();
+        default: assert_not_reached();
     }
 
     tail->next = g_malloc0(size);

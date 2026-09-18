@@ -266,7 +266,7 @@ SysBusDevice* adp_v2_from_node(AppleDTNode* node, MemoryRegion* dma_mr, AppleVid
 
     s->dma_mr = dma_mr;
 
-    assert_nonnull(object_property_add_const_link(OBJECT(s), "dma_mr", OBJECT(dma_mr)));
+    object_property_add_const_link(OBJECT(s), "dma_mr", OBJECT(dma_mr));
     address_space_init(&s->dma_as, dma_mr, "disp0.dma");
 
     memory_region_init_ram(&s->vram, OBJECT(s), "vram", vram_size, &error_fatal);

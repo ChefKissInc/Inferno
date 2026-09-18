@@ -1446,7 +1446,7 @@ static ApplePCIEPort* apple_pcie_create_port(AppleDTNode* node, uint32_t bus_nr,
             dma_mr = apple_dart_iommu_mr(dart, 1);
         }
         assert_nonnull(dma_mr);
-        assert_nonnull(object_property_add_const_link(OBJECT(port), "dma-mr", OBJECT(dma_mr)));
+        object_property_add_const_link(OBJECT(port), "dma-mr", OBJECT(dma_mr));
         port->dma_mr = MEMORY_REGION(dma_mr);
 
     #if 1

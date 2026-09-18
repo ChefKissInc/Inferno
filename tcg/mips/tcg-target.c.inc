@@ -153,7 +153,7 @@ static bool patch_reloc(tcg_insn_unit* code_ptr, int type, intptr_t value, intpt
             *code_ptr = deposit32(*code_ptr, 0, 16, value);
             return true;
     }
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 #define TCG_CT_CONST_U16  0x100 /* Unsigned 16-bit: 0 - 0xffff.  */
@@ -613,7 +613,7 @@ static bool tcg_out_xchg(TCGContext* s, TCGType type, TCGReg r1, TCGReg r2) { re
 static void tcg_out_addi_ptr(TCGContext* s, TCGReg rd, TCGReg rs, tcg_target_long imm)
 {
     /* This function is only used for passing structs by reference. */
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 static void tcg_out_bswap_subr(TCGContext* s, const tcg_insn_unit* sub)
@@ -698,7 +698,7 @@ static int tcg_out_setcond_int(TCGContext* s, TCGCond cond, TCGReg ret, TCGReg a
         case TCG_COND_LTU: tcg_out_opc_reg(s, OPC_SLTU, ret, arg1, arg2); break;
         case TCG_COND_GT : tcg_out_opc_reg(s, OPC_SLT, ret, arg2, arg1); break;
         case TCG_COND_GTU: tcg_out_opc_reg(s, OPC_SLTU, ret, arg2, arg1); break;
-        default          : g_assert_not_reached();
+        default          : assert_not_reached();
     }
     return ret | flags;
 }
@@ -721,7 +721,7 @@ static void tcg_out_setcond_end(TCGContext* s, TCGReg ret, int tmpflags)
                 /* Intermediate result is zero/non-zero: test == 0. */
                 tcg_out_opc_imm(s, OPC_SLTIU, ret, tmp, 1);
                 break;
-            default: g_assert_not_reached();
+            default: assert_not_reached();
         }
     }
 }
@@ -1129,7 +1129,7 @@ static void tcg_out_qemu_ld_direct(TCGContext* s, TCGReg lo, TCGReg hi, TCGReg b
                 tcg_out_opc_imm(s, OPC_LW, hi, base, HI_OFF);
             }
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -1184,7 +1184,7 @@ static void tcg_out_qemu_ld_unalign(TCGContext* s, TCGReg lo, TCGReg hi, TCGReg 
             }
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -1259,7 +1259,7 @@ static void tcg_out_qemu_st_direct(TCGContext* s, TCGReg lo, TCGReg hi, TCGReg b
                 tcg_out_opc_imm(s, OPC_SW, HOST_BIG_ENDIAN ? lo : hi, base, 4);
             }
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -1295,7 +1295,7 @@ static void tcg_out_qemu_st_unalign(TCGContext* s, TCGReg lo, TCGReg hi, TCGReg 
             }
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -1472,7 +1472,7 @@ static const TCGOutOpBinary outop_addcio = {
     .base.static_constraint = C_NotImplemented,
 };
 
-static void tcg_out_set_carry(TCGContext* s) { g_assert_not_reached(); }
+static void tcg_out_set_carry(TCGContext* s) { assert_not_reached(); }
 
 static void tgen_and(TCGContext* s, TCGType type, TCGReg a0, TCGReg a1, TCGReg a2)
 { tcg_out_opc_reg(s, OPC_AND, a0, a1, a2); }
@@ -1895,7 +1895,7 @@ static const TCGOutOpAddSubCarry outop_subbio = {
     .base.static_constraint = C_NotImplemented,
 };
 
-static void tcg_out_set_borrow(TCGContext* s) { g_assert_not_reached(); }
+static void tcg_out_set_borrow(TCGContext* s) { assert_not_reached(); }
 
 static void tgen_xor(TCGContext* s, TCGType type, TCGReg a0, TCGReg a1, TCGReg a2)
 { tcg_out_opc_reg(s, OPC_XOR, a0, a1, a2); }
@@ -2035,7 +2035,7 @@ static void tgen_sextract(TCGContext* s, TCGType type, TCGReg a0, TCGReg a1, uns
             case 32: tcg_out_ext32s(s, a0, a1); return;
         }
     }
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 static const TCGOutOpExtract outop_sextract = {

@@ -683,7 +683,7 @@ static void get_prop_pcielinkspeed(Object* obj, Visitor* v, const char* name, vo
         case QEMU_PCI_EXP_LNK_64GT : speed = PCIE_LINK_SPEED_64; break;
         default:
             /* Unreachable */
-            abort();
+            assert_not_reached();
     }
 
     visit_type_enum(v, name, &speed, prop->info->enum_table, errp);
@@ -706,7 +706,7 @@ static void set_prop_pcielinkspeed(Object* obj, Visitor* v, const char* name, vo
         case PCIE_LINK_SPEED_64 : *p = QEMU_PCI_EXP_LNK_64GT; break;
         default:
             /* Unreachable */
-            abort();
+            assert_not_reached();
     }
 }
 
@@ -737,7 +737,7 @@ static void get_prop_pcielinkwidth(Object* obj, Visitor* v, const char* name, vo
         case QEMU_PCI_EXP_LNK_X32: width = PCIE_LINK_WIDTH_32; break;
         default:
             /* Unreachable */
-            abort();
+            assert_not_reached();
     }
 
     visit_type_enum(v, name, &width, prop->info->enum_table, errp);
@@ -761,7 +761,7 @@ static void set_prop_pcielinkwidth(Object* obj, Visitor* v, const char* name, vo
         case PCIE_LINK_WIDTH_32: *p = QEMU_PCI_EXP_LNK_X32; break;
         default:
             /* Unreachable */
-            abort();
+            assert_not_reached();
     }
 }
 

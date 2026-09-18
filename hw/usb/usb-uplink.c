@@ -441,7 +441,7 @@ DeviceState* usb_uplink_new(USBUplinkType type, const char* addr, Error** errp)
     switch (type) {
         case USB_UPLINK_TYPE_INFERNO    : dev = qdev_new(TYPE_USB_INFERNO_HOST); break;
         case USB_UPLINK_TYPE_VIRTUALHERE: dev = qdev_new(TYPE_USB_VIRTUALHERE); break;
-        default                         : g_assert_not_reached();
+        default                         : assert_not_reached();
     }
 
     if (addr != NULL) { object_property_set_str(OBJECT(dev), "addr", addr, errp); }

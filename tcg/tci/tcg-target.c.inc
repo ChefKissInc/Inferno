@@ -303,7 +303,7 @@ static void tcg_out_movi(TCGContext* s, TCGType type, TCGReg ret, tcg_target_lon
         case TCG_TYPE_I64:
 #endif
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 
     if (arg == sextract32(arg, 0, 20)) { tcg_out_op_ri(s, INDEX_op_tci_movi, ret, arg); }
@@ -374,7 +374,7 @@ static bool tcg_out_xchg(TCGContext* s, TCGType type, TCGReg r1, TCGReg r2) { re
 static void tcg_out_addi_ptr(TCGContext* s, TCGReg rd, TCGReg rs, tcg_target_long imm)
 {
     /* This function is only used for passing structs by reference. */
-    g_assert_not_reached();
+    assert_not_reached();
 }
 
 static void tcg_out_call(TCGContext* s, const tcg_insn_unit* func, const TCGHelperInfo* info)
@@ -1026,6 +1026,6 @@ static void tcg_out_tb_start(TCGContext* s) { /* nothing to do */ }
 
 bool tcg_target_has_memory_bswap(MemOp memop) { return true; }
 
-static bool tcg_out_qemu_ld_slow_path(TCGContext* s, TCGLabelQemuLdst* l) { g_assert_not_reached(); }
+static bool tcg_out_qemu_ld_slow_path(TCGContext* s, TCGLabelQemuLdst* l) { assert_not_reached(); }
 
-static bool tcg_out_qemu_st_slow_path(TCGContext* s, TCGLabelQemuLdst* l) { g_assert_not_reached(); }
+static bool tcg_out_qemu_st_slow_path(TCGContext* s, TCGLabelQemuLdst* l) { assert_not_reached(); }

@@ -490,7 +490,7 @@ void usb_packet_check_state(USBPacket* p, USBPacketState expected)
     bus = usb_bus_from_device(dev);
     trace_usb_packet_state_fault(bus->busnr, dev->port->path, p->ep->nr, p, usb_packet_state_name(p->state),
                                  usb_packet_state_name(expected));
-    assert(!"usb packet state check failed");
+    assert_not_reached();
 }
 
 void usb_packet_set_state(USBPacket* p, USBPacketState state)

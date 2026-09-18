@@ -154,7 +154,7 @@ static void to_json(JSONWriter* writer, const char* name, const QObject* obj)
                 case QNUM_I64   : json_writer_int64(writer, name, val->u.i64); break;
                 case QNUM_U64   : json_writer_uint64(writer, name, val->u.u64); break;
                 case QNUM_DOUBLE: json_writer_double(writer, name, val->u.dbl); break;
-                default         : abort();
+                default         : assert_not_reached();
             }
             break;
         }
@@ -194,7 +194,7 @@ static void to_json(JSONWriter* writer, const char* name, const QObject* obj)
             json_writer_bool(writer, name, qbool_get_bool(val));
             break;
         }
-        default: abort();
+        default: assert_not_reached();
     }
 }
 

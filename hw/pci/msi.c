@@ -58,7 +58,7 @@ static inline uint8_t msi_cap_sizeof(uint16_t flags)
         case PCI_MSI_FLAGS_64BIT                        : return PCI_MSI_64_SIZEOF;
         case PCI_MSI_FLAGS_MASKBIT                      : return PCI_MSI_32M_SIZEOF;
         case 0                                          : return PCI_MSI_32_SIZEOF;
-        default                                         : abort(); break;
+        default                                         : assert_not_reached(); break;
     }
     return 0;
 }

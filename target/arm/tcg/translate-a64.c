@@ -6990,8 +6990,7 @@ static void shift_reg(TCGv_i64 dst, TCGv_i64 src, int sf, enum a64_shift_type sh
             }
             break;
         default:
-            assert(FALSE); /* all shift types should be handled */
-            break;
+            assert_not_reached(); /* all shift types should be handled */
     }
 
     if (!sf) { /* zero extend final result */

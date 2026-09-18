@@ -4373,7 +4373,7 @@ floatx80 roundAndPackFloatx80(FloatX80RoundPrec roundingPrecision, bool zSign, i
         case float_round_to_zero     : roundIncrement = 0; break;
         case float_round_up          : roundIncrement = zSign ? 0 : roundMask; break;
         case float_round_down        : roundIncrement = zSign ? roundMask : 0; break;
-        default                      : abort();
+        default                      : assert_not_reached();
     }
     roundBits = zSig0 & roundMask;
     if (0x7FFD <= (uint32_t)(zExp - 1)) {
@@ -4415,7 +4415,7 @@ precision80:
         case float_round_to_zero     : increment = 0; break;
         case float_round_up          : increment = !zSign && zSig1; break;
         case float_round_down        : increment = zSign && zSig1; break;
-        default                      : abort();
+        default                      : assert_not_reached();
     }
     if (0x7FFD <= (uint32_t)(zExp - 1)) {
         if ((0x7FFE < zExp) || ((zExp == 0x7FFE) && (zSig0 == UINT64_C(0xFFFFFFFFFFFFFFFF)) && increment)) {
@@ -4442,7 +4442,7 @@ precision80:
                 case float_round_to_zero     : increment = 0; break;
                 case float_round_up          : increment = !zSign && zSig1; break;
                 case float_round_down        : increment = zSign && zSig1; break;
-                default                      : abort();
+                default                      : qemu_build_not_reached();
             }
             if (increment) {
                 ++zSig0;

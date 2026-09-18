@@ -81,7 +81,7 @@ static int required_atomicity(CPUState* cpu, uintptr_t p, MemOp memop)
             atmax = MIN(size, tmp);
             break;
 
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 
     /*
@@ -365,7 +365,7 @@ static uint16_t load_atom_2(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop)
             }
             if ((pi & 15) != 7) { return load_atom_extract_al8_or_exit(cpu, ra, pv, 2); }
             return load_atom_extract_al16_or_exit(cpu, ra, pv, 2);
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -402,7 +402,7 @@ static uint32_t load_atom_4(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop)
         case MO_32:
             if (!(pi & 4)) { return load_atom_extract_al8_or_exit(cpu, ra, pv, 4); }
             return load_atom_extract_al16_or_exit(cpu, ra, pv, 4);
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -439,7 +439,7 @@ static uint64_t load_atom_8(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop)
             if (HAVE_al8) { return load_atom_extract_al8x2(pv); }
             trace_load_atom8_fallback(memop, ra);
             cpu_loop_exit_atomic(cpu, ra);
-        default: g_assert_not_reached();
+        default: qemu_build_not_reached();
     }
 }
 
@@ -491,7 +491,7 @@ static Int128 load_atom_16(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop)
             b = load_atom_extract_al8x2(pv + 8);
             break;
         case MO_128: return load_atomic16_or_exit(cpu, ra, pv);
-        default    : g_assert_not_reached();
+        default    : assert_not_reached();
     }
     return int128_make128(HOST_BIG_ENDIAN ? b : a, HOST_BIG_ENDIAN ? a : b);
 }
@@ -653,7 +653,7 @@ static uint64_t store_parts_leN(void* pv, int size, uint64_t val_le)
                 val_le        >>= 8;
                 n               = 1;
                 break;
-            case 0: g_assert_not_reached();
+            case 0: assert_not_reached();
         }
         pv   += n;
         size -= n;
@@ -807,7 +807,7 @@ static void store_atom_2(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop, uin
         }
     }
     else {
-        g_assert_not_reached();
+        assert_not_reached();
     }
 
     trace_store_atom2_fallback(memop, ra);
@@ -852,7 +852,7 @@ static void store_atom_4(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop, uin
                     break;
                 case 0 : /* aligned */
                 case 2 : /* atmax MO_16 */
-                default: g_assert_not_reached();
+                default: assert_not_reached();
             }
         }
             return;
@@ -871,7 +871,7 @@ static void store_atom_4(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop, uin
             }
             trace_store_atom4_fallback(memop, ra);
             cpu_loop_exit_atomic(cpu, ra);
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
 }
 
@@ -915,7 +915,7 @@ static void store_atom_8(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop, uin
                         break;
                     case 0 : /* aligned */
                     case 4 : /* atmax MO_32 */
-                    default: g_assert_not_reached();
+                    default: assert_not_reached();
                 }
                 return;
             }
@@ -926,7 +926,7 @@ static void store_atom_8(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop, uin
                 return;
             }
             break;
-        default: g_assert_not_reached();
+        default: assert_not_reached();
     }
     trace_store_atom8_fallback(memop, ra);
     cpu_loop_exit_atomic(cpu, ra);
@@ -991,13 +991,13 @@ static void store_atom_16(CPUState* cpu, uintptr_t ra, void* pv, MemOp memop, In
                         break;
                     case 0 : /* aligned */
                     case 8 : /* atmax MO_64 */
-                    default: g_assert_not_reached();
+                    default: assert_not_reached();
                 }
                 return;
             }
             break;
         case MO_128: break;
-        default    : g_assert_not_reached();
+        default    : assert_not_reached();
     }
     trace_store_atom16_fallback(memop, ra);
     cpu_loop_exit_atomic(cpu, ra);

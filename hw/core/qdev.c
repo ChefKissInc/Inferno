@@ -162,7 +162,7 @@ enum ListenerDirection
                     if (_listener->_callback) { _listener->_callback(_listener, ##_args); } \
                 }                                                                           \
                 break;                                                                      \
-            default: abort();                                                               \
+            default: assert_not_reached();                                                  \
         }                                                                                   \
     }                                                                                       \
     while (0)

@@ -1727,7 +1727,7 @@ static inline int coroutine_fn GRAPH_RDLOCK bdrv_co_write_req_prepare(BdrvChild*
             bdrv_write_threshold_check_write(bs, offset, bytes);
             return 0;
         case BDRV_TRACKED_TRUNCATE: assert(child->perm & BLK_PERM_RESIZE); return 0;
-        default                   : abort();
+        default                   : assert_not_reached();
     }
 }
 
