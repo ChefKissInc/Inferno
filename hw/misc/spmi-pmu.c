@@ -125,9 +125,9 @@ static void apple_spmi_pmu_set_alarm(AppleSPMIPMUState* pmu)
 static int apple_spmi_pmu_send(SPMISlave* slave, uint8_t* data, uint8_t len)
 {
     AppleSPMIPMUState* pmu = container_of(slave, AppleSPMIPMUState, parent_obj);
-    uint16_t           addr;
+    uint16_t           addr, end_addr;
 
-    for (addr = pmu->addr; addr < pmu->addr + len; addr++) {
+    for (addr = pmu->addr, end_addr = addr + len; addr < end_addr; addr++) {
         pmu->reg[addr] = data[addr - pmu->addr];
         if (addr == pmu->reg_alarm_ctrl || (addr >= pmu->reg_alarm && addr < pmu->reg_alarm + 4)) {
             apple_spmi_pmu_set_alarm(pmu);
