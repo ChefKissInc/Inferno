@@ -190,26 +190,6 @@ int64_t cpus_get_virtual_clock(void)
     return cpu_get_clock();
 }
 
-/*
- * Signal the new virtual time to the accelerator. This is only needed
- * by accelerators that need to track the changes as we warp time.
- */
-void cpus_set_virtual_clock(int64_t new_time)
-{
-    if (cpus_accel && cpus_accel->set_virtual_clock) { cpus_accel->set_virtual_clock(new_time); }
-}
-
-/*
- * return the time elapsed in VM between vm_start and vm_stop.  Unless
- * icount is active, cpus_get_elapsed_ticks() uses units of the host CPU cycle
- * counter.
- */
-int64_t cpus_get_elapsed_ticks(void)
-{
-    if (cpus_accel->get_elapsed_ticks) { return cpus_accel->get_elapsed_ticks(); }
-    return cpu_get_ticks();
-}
-
 void cpu_set_interrupt(CPUState* cpu, int mask)
 {
     /* Pairs with cpu_test_interrupt(). */
@@ -242,7 +222,7 @@ static int do_vm_stop(RunState state, bool send_stop)
     if (runstate_is_live(oldstate)) {
         vm_was_suspended = (oldstate == RUN_STATE_SUSPENDED);
         runstate_set(state);
-        cpu_disable_ticks();
+        vm_clock_disable();
         if (oldstate == RUN_STATE_RUNNING) { pause_all_vcpus(); }
         ret = vm_state_notify(0, state);
         if (send_stop) { qapi_event_send_stop(); }
@@ -606,7 +586,7 @@ int vm_prepare_start(bool step_pending)
     /* We are sending this now, but the CPUs will be resumed shortly later */
     qapi_event_send_resume();
 
-    cpu_enable_ticks();
+    vm_clock_enable();
     runstate_set(state);
     vm_state_notify(1, state);
     vm_was_suspended = false;

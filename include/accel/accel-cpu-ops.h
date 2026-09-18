@@ -71,17 +71,10 @@ struct AccelOpsClass
 
     /**
      * @get_virtual_clock: fetch virtual clock
-     * @set_virtual_clock: set virtual clock
      *
-     * These allow the timer subsystem to defer to the accelerator to
-     * fetch time. The set function is needed if the accelerator wants
-     * to track the changes to time as the timer is warped through
-     * various timer events.
+     * Allows the timer subsystem to defer to the accelerator to fetch time.
      */
     int64_t (*get_virtual_clock)(void);
-    void    (*set_virtual_clock)(int64_t time);
-
-    int64_t (*get_elapsed_ticks)(void);
 
     /* gdbstub hooks */
     bool (*supports_guest_debug)(void);

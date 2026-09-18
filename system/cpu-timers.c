@@ -35,43 +35,12 @@
 #include "system/cpu-timers.h"
 #include "system/cpu-timers-internal.h"
 
-/* clock and ticks */
-
-static int64_t cpu_get_ticks_locked(void)
-{
-    int64_t ticks = timers_state.cpu_ticks_offset;
-    if (timers_state.cpu_ticks_enabled) { ticks += cpu_get_host_ticks(); }
-
-    if (timers_state.cpu_ticks_prev > ticks) {
-        /* Non increasing ticks may happen if the host uses software suspend. */
-        timers_state.cpu_ticks_offset += timers_state.cpu_ticks_prev - ticks;
-        ticks                          = timers_state.cpu_ticks_prev;
-    }
-
-    timers_state.cpu_ticks_prev = ticks;
-    return ticks;
-}
-
-/*
- * return the time elapsed in VM between vm_start and vm_stop.
- * cpu_get_ticks() uses units of the host CPU cycle counter.
- */
-int64_t cpu_get_ticks(void)
-{
-    int64_t ticks;
-
-    qemu_spin_lock(&timers_state.vm_clock_lock);
-    ticks = cpu_get_ticks_locked();
-    qemu_spin_unlock(&timers_state.vm_clock_lock);
-    return ticks;
-}
-
 int64_t cpu_get_clock_locked(void)
 {
     int64_t time;
 
-    time = timers_state.cpu_clock_offset;
-    if (timers_state.cpu_ticks_enabled) { time += get_clock(); }
+    time = timers_state.vm_clock_offset;
+    if (timers_state.vm_clock_enabled) { time += get_clock(); }
 
     return time;
 }
@@ -95,32 +64,29 @@ int64_t cpu_get_clock(void)
 }
 
 /*
- * enable cpu_get_ticks()
+ * Start the VM clock.
  * Caller must hold BQL which serves as mutex for vm_clock_seqlock.
  */
-void cpu_enable_ticks(void)
+void vm_clock_enable(void)
 {
     seqlock_write_lock(&timers_state.vm_clock_seqlock, &timers_state.vm_clock_lock);
-    if (!timers_state.cpu_ticks_enabled) {
-        timers_state.cpu_ticks_offset  -= cpu_get_host_ticks();
-        timers_state.cpu_clock_offset  -= get_clock();
-        timers_state.cpu_ticks_enabled  = 1;
+    if (!timers_state.vm_clock_enabled) {
+        timers_state.vm_clock_offset  -= get_clock();
+        timers_state.vm_clock_enabled  = 1;
     }
     seqlock_write_unlock(&timers_state.vm_clock_seqlock, &timers_state.vm_clock_lock);
 }
 
 /*
- * disable cpu_get_ticks() : the clock is stopped. You must not call
- * cpu_get_ticks() after that.
+ * Stop the VM clock. cpu_get_clock() keeps returning the time it stopped at.
  * Caller must hold BQL which serves as mutex for vm_clock_seqlock.
  */
-void cpu_disable_ticks(void)
+void vm_clock_disable(void)
 {
     seqlock_write_lock(&timers_state.vm_clock_seqlock, &timers_state.vm_clock_lock);
-    if (timers_state.cpu_ticks_enabled) {
-        timers_state.cpu_ticks_offset  += cpu_get_host_ticks();
-        timers_state.cpu_clock_offset   = cpu_get_clock_locked();
-        timers_state.cpu_ticks_enabled  = 0;
+    if (timers_state.vm_clock_enabled) {
+        timers_state.vm_clock_offset  = cpu_get_clock_locked();
+        timers_state.vm_clock_enabled = 0;
     }
     seqlock_write_unlock(&timers_state.vm_clock_seqlock, &timers_state.vm_clock_lock);
 }
@@ -129,7 +95,7 @@ void qemu_timer_notify_cb(void* opaque, QEMUClockType type) { qemu_notify_event(
 
 TimersState timers_state;
 
-/* initialize timers state and the cpu throttle for convenience */
+/* initialize timers state */
 void cpu_timers_init(void)
 {
     seqlock_init(&timers_state.vm_clock_seqlock);

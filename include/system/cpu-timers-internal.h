@@ -24,33 +24,19 @@
 
 #pragma once
 
-/* timers state, for sharing between icount and cpu-timers */
-
 typedef struct TimersState
 {
-    /* Protected by BQL.  */
-    int64_t cpu_ticks_prev;
-    int64_t cpu_ticks_offset;
-
     /*
-     * Protect fields that can be respectively read outside the
-     * BQL, and written from multiple threads.
+     * Protects vm_clock_offset and vm_clock_enabled, which are read
+     * outside the BQL. The BQL serves as the mutex for the write side.
      */
     QemuSeqLock vm_clock_seqlock;
     QemuSpin    vm_clock_lock;
 
-    int16_t cpu_ticks_enabled;
-
-    int64_t vm_clock_warp_start;
-    int64_t cpu_clock_offset;
-
-    /* Only written by TCG thread */
-    int64_t qemu_icount;
+    int16_t vm_clock_enabled;
+    int64_t vm_clock_offset;
 } TimersState;
 
 extern TimersState timers_state;
 
-/*
- * icount needs this internal from cpu-timers when adjusting the icount shift.
- */
 int64_t cpu_get_clock_locked(void);

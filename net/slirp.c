@@ -201,14 +201,14 @@ static void* net_slirp_timer_new_opaque(SlirpTimerId id, void* cb_opaque, void* 
     t->slirp      = s->slirp;
     t->id         = id;
     t->cb_opaque  = cb_opaque;
-    timer_init_full(&t->timer, NULL, QEMU_CLOCK_VIRTUAL, SCALE_MS, QEMU_TIMER_ATTR_EXTERNAL, net_slirp_timer_cb, t);
+    timer_init_ms(&t->timer, QEMU_CLOCK_VIRTUAL, net_slirp_timer_cb, t);
     return t;
 }
 #else
 static void* net_slirp_timer_new(SlirpTimerCb cb, void* cb_opaque, void* opaque)
 {
     SlirpTimer* t = g_new(SlirpTimer, 1);
-    timer_init_full(&t->timer, NULL, QEMU_CLOCK_VIRTUAL, SCALE_MS, QEMU_TIMER_ATTR_EXTERNAL, cb, cb_opaque);
+    timer_init_ms(&t->timer, QEMU_CLOCK_VIRTUAL, cb, cb_opaque);
     return t;
 }
 #endif
