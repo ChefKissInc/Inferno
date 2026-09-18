@@ -559,6 +559,13 @@ static inline bool cpu_handle_interrupt(CPUState* cpu, TranslationBlock** last_t
     qatomic_set_mb(&cpu->neg.tb_exit_request, false);
 
     if (unlikely(cpu_test_interrupt(cpu, ~0))) {
+        /* EXITTB alone is an atomic clear and a local store. */
+        if (!cpu_test_interrupt(cpu, ~CPU_INTERRUPT_EXITTB)) {
+            cpu_reset_interrupt(cpu, CPU_INTERRUPT_EXITTB);
+            *last_tb = NULL;
+            goto check_exit_request;
+        }
+
         bql_lock();
         if (cpu_test_interrupt(cpu, CPU_INTERRUPT_DEBUG)) {
             cpu_reset_interrupt(cpu, CPU_INTERRUPT_DEBUG);
@@ -620,6 +627,7 @@ static inline bool cpu_handle_interrupt(CPUState* cpu, TranslationBlock** last_t
         bql_unlock();
     }
 
+check_exit_request:
     /*
      * Finally, check if we need to exit to the main loop.
      * The corresponding store-release is in cpu_exit.
