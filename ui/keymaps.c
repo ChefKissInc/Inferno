@@ -107,7 +107,7 @@ static int parse_keyboard_layout(kbd_layout_t* k, const name2keysym_t* table, co
         }
         else {
             int offset = 0;
-            while (line[offset] != 0 && line[offset] != ' ' && offset < sizeof(keyname) - 1) {
+            while (offset < sizeof(keyname) - 1 && line[offset] != 0 && line[offset] != ' ') {
                 keyname[offset] = line[offset];
                 offset++;
             }
