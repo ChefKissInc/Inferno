@@ -232,10 +232,12 @@ AppleDTProp* apple_dt_set_prop_str(AppleDTNode* node, const char* name, const ch
 
 AppleDTProp* apple_dt_set_prop_strn(AppleDTNode* node, const char* name, uint32_t max_len, const char* val)
 {
-    g_autofree char* buf;
+    g_autofree char* buf = NULL;
 
-    buf = g_malloc(max_len);
-    strncpy(buf, val, max_len);
+    assert_cmpint(max_len, >, 0);
+
+    buf = g_malloc0(max_len);
+    strncpy(buf, val, max_len - 1);
     return apple_dt_set_prop(node, name, max_len, buf);
 }
 
@@ -423,7 +425,7 @@ static uint32_t apple_dt_prop_placeholder_len(AppleDTProp* prop)
 
     if (prop->len == 0) { return 0; }
 
-    next = string = g_new0(char, prop->len);
+    next = string = g_new0(char, prop->len + 1);
     memcpy(next, prop->data, prop->len);
 
     while ((token = qemu_strsep(&next, ",")) != NULL) {
