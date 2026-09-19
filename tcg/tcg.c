@@ -4007,7 +4007,7 @@ static void temp_allocate_frame(TCGContext* s, TCGTemp* ts)
          */
         ts -= ts->temp_subindex;
         for (int i = 0; i < part_count; ++i) {
-            ts[i].mem_offset    = off + i * part_size;
+            ts[i].mem_offset    = off + (intptr_t)i * part_size;
             ts[i].mem_base      = s->frame_temp;
             ts[i].mem_allocated = 1;
         }
