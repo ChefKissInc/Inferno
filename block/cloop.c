@@ -180,7 +180,7 @@ static int cloop_open(BlockDriverState* bs, QDict* options, int flags, Error** e
     s->current_block = s->n_blocks;
 
     s->sectors_per_block = s->block_size / 512;
-    bs->total_sectors    = s->n_blocks * s->sectors_per_block;
+    bs->total_sectors    = (int64_t)s->n_blocks * s->sectors_per_block;
     qemu_co_mutex_init(&s->lock);
     return 0;
 
