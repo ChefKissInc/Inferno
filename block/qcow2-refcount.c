@@ -497,7 +497,7 @@ int64_t qcow2_refcount_area(BlockDriverState* bs, uint64_t start_offset, uint64_
     }
 
     table_offset = start_offset + additional_refblock_count * s->cluster_size;
-    end_offset   = table_offset + table_clusters * s->cluster_size;
+    end_offset   = table_offset + (uint64_t)table_clusters * s->cluster_size;
 
     /* Fill the refcount blocks, and create new ones, if necessary */
     block_offset = start_offset;
@@ -1069,7 +1069,7 @@ int qcow2_update_snapshot_refcount(BlockDriverState* bs, int64_t l1_table_offset
             }
 
             for (slice = 0; slice < n_slices; slice++) {
-                ret = qcow2_cache_get(bs, s->l2_table_cache, l2_offset + slice * slice_size2, (void**)&l2_slice);
+                ret = qcow2_cache_get(bs, s->l2_table_cache, l2_offset + (uint64_t)slice * slice_size2, (void**)&l2_slice);
                 if (ret < 0) { goto fail; }
 
                 for (j = 0; j < s->l2_slice_size; j++) {

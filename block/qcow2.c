@@ -4375,7 +4375,7 @@ static int GRAPH_RDLOCK make_completely_empty(BlockDriverState* bs)
     /* After this call, neither the in-memory nor the on-disk refcount
      * information accurately describe the actual references */
 
-    ret = bdrv_pwrite_zeroes(bs->file, s->l1_table_offset, l1_clusters * s->cluster_size, 0);
+    ret = bdrv_pwrite_zeroes(bs->file, s->l1_table_offset, (int64_t)l1_clusters * s->cluster_size, 0);
     if (ret < 0) { goto fail_broken_refcounts; }
     memset(s->l1_table, 0, l1_size2);
 
@@ -4386,7 +4386,7 @@ static int GRAPH_RDLOCK make_completely_empty(BlockDriverState* bs)
      * overwrite parts of the existing refcount and L1 table, which is not
      * an issue because the dirty flag is set, complete data loss is in fact
      * desired and partial data loss is consequently fine as well */
-    ret = bdrv_pwrite_zeroes(bs->file, s->cluster_size, (2 + l1_clusters) * s->cluster_size, 0);
+    ret = bdrv_pwrite_zeroes(bs->file, s->cluster_size, ((int64_t)2 + l1_clusters) * s->cluster_size, 0);
     /* This call (even if it failed overall) may have overwritten on-disk
      * refcount structures; in that case, the in-memory refcount information
      * will probably differ from the on-disk information which makes the BDS
@@ -4453,7 +4453,7 @@ static int GRAPH_RDLOCK make_completely_empty(BlockDriverState* bs)
     ret = qcow2_mark_clean(bs);
     if (ret < 0) { goto fail; }
 
-    ret = bdrv_truncate(bs->file, (3 + l1_clusters) * s->cluster_size, false, PREALLOC_MODE_OFF, 0, &local_err);
+    ret = bdrv_truncate(bs->file, ((int64_t)3 + l1_clusters) * s->cluster_size, false, PREALLOC_MODE_OFF, 0, &local_err);
     if (ret < 0) {
         error_report_err(local_err);
         goto fail;

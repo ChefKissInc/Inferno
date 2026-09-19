@@ -258,7 +258,7 @@ static int GRAPH_RDLOCK l2_allocate(BlockDriverState* bs, int l1_index)
 
     trace_qcow2_l2_allocate_get_empty(bs, l1_index);
     for (slice = 0; slice < n_slices; slice++) {
-        ret = qcow2_cache_get_empty(bs, s->l2_table_cache, l2_offset + slice * slice_size2, (void**)&l2_slice);
+        ret = qcow2_cache_get_empty(bs, s->l2_table_cache, l2_offset + (int64_t)slice * slice_size2, (void**)&l2_slice);
         if (ret < 0) { goto fail; }
 
         if ((old_l2_offset & L1E_OFFSET_MASK) == 0) {
@@ -1333,7 +1333,7 @@ static int coroutine_fn GRAPH_RDLOCK handle_copied(BlockDriverState* bs, uint64_
         keep_clusters = count_single_write_clusters(bs, nb_clusters, l2_slice, l2_index, false);
         assert(keep_clusters <= nb_clusters);
 
-        *bytes = MIN(*bytes, keep_clusters * s->cluster_size - offset_into_cluster(s, guest_offset));
+        *bytes = MIN(*bytes, (int64_t)keep_clusters * s->cluster_size - offset_into_cluster(s, guest_offset));
         assert(*bytes != 0);
 
         ret = calculate_l2_meta(bs, cluster_offset, guest_offset, *bytes, l2_slice, m, true);
@@ -1997,7 +1997,7 @@ static int GRAPH_RDLOCK expand_zero_clusters_in_l1(BlockDriverState* bs, uint64_
         if (ret < 0) { goto fail; }
 
         for (slice = 0; slice < n_slices; slice++) {
-            uint64_t slice_offset = l2_offset + slice * slice_size2;
+            uint64_t slice_offset = l2_offset + (uint64_t)slice * slice_size2;
             bool     l2_dirty     = false;
             if (is_active_l1) {
                 /* get active L2 tables from cache */
