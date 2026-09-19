@@ -4197,7 +4197,7 @@ static int img_bench(const img_cmd_t* ccmd, int argc, char** argv)
            data.n, data.write ? "write" : "read", data.bufsize, data.nrreq, data.offset, data.step);
     if (flush_interval) { printf("Sending flush every %d requests\n", flush_interval); }
 
-    buf_size = data.nrreq * data.bufsize;
+    buf_size = (size_t)data.nrreq * data.bufsize;
     data.buf = blk_blockalign(blk, buf_size);
     memset(data.buf, pattern, data.nrreq * data.bufsize);
 
