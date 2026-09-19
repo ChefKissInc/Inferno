@@ -181,7 +181,7 @@ void mdns_service_unregister(MDNSService* svc)
     #include <avahi-common/error.h>
     #include <avahi-common/strlst.h>
     #include <avahi-glib/glib-watch.h>
-    #include <avahi-glib/glib-common.h>
+    #include <avahi-glib/glib-malloc.h>
 
 struct MDNSService
 {
