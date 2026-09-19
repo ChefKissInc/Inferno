@@ -457,7 +457,7 @@ SysBusDevice* apple_mca_create(AppleDTNode* node, AppleSIODMAEndpoint* tx_ep, Ap
     s   = APPLE_MCA(sbd);
 
     prop = apple_dt_get_prop(node, "reg");
-    g_assert_nonnull(prop);
+    assert_nonnull(prop);
 
     s->sio_cluster_count = ldq_le_p(prop->data + sizeof(uint64_t)) / MCA_SIO_REG_STRIDE;
     s->sio_clusters      = g_new0(AppleMCACluster, s->sio_cluster_count);

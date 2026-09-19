@@ -1951,25 +1951,25 @@ static void t8030_create_scaler(AppleT8030MachineState* t8030)
     AppleDTProp*  prop;
 
     AppleDARTState* dart = APPLE_DART(object_property_get_link(OBJECT(t8030), "dart-scaler", &error_fatal));
-    g_assert_nonnull(dart);
+    assert_nonnull(dart);
     child = apple_dt_get_node(t8030->device_tree, "arm-io/dart-scaler/mapper-scaler");
-    g_assert_nonnull(child);
+    assert_nonnull(child);
     prop = apple_dt_get_prop(child, "reg");
-    g_assert_nonnull(prop);
+    assert_nonnull(prop);
 
     child = apple_dt_get_node(t8030->device_tree, "arm-io/scaler0");
 
     sbd = apple_scaler_create(child, MEMORY_REGION(apple_dart_iommu_mr(dart, ldl_le_p(prop->data))));
 
     prop = apple_dt_get_prop(child, "reg");
-    g_assert_nonnull(prop);
+    assert_nonnull(prop);
     reg = (uint64_t*)prop->data;
 
     sysbus_mmio_map(sbd, 0, t8030->armio_base + reg[0]);
     sysbus_mmio_map(sbd, 1, t8030->armio_base + reg[2]);
 
     prop = apple_dt_get_prop(child, "interrupts");
-    g_assert_nonnull(prop);
+    assert_nonnull(prop);
     uint32_t* ints = (uint32_t*)prop->data;
 
     for (size_t i = 0; i < prop->len / sizeof(uint32_t); i++) {

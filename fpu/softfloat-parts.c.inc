@@ -538,12 +538,12 @@ static FloatPartsN* partsN(addsub)(FloatPartsN* a, FloatPartsN* b, float_status*
     }
 
     if (b->cls == float_class_zero) {
-        g_assert(is_anynorm(a->cls));
+        assert(is_anynorm(a->cls));
         return a;
     }
 
-    g_assert(a->cls == float_class_zero);
-    g_assert(is_anynorm(b->cls));
+    assert(a->cls == float_class_zero);
+    assert(is_anynorm(b->cls));
 return_b:
     b->sign = b_sign;
     return b;
@@ -598,7 +598,7 @@ static FloatPartsN* partsN(mul)(FloatPartsN* a, FloatPartsN* b, float_status* s)
         return a;
     }
 
-    g_assert(ab_mask & float_cmask_zero);
+    assert(ab_mask & float_cmask_zero);
     a->cls  = float_class_zero;
     a->sign = sign;
     return a;
@@ -654,7 +654,7 @@ static FloatPartsN* partsN(muladd_scalbn)(FloatPartsN* a, FloatPartsN* b, FloatP
             goto return_inf;
         }
 
-        g_assert(ab_mask & float_cmask_zero);
+        assert(ab_mask & float_cmask_zero);
         if (is_anynorm(c->cls)) {
             *a = *c;
             goto return_normal;
@@ -663,7 +663,7 @@ static FloatPartsN* partsN(muladd_scalbn)(FloatPartsN* a, FloatPartsN* b, FloatP
             if (a->sign != c->sign) { goto return_sub_zero; }
             goto return_zero;
         }
-        g_assert(c->cls == float_class_inf);
+        assert(c->cls == float_class_inf);
     }
 
     if (unlikely(c->cls == float_class_inf)) {
@@ -773,7 +773,7 @@ static FloatPartsN* partsN(div)(FloatPartsN* a, FloatPartsN* b, float_status* s)
     }
 
     /* X / 0 => Inf */
-    g_assert(b->cls == float_class_zero);
+    assert(b->cls == float_class_zero);
     float_raise(float_flag_divbyzero, s);
     a->cls = float_class_inf;
     return a;
@@ -811,7 +811,7 @@ static FloatPartsN* partsN(modrem)(FloatPartsN* a, FloatPartsN* b, uint64_t* mod
     if (ab_mask & float_cmask_denormal) { float_raise(float_flag_input_denormal_used, s); }
 
     /* N % Inf; 0 % N */
-    g_assert(b->cls == float_class_inf || a->cls == float_class_zero);
+    assert(b->cls == float_class_inf || a->cls == float_class_zero);
     return a;
 }
 
@@ -1525,7 +1525,7 @@ static FloatRelation partsN(compare)(FloatPartsN* a, FloatPartsN* b, float_statu
         goto b_sign;
     }
     else {
-        g_assert(a->cls == float_class_inf);
+        assert(a->cls == float_class_inf);
     }
 
 a_sign:
@@ -1586,7 +1586,7 @@ static void partsN(log2)(FloatPartsN* a, float_status* s, const FloatFmt* fmt)
     if (unlikely(a->sign)) { goto d_nan; }
 
     /* TODO: This algorithm looses bits too quickly for float128. */
-    g_assert(N == 64);
+    assert(N == 64);
 
     a_exp = a->exp;
     f_exp = -1;
