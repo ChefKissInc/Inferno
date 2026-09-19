@@ -294,7 +294,7 @@ static int qcrypto_block_luks_splitkeylen_sectors(const QCryptoBlockLUKS* luks, 
      * but instead follows the cryptsetup implementation.
      */
 
-    size_t splitkeylen = luks->header.master_key_len * stripes;
+    size_t splitkeylen = (size_t)luks->header.master_key_len * stripes;
 
     /* First align the key material size to block size*/
     size_t splitkeylen_sectors = DIV_ROUND_UP(splitkeylen, QCRYPTO_BLOCK_LUKS_SECTOR_SIZE);
@@ -607,7 +607,7 @@ static int qcrypto_block_luks_store_key(QCryptoBlock* block, unsigned int slot_i
 
     assert(slot_idx < QCRYPTO_BLOCK_LUKS_NUM_KEY_SLOTS);
     slot        = &luks->header.key_slots[slot_idx];
-    splitkeylen = luks->header.master_key_len * slot->stripes;
+    splitkeylen = (size_t)luks->header.master_key_len * slot->stripes;
 
     if (qcrypto_random_bytes(slot->salt, QCRYPTO_BLOCK_LUKS_SALT_LEN, errp) < 0) { goto cleanup; }
 
@@ -733,7 +733,7 @@ static int qcrypto_block_luks_load_key(QCryptoBlock* block, size_t slot_idx, con
     slot = &luks->header.key_slots[slot_idx];
     if (slot->active != QCRYPTO_BLOCK_LUKS_KEY_SLOT_ENABLED) { return 0; }
 
-    splitkeylen = luks->header.master_key_len * slot->stripes;
+    splitkeylen = (size_t)luks->header.master_key_len * slot->stripes;
     splitkey    = g_new0(uint8_t, splitkeylen);
     possiblekey = g_new0(uint8_t, luks->header.master_key_len);
 
@@ -909,7 +909,7 @@ static int qcrypto_block_luks_erase_key(QCryptoBlock* block, unsigned int slot_i
     assert(slot_idx < QCRYPTO_BLOCK_LUKS_NUM_KEY_SLOTS);
     slot = &luks->header.key_slots[slot_idx];
 
-    splitkeylen = luks->header.master_key_len * slot->stripes;
+    splitkeylen = (size_t)luks->header.master_key_len * slot->stripes;
     assert(splitkeylen > 0);
 
     garbagesplitkey = g_new0(uint8_t, splitkeylen);
