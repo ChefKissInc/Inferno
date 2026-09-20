@@ -26,6 +26,7 @@
 #include "qapi/error.h"
 #include "qemu/error-report.h"
 #include "system/address-spaces.h"
+#include "system/tcg.h"
 #include "target/arm/cpregs.h"
 #include "arm-powerctl.h"
 
@@ -111,7 +112,10 @@ static void apple_a9_realize(DeviceState* dev, Error** errp)
 //     tclass->parent_reset(dev);
 // }
 
-static void apple_a9_instance_init(Object* obj) { object_property_set_uint(obj, "cntfrq", 24000000, &error_fatal); }
+static void apple_a9_instance_init(Object* obj) {
+    object_property_set_uint(obj, "cntfrq", 24000000, &error_fatal);
+    if (tcg_enabled()) { object_property_set_bool(obj, "pauth-noop", true, NULL); }
+}
 
 AppleA9* apple_a9_create(const char* name, uint32_t cpu_id, uint32_t phys_id)
 {
