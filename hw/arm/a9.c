@@ -112,7 +112,8 @@ static void apple_a9_realize(DeviceState* dev, Error** errp)
 //     tclass->parent_reset(dev);
 // }
 
-static void apple_a9_instance_init(Object* obj) {
+static void apple_a9_instance_init(Object* obj)
+{
     object_property_set_uint(obj, "cntfrq", 24000000, &error_fatal);
     if (tcg_enabled()) { object_property_set_bool(obj, "pauth-noop", true, NULL); }
 }

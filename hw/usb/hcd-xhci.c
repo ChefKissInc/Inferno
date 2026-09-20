@@ -1869,9 +1869,7 @@ static USBPort* xhci_lookup_uport(XHCIState* xhci, uint32_t* slot_ctx)
         port = (slot_ctx[0] >> 4 * i) & 0x0f;
         if (!port) { break; }
         int n = snprintf(path + pos, sizeof(path) - pos, ".%d", port);
-        if (n < 0 || n >= sizeof(path) - pos) {
-            break;
-        }
+        if (n < 0 || n >= sizeof(path) - pos) { break; }
         pos += n;
     }
 
