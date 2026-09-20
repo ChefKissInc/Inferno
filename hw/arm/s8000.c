@@ -492,9 +492,9 @@ static uint64_t pmgr_unk_reg_read(void* opaque, hwaddr addr, unsigned size)
             ret |= ((uint32_t)raw_secure_mode << 1);
             return ret;
         case 0x102BC080:                              // ECID_LO
-            return extract32(s8000->ecid, 0, 32);     // ECID lower
+            return extract64(s8000->ecid, 0, 32);     // ECID lower
         case 0x102BC084:                              // ECID_HI
-            return extract32(s8000->ecid, 32, 32);    // ECID upper
+            return extract64(s8000->ecid, 32, 32);    // ECID upper
         case 0x102E8000:                              // ????
             return 0x4;
         case 0x102BC104:    // ???? bit 24 => is fresh boot?
