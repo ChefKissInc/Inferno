@@ -1,19 +1,34 @@
-Img4 { }
-
-DEFINITIONS EXPLICIT TAGS ::=
+Image4 DEFINITIONS EXPLICIT TAGS ::=
 
 BEGIN
 
-Img4Payload ::= SEQUENCE {
-	magic       IA5String (SIZE(1..4)),
-	type        IA5String (SIZE(1..4)),
-	description IA5String (SIZE(1..128)),
-	data        OCTET STRING,
+IM4P ::= SEQUENCE {
+	magic			IA5String (SIZE(1..4)),
+	type			IA5String (SIZE(1..4)),
+	description		IA5String,
+	data			OCTET STRING,
+	kbag			OCTET STRING OPTIONAL,
+	trailer			SEQUENCE OF ANY OPTIONAL
+}
 
-	-- This appears to be a sequence with two integers,
-	-- at least for the DeviceTree file.
-	extra       ANY                         OPTIONAL,
-	payp        ANY                         OPTIONAL
+IM4R ::= SEQUENCE {
+	magic			IA5String (SIZE(1..4)),
+	generatorProps	SET OF ANY
+}
+
+IM4M ::= SEQUENCE {
+	magic			IA5String (SIZE(1..4)),
+	version			INTEGER,
+	body			SET OF ANY,
+	signature		OCTET STRING,
+	certificates	SEQUENCE OF ANY
+}
+
+IMG4 ::= SEQUENCE {
+	magic		IA5String (SIZE(1..4)),
+	payload		IM4P,
+	manifest	[0] EXPLICIT IM4M OPTIONAL,
+	restoreInfo	[1] EXPLICIT IM4R OPTIONAL
 }
 
 END

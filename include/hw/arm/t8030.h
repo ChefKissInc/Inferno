@@ -56,7 +56,6 @@ typedef struct
     AppleBootInfo   boot_info;
     AppleVideoArgs  video_args;
     char*           trustcache_filename;
-    char*           ticket_filename;
     char*           sep_rom_filename;
     char*           sep_fw_filename;
     char*           securerom_filename;

@@ -326,9 +326,9 @@ static void extract_im4p_payload(const char* filename, char* payload_type, uint8
 {
     uint8_t*  file_data;
     gsize     fsize;
-    char      errorDescription[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
+    char      error_desc[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
     asn1_node img4_definitions = NULL;
-    asn1_node img4;
+    asn1_node im4p;
     int       ret;
     char      magic[4];
     char      description[128];
@@ -340,70 +340,70 @@ static void extract_im4p_payload(const char* filename, char* payload_type, uint8
         return;
     }
 
-    if (asn1_array2tree(img4_definitions_array, &img4_definitions, errorDescription) != ASN1_SUCCESS) {
-        error_setg(&error_fatal, "ASN.1 parser initialisation failed: `%s`", errorDescription);
+    if (asn1_array2tree(img4_definitions_array, &img4_definitions, error_desc) != ASN1_SUCCESS) {
+        error_setg(&error_fatal, "ASN.1 parser initialisation failed: `%s`", error_desc);
         return;
     }
 
-    ret = asn1_create_element(img4_definitions, "Img4.Img4Payload", &img4);
+    ret = asn1_create_element(img4_definitions, "Image4.IM4P", &im4p);
     if (ret != ASN1_SUCCESS) {
-        error_setg(&error_fatal, "Img4Payload element creation failed: %d", ret);
+        error_setg(&error_fatal, "IM4P element creation failed: %d", ret);
         return;
     }
 
-    ret = asn1_der_decoding(&img4, file_data, (uint32_t)fsize, errorDescription);
+    ret = asn1_der_decoding(&im4p, file_data, (uint32_t)fsize, error_desc);
     if (ret != ASN1_SUCCESS) {
         *data   = file_data;
         *length = (uint32_t)fsize;
         strncpy(payload_type, "raw", 4);
-        asn1_delete_structure(&img4);
+        asn1_delete_structure(&im4p);
         asn1_delete_structure(&img4_definitions);
         return;
     }
 
     len = 4;
-    ret = asn1_read_value(img4, "magic", magic, &len);
+    ret = asn1_read_value(im4p, "magic", magic, &len);
     if (ret != ASN1_SUCCESS) {
-        error_setg(&error_fatal, "im4p magic read for `%s` failed: %d", filename, ret);
+        error_setg(&error_fatal, "IM4P magic read for `%s` failed: %d", filename, ret);
         return;
     }
 
     if (memcmp(magic, "IM4P", 4) != 0) {
-        error_setg(&error_fatal, "`%s` is not an img4 payload", filename);
+        error_setg(&error_fatal, "`%s` is not an IM4P", filename);
         return;
     }
 
     len = 4;
-    ret = asn1_read_value(img4, "type", payload_type, &len);
+    ret = asn1_read_value(im4p, "type", payload_type, &len);
     if (ret != ASN1_SUCCESS) {
-        error_setg(&error_fatal, "img4 payload type read for `%s` failed: %d", filename, ret);
+        error_setg(&error_fatal, "IM4P type read for `%s` failed: %d", filename, ret);
         return;
     }
 
     len = 128;
-    ret = asn1_read_value(img4, "description", description, &len);
+    ret = asn1_read_value(im4p, "description", description, &len);
     if (ret != ASN1_SUCCESS) {
-        error_setg(&error_fatal, "img4 payload description read for `%s` failed: %d", filename, ret);
+        error_setg(&error_fatal, "IM4P description read for `%s` failed: %d", filename, ret);
         return;
     }
 
     len = 0;
-    ret = asn1_read_value(img4, "data", NULL, &len);
+    ret = asn1_read_value(im4p, "data", NULL, &len);
     if (ret != ASN1_MEM_ERROR) {
-        error_setg(&error_fatal, "img4 payload size read for `%s` failed: %d", filename, ret);
+        error_setg(&error_fatal, "IM4P size read for `%s` failed: %d", filename, ret);
         return;
     }
 
     payload_data = g_malloc0(len);
-    ret          = asn1_read_value(img4, "data", payload_data, &len);
+    ret          = asn1_read_value(im4p, "data", payload_data, &len);
     g_free(file_data);
 
     if (ret != ASN1_SUCCESS) {
-        error_setg(&error_fatal, "img4 payload read for `%s` failed: %d", filename, ret);
+        error_setg(&error_fatal, "IM4P read for `%s` failed: %d", filename, ret);
         return;
     }
 
-    asn1_delete_structure(&img4);
+    asn1_delete_structure(&im4p);
     asn1_delete_structure(&img4_definitions);
 
     if (memcmp(payload_data, "bvx", 3) == 0) {
@@ -1354,3 +1354,105 @@ MachoSection64* apple_boot_get_section(MachoSegmentCommand64* segment, const cha
 vaddr apple_boot_fixup_slide_va(vaddr va) { return (0xFFFF000000000000 | va) + g_virt_slide; }
 
 void* apple_boot_va_to_ptr(vaddr va) { return (void*)(apple_boot_fixup_slide_va(va) - g_virt_base + g_phys_base); }
+
+void apple_boot_extract_manifest(const uint8_t* img4_data, uint64_t img4_data_len_max, gchar** out_data,
+                                 gsize* out_size)
+{
+    asn1_node img4_definitions = NULL;
+    asn1_node img4;
+    char      error_desc[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
+    int       ret;
+    char      magic[4];
+    int       len;
+
+    *out_data = NULL;
+    *out_size = 0;
+
+    if (asn1_array2tree(img4_definitions_array, &img4_definitions, error_desc) != ASN1_SUCCESS) {
+        error_setg(&error_fatal, "ASN.1 parser initialisation failed: `%s`", error_desc);
+        return;
+    }
+
+    ret = asn1_create_element(img4_definitions, "Image4.IMG4", &img4);
+    if (ret != ASN1_SUCCESS) {
+        error_setg(&error_fatal, "IMG4 element creation failed: %d", ret);
+        return;
+    }
+
+    unsigned char cls;
+    int           tag_len;
+    unsigned long tag_num;
+    ret = asn1_get_tag_der(img4_data, (int)img4_data_len_max, &cls, &tag_len, &tag_num);
+    if (ret != ASN1_SUCCESS) {
+        asn1_delete_structure(&img4);
+        asn1_delete_structure(&img4_definitions);
+        return;
+    }
+
+    int  len_len;
+    long content_len = asn1_get_length_der(img4_data + tag_len, (int)(img4_data_len_max - tag_len), &len_len);
+    if (content_len < 0) {
+        asn1_delete_structure(&img4);
+        asn1_delete_structure(&img4_definitions);
+        return;
+    }
+
+    uint64_t total_len = (uint64_t)tag_len + (uint64_t)len_len + (uint64_t)content_len;
+    if (total_len > img4_data_len_max) { return; }
+
+    ret = asn1_der_decoding(&img4, img4_data, (uint32_t)total_len, error_desc);
+    if (ret != ASN1_SUCCESS) {
+        asn1_delete_structure(&img4);
+        asn1_delete_structure(&img4_definitions);
+        return;
+    }
+
+    len = 4;
+    ret = asn1_read_value(img4, "magic", magic, &len);
+    if (ret != ASN1_SUCCESS) {
+        asn1_delete_structure(&img4);
+        asn1_delete_structure(&img4_definitions);
+        return;
+    }
+
+    if (memcmp(magic, "IMG4", 4) != 0) {
+        asn1_delete_structure(&img4);
+        asn1_delete_structure(&img4_definitions);
+        return;
+    }
+
+    int start, end;
+    ret = asn1_der_decoding_startEnd(img4, img4_data, total_len, "manifest", &start, &end);
+    if (ret != ASN1_SUCCESS || start < 0 || end < 0 || start == end) {
+        asn1_delete_structure(&img4);
+        asn1_delete_structure(&img4_definitions);
+        return;
+    }
+
+    int           wrapper_tag_len;
+    unsigned long wrapper_tag_num;
+    ret = asn1_get_tag_der(img4_data + start, (int)(total_len - start), &cls, &wrapper_tag_len, &wrapper_tag_num);
+    if (ret != ASN1_SUCCESS) {
+        asn1_delete_structure(&img4);
+        asn1_delete_structure(&img4_definitions);
+        return;
+    }
+
+    int  wrapper_len_len;
+    long inner_len = asn1_get_length_der(img4_data + start + wrapper_tag_len,
+                                         (int)(total_len - start - wrapper_tag_len), &wrapper_len_len);
+    if (inner_len < 0) {
+        asn1_delete_structure(&img4);
+        asn1_delete_structure(&img4_definitions);
+        return;
+    }
+
+    int inner_start = start + wrapper_tag_len + wrapper_len_len;
+
+    *out_size = inner_len;
+    *out_data = g_malloc(*out_size);
+    memcpy(*out_data, img4_data + inner_start, *out_size);
+
+    asn1_delete_structure(&img4);
+    asn1_delete_structure(&img4_definitions);
+}

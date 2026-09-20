@@ -362,7 +362,7 @@ typedef struct
     uint64_t      dram_size;
     uint8_t       nvram_data[XNU_MAX_NVRAM_SIZE];
     uint32_t      nvram_size;
-    char*         ticket_data;
+    gchar*        ticket_data;
     gsize         ticket_length;
     bool          non_cold_boot;
     bool          had_autoboot;
@@ -423,3 +423,6 @@ void apple_boot_finalise_dt(AppleDTNode* root, AddressSpace* as, AppleBootInfo* 
 uint8_t* apple_boot_load_trustcache_file(const char* filename, uint64_t* size);
 
 void apple_boot_load_ramdisk(const char* filename, AddressSpace* as, hwaddr pa, uint64_t* size);
+
+void apple_boot_extract_manifest(const uint8_t* img4_data, uint64_t img4_data_len_max, gchar** out_data,
+                                 gsize* out_size);

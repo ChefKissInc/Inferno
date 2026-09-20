@@ -51,6 +51,7 @@
 #include "qemu/log.h"
 #include "qemu/units.h"
 #include "system/address-spaces.h"
+#include "system/block-backend.h"
 #include "system/memory.h"
 #include "system/reset.h"
 #include "system/runstate.h"
@@ -344,7 +345,7 @@ static void s8000_memory_setup(MachineState* machine)
     info->dram_base = DRAM_BASE;
     info->dram_size = DRAM_SIZE;
 
-    nvram = APPLE_NVRAM(object_resolve_path_at(NULL, "/machine/peripheral/nvram"));
+    nvram = APPLE_NVRAM(object_resolve_path_at(OBJECT(s8000), "peripheral/nvram"));
     if (!nvram) {
         error_setg(&error_fatal, "Failed to find NVRAM device");
         return;
@@ -428,6 +429,32 @@ static void s8000_memory_setup(MachineState* machine)
         vram_reg[1]          = vram_size;
         apple_dt_set_prop(vram, "reg", sizeof(vram_reg), &vram_reg);
     }
+
+    NvmeNamespace* firmware = NVME_NS(object_resolve_path_at(OBJECT(s8000), "peripheral/firmware"));
+    if (firmware == NULL) {
+        error_setg(&error_fatal, "Failed to find firmware device");
+        return;
+    }
+    size_t fwlen = blk_getlength(firmware->blkconf.blk);
+
+    uint8_t* buffer = g_malloc(fwlen);
+
+    blk_flush(firmware->blkconf.blk);
+    blk_drain(firmware->blkconf.blk);
+
+    if (blk_pread(firmware->blkconf.blk, 0, fwlen, buffer, 0) < 0) {
+        error_report("%s: Failed to read firmware", __func__);
+        return;
+    }
+
+    if (s8000->boot_info.ticket_data != NULL) {
+        g_free(s8000->boot_info.ticket_data);
+        s8000->boot_info.ticket_data   = NULL;
+        s8000->boot_info.ticket_length = 0;
+    }
+
+    apple_boot_extract_manifest(buffer, fwlen, &s8000->boot_info.ticket_data, &s8000->boot_info.ticket_length);
+    g_free(buffer);
 
     header = s8000->kernel;
     assert_nonnull(header);
@@ -1330,14 +1357,6 @@ static void s8000_init(MachineState* machine)
 
         s8000->trustcache =
             apple_boot_load_trustcache_file(s8000->trustcache_filename, &s8000->boot_info.trustcache_size);
-        if (s8000->ticket_filename != NULL) {
-            if (!g_file_get_contents(s8000->ticket_filename, &s8000->boot_info.ticket_data,
-                                     &s8000->boot_info.ticket_length, NULL))
-            {
-                error_setg(&error_fatal, "Failed to read ticket from `%s`", s8000->ticket_filename);
-                return;
-            }
-        }
     }
     else {
         if (!g_file_get_contents(s8000->securerom_filename, &s8000->securerom, &s8000->securerom_size, NULL)) {
@@ -1461,7 +1480,6 @@ PROP_VISIT_GETTER_SETTER(uint64, ecid);
 PROP_GETTER_SETTER(bool, kaslr_off);
 PROP_GETTER_SETTER(bool, force_dfu);
 PROP_STR_GETTER_SETTER(trustcache_filename);
-PROP_STR_GETTER_SETTER(ticket_filename);
 PROP_STR_GETTER_SETTER(sep_rom_filename);
 PROP_STR_GETTER_SETTER(sep_fw_filename);
 PROP_STR_GETTER_SETTER(securerom_filename);
@@ -1485,8 +1503,6 @@ static void s8000_class_init(ObjectClass* klass, const void* data)
 
     object_class_property_add_str(klass, "trustcache", s8000_get_trustcache_filename, s8000_set_trustcache_filename);
     object_class_property_set_description(klass, "trustcache", "TrustCache");
-    object_class_property_add_str(klass, "ticket", s8000_get_ticket_filename, s8000_set_ticket_filename);
-    object_class_property_set_description(klass, "ticket", "AP Ticket");
     object_class_property_add_str(klass, "sep-rom", s8000_get_sep_rom_filename, s8000_set_sep_rom_filename);
     object_class_property_set_description(klass, "sep-rom", "SEP ROM");
     object_class_property_add_str(klass, "sep-fw", s8000_get_sep_fw_filename, s8000_set_sep_fw_filename);
